@@ -1,10 +1,8 @@
 import type { GameState, StarSystemId } from "./types";
-import {
-    advanceActiveSurvey,
-    beginSurvey,
-} from "./systems/explorationSystem";
+import { beginSurvey } from "./systems/explorationSystem";
 import type { PrimaryOutpostId } from "./config/outposts";
 import { claimWithOutpost } from "./systems/outpostSystem";
+import { advanceGameTime } from "./systems/timeSystem";
 
 export type GameAction =
     | {
@@ -16,7 +14,7 @@ export type GameAction =
         systemId: StarSystemId;
     }
     | {
-        type: "advanceSurvey";
+        type: "advanceGameTime";
         seconds: number;
     }
     | {
@@ -47,8 +45,8 @@ export function gameReducer(
             return beginSurvey(state, action.systemId);
         }
 
-        case "advanceSurvey": {
-            return advanceActiveSurvey(state, action.seconds);
+        case "advanceGameTime": {
+            return advanceGameTime(state, action.seconds);
         }
 
         case "claimWithOutpost": {

@@ -32,7 +32,7 @@ export function GameTicker() {
             lastTickTimeRef.current = now;
 
             dispatch({
-                type: "advanceSurvey",
+                type: "advanceGameTime",
                 seconds: deltaSeconds,
             });
         }, TICK_INTERVAL_MS);

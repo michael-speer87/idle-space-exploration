@@ -10,7 +10,6 @@ type SelectedSystemPanelProps = {
     canBeginSurvey: boolean;
     firstFreeSurveyAvailable: boolean;
     onBeginSurvey: () => void;
-    onAdvanceSurvey: () => void;
 };
 
 export function SelectedSystemPanel({ 
@@ -19,7 +18,6 @@ export function SelectedSystemPanel({
     canBeginSurvey,
     firstFreeSurveyAvailable,
     onBeginSurvey,
-    onAdvanceSurvey,
 }: SelectedSystemPanelProps) {
     if (system === null) {
         return (
@@ -81,13 +79,7 @@ export function SelectedSystemPanel({
         </div>
 
         {activeSurvey !== null && (
-          <button
-            className="primary-action-button"
-            type="button"
-            onClick={onAdvanceSurvey}
-          >
-            Advance Survey +1s
-          </button>
+          <p className="panel-note">Survey in progress...</p>
         )}
 
         {activeSurvey === null && canBeginSurvey && (

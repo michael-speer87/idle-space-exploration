@@ -5,10 +5,12 @@ import { StarMapCanvas } from "./components/StarMapCanvas";
 import { MapLegend } from "./components/MapLegend";
 import type { StarSystemId } from "./game/types";
 import { canBeginSurvey } from "./game/systems/explorationSystem";
+import { GameTicker } from "./game/GameTicker";
 
 function App() {
   return (
     <GameProvider>
+      <GameTicker />
       <GameScreen />
     </GameProvider>
   );
@@ -54,13 +56,6 @@ function GameScreen() {
     });
   }, [dispatch, selectedSystem]);
 
-  const handleAdvanceSurvey = useCallback(() => {
-    dispatch({
-      type: "advanceSurvey",
-      seconds: 1,
-    });
-  }, [dispatch]);
-
   return (
     <main className="game-layout">
       <SelectedSystemPanel
@@ -69,7 +64,6 @@ function GameScreen() {
         canBeginSurvey={canBeginSurveyForSelectedSystem}
         firstFreeSurveyAvailable={gameState.exploration.firstFreeSurveyAvailable}
         onBeginSurvey={handleBeginSurvey}
-        onAdvanceSurvey={handleAdvanceSurvey}
       />
 
       <section className="map-section">

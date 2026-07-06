@@ -2,8 +2,9 @@ import { useCallback } from "react";
 import { GameProvider, useGameDispatch, useGameState } from "./game/GameContext";
 import { SelectedSystemPanel } from "./components/SelectedSystemPanel";
 import { StarMapCanvas } from "./components/StarMapCanvas";
-import type { StarSystemId } from "./game/types";
 import { MapLegend } from "./components/MapLegend";
+import type { StarSystemId } from "./game/types";
+import { canBeginSurvey } from "./game/systems/explorationSystem";
 
 function App() {
   return (
@@ -21,6 +22,17 @@ function GameScreen() {
     ? gameState.map.systemsById[gameState.selectedSystemId]
     : null;
 
+  const activeSurveyForSelectedSystem =
+    selectedSystem !== null &&
+    gameState.exploration.activeSurvey?.systemId === selectedSystem.id
+      ? gameState.exploration.activeSurvey
+      : null;
+
+  const canBeginSurveyForSelectedSystem =
+    selectedSystem !== null
+      ? canBeginSurvey(gameState, selectedSystem.id)
+      : false;
+
   const handleSelectSystem = useCallback(
     (systemId: StarSystemId) => {
       dispatch({
@@ -31,9 +43,34 @@ function GameScreen() {
     [dispatch],
   );
 
+  const handleBeginSurvey = useCallback(() => {
+    if (selectedSystem === null) {
+      return;
+    }
+
+    dispatch({
+      type: "beginSurvey",
+      systemId: selectedSystem.id,
+    });
+  }, [dispatch, selectedSystem]);
+
+  const handleAdvanceSurvey = useCallback(() => {
+    dispatch({
+      type: "advanceSurvey",
+      seconds: 1,
+    });
+  }, [dispatch]);
+
   return (
     <main className="game-layout">
-      <SelectedSystemPanel system={selectedSystem} />
+      <SelectedSystemPanel
+        system={selectedSystem}
+        activeSurvey={activeSurveyForSelectedSystem}
+        canBeginSurvey={canBeginSurveyForSelectedSystem}
+        firstFreeSurveyAvailable={gameState.exploration.firstFreeSurveyAvailable}
+        onBeginSurvey={handleBeginSurvey}
+        onAdvanceSurvey={handleAdvanceSurvey}
+      />
 
       <section className="map-section">
         <div className="map-header">

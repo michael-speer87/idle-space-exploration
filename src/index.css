@@ -202,3 +202,54 @@ dd {
   background: #1a2233;
   border: 1px solid #2d3a52;
 }
+
+.survey-progress {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.survey-progress-label {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.85rem;
+}
+
+.survey-progress-label span {
+  opacity: 0.7;
+}
+
+.survey-progress-bar {
+  height: 0.6rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.survey-progress-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: #72e0ff;
+  transition: width 160ms ease-out;
+}
+
+.primary-action-button {
+  width: 100%;
+  margin-top: 0.85rem;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid rgba(114, 224, 255, 0.45);
+  border-radius: 0.65rem;
+  background: rgba(114, 224, 255, 0.12);
+  color: #dff8ff;
+}
+
+.primary-action-button:hover {
+  background: rgba(114, 224, 255, 0.18);
+}
+
+.panel-note {
+  margin: 0.85rem 0 0;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  opacity: 0.75;
+}

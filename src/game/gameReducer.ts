@@ -1,10 +1,22 @@
 import type { GameState, StarSystemId } from "./types";
+import {
+    advanceActiveSurvey,
+    beginSurvey,
+} from "./systems/explorationSystem";
 
 export type GameAction =
     | {
         type: "selectSystem";
         systemId: StarSystemId;
-    };
+    }
+    | {
+        type: "beginSurvey";
+        systemId: StarSystemId;
+    }
+    | {
+        type: "advanceSurvey";
+        seconds: number;
+    }
 
 export function gameReducer(
     state: GameState,
@@ -22,6 +34,14 @@ export function gameReducer(
                 ...state,
                 selectedSystemId: action.systemId,
             };
+        }
+
+        case "beginSurvey": {
+            return beginSurvey(state, action.systemId);
+        }
+
+        case "advanceSurvey": {
+            return advanceActiveSurvey(state, action.seconds);
         }
 
         default: {

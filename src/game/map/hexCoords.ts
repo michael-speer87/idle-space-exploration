@@ -41,3 +41,26 @@ export function getHexCoordsInRadius(radius: number): HexCoord[] {
     return a.r - b.r;
   });
 }
+
+const HEX_DIRECTIONS: readonly HexCoord[] = [
+  { q: 1, r: 0 },
+  { q: 1, r: -1 },
+  { q: 0, r: -1 },
+  { q: -1, r: 0 },
+  { q: -1, r: 1 },
+  { q: 0, r: 1 },
+];
+
+export function getHexNeighbors(coord: HexCoord): HexCoord[] {
+  return HEX_DIRECTIONS.map((direction) => ({
+    q: coord.q + direction.q,
+    r: coord.r + direction.r,
+  }));
+}
+
+export function areHexCoordsAdjacent(a: HexCoord, b: HexCoord): boolean {
+  return getHexDistance({
+    q: a.q - b.q,
+    r: a.r - b.r,
+  }) === 1;
+}

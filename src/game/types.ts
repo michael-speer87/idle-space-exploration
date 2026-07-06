@@ -64,11 +64,24 @@ export type ResourceState = {
   science: number;
 };
 
+export type ActiveSurveyState = {
+  systemId: StarSystemId;
+  progress: number;
+  speedPerSecond: number;
+  isFirstFreeSurvey: boolean;
+};
+
+export type ExplorationRunState = {
+  firstFreeSurveyAvailable: boolean;
+  activeSurvey: ActiveSurveyState | null;
+};
+
 export type GameState = {
   version: GameVersion;
   seed: number;
 
   resources: ResourceState;
+  exploration: ExplorationRunState;
   map: StarMapState;
 
   selectedSystemId: StarSystemId | null;

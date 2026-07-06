@@ -16,6 +16,11 @@ export function createNewGame(seed = 12345): GameState {
             science: 0,
         },
 
+        exploration: {
+            firstFreeSurveyAvailable: true,
+            activeSurvey: null,
+        },
+
         map,
 
         selectedSystemId: map.homeSystemId,

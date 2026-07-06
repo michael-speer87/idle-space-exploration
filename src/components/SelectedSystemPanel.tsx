@@ -1,10 +1,26 @@
-import type { AffinityProfile, StarSystem } from "../game/types";
+import type { 
+    ActiveSurveyState, 
+    AffinityProfile, 
+    StarSystem 
+} from "../game/types";
 
 type SelectedSystemPanelProps = {
     system: StarSystem | null;
+    activeSurvey: ActiveSurveyState | null;
+    canBeginSurvey: boolean;
+    firstFreeSurveyAvailable: boolean;
+    onBeginSurvey: () => void;
+    onAdvanceSurvey: () => void;
 };
 
-export function SelectedSystemPanel({ system }: SelectedSystemPanelProps) {
+export function SelectedSystemPanel({ 
+    system,
+    activeSurvey,
+    canBeginSurvey,
+    firstFreeSurveyAvailable,
+    onBeginSurvey,
+    onAdvanceSurvey,
+}: SelectedSystemPanelProps) {
     if (system === null) {
         return (
             <aside className="system-panel">
@@ -14,11 +30,18 @@ export function SelectedSystemPanel({ system }: SelectedSystemPanelProps) {
         );
     }
 
+    const surveyProgress =
+        activeSurvey !== null
+            ? Math.round((activeSurvey.progress / system.surveyRequirement) * 100)
+            : system.explorationState === "surveyed"
+                ? 100
+                : 0;
+
     return (
         <aside className="system-panel">
             <p className="panel-kicker">
-                {system.isHome ? "Home System" : "Star System"}    
-            </p>"
+                {system.isHome ? "Home System" : "Star System"}
+            </p>
 
             <h2>{system.name}</h2>
 
@@ -27,7 +50,7 @@ export function SelectedSystemPanel({ system }: SelectedSystemPanelProps) {
 
                 <dl>
                     <PanelRow label="ID" value={system.id} />
-                    <PanelRow
+                    <PanelRow 
                         label="Coordinates"
                         value={`q: ${system.coord.q}, r: ${system.coord.r}`}
                     />
@@ -40,32 +63,89 @@ export function SelectedSystemPanel({ system }: SelectedSystemPanelProps) {
                     />
                 </dl>
             </section>
+        <section className="panel-section">
+        <h3>Survey</h3>
 
-            <section className="panel-section">
-                <h3>Outpost Potential</h3>
+        <div className="survey-progress">
+          <div className="survey-progress-label">
+            <span>Progress</span>
+            <strong>{surveyProgress}%</strong>
+          </div>
 
-                <dl>
-                    <PanelRow
-                        label="Support Slots"
-                        value={system.supportSlotCount.toString()}
-                    />
-                    <PanelRow
-                        label="Primary Outpost"
-                        value={system.primaryOutpostId ?? "None"}
-                    />
-                </dl>
-            </section>
+          <div className="survey-progress-bar">
+            <div
+              className="survey-progress-fill"
+              style={{ width: `${surveyProgress}%` }}
+            />
+          </div>
+        </div>
 
-            <section className="panel-section">
-                <h3>Affinities</h3>
-                <AffinityGrid affinities={system.affinities} />
-            </section>
+        {activeSurvey !== null && (
+          <button
+            className="primary-action-button"
+            type="button"
+            onClick={onAdvanceSurvey}
+          >
+            Advance Survey +1s
+          </button>
+        )}
 
-            {system.hasGradCommand && (
-                <p className="grad-command-note">GRaD Command established.</p>
-            )}
-        </aside>
-    );
+        {activeSurvey === null && canBeginSurvey && (
+          <button
+            className="primary-action-button"
+            type="button"
+            onClick={onBeginSurvey}
+          >
+            Begin First Free Survey
+          </button>
+        )}
+
+        {activeSurvey === null &&
+          !canBeginSurvey &&
+          system.explorationState === "detected" &&
+          !firstFreeSurveyAvailable && (
+            <p className="panel-note">
+              Further surveys require EP infrastructure. Coming in a later
+              milestone.
+            </p>
+          )}
+
+        {system.explorationState === "unknown" && (
+          <p className="panel-note">
+            This system is unknown. Survey nearby systems to detect it.
+          </p>
+        )}
+
+        {system.explorationState === "surveyed" && (
+          <p className="panel-note">Survey complete.</p>
+        )}
+      </section>
+
+      <section className="panel-section">
+        <h3>Outpost Potential</h3>
+
+        <dl>
+          <PanelRow
+            label="Support Slots"
+            value={system.supportSlotCount.toString()}
+          />
+          <PanelRow
+            label="Primary Outpost"
+            value={system.primaryOutpostId ?? "None"}
+          />
+        </dl>
+      </section>
+
+      <section className="panel-section">
+        <h3>Affinities</h3>
+        <AffinityGrid affinities={system.affinities} />
+      </section>
+
+      {system.hasGradCommand && (
+        <p className="grad-command-note">GRaD Command established.</p>
+      )}
+    </aside>
+  );
 }
 
 type PanelRowProps = {

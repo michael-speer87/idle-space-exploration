@@ -1,3 +1,5 @@
+import type { PrimaryOutpostId } from "./config/outposts";
+
 export type GameVersion = 1;
 
 export type StarSystemId = string;
@@ -48,7 +50,7 @@ export type StarSystem = {
   hazardId: string | null;
   modifierIds: string[];
 
-  primaryOutpostId: string | null;
+  primaryOutpostId: PrimaryOutpostId | null;
   supportBuildingIds: string[];
 };
 

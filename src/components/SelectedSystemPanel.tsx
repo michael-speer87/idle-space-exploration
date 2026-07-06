@@ -3,21 +3,27 @@ import type {
     AffinityProfile, 
     StarSystem 
 } from "../game/types";
+import { canClaimWithOutpost } from "../game/systems/outpostSystem";
+import type { GameState } from "../game/types";
 
 type SelectedSystemPanelProps = {
     system: StarSystem | null;
     activeSurvey: ActiveSurveyState | null;
     canBeginSurvey: boolean;
+    canClaimSurveyArray: boolean;
     firstFreeSurveyAvailable: boolean;
     onBeginSurvey: () => void;
+    onClaimSurveyArray: () => void;
 };
 
 export function SelectedSystemPanel({ 
     system,
     activeSurvey,
     canBeginSurvey,
+    canClaimSurveyArray,
     firstFreeSurveyAvailable,
     onBeginSurvey,
+    onClaimSurveyArray,
 }: SelectedSystemPanelProps) {
     if (system === null) {
         return (
@@ -117,6 +123,15 @@ export function SelectedSystemPanel({
         <h3>Outpost Potential</h3>
 
         <dl>
+          {canClaimSurveyArray && (
+            <button
+              className="primary-action-button"
+              type="button"
+              onClick={onClaimSurveyArray}
+              >
+                Claim with Survey Array
+              </button>
+          )}
           <PanelRow
             label="Support Slots"
             value={system.supportSlotCount.toString()}

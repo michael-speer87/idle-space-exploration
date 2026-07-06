@@ -253,3 +253,36 @@ dd {
   line-height: 1.4;
   opacity: 0.75;
 }
+
+.resource-bar {
+  position: absolute;
+  z-index: 1;
+  top: 1rem;
+  right: 1rem;
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.65rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 0.75rem;
+  background: rgba(8, 11, 20, 0.72);
+  backdrop-filter: blur(8px);
+}
+
+.resource-pill {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 5.5rem;
+  padding: 0.45rem 0.6rem;
+  border-radius: 0.55rem;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.resource-pill span {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  opacity: 0.65;
+}
+
+.resource-pill strong {
+  font-size: 0.95rem;
+}

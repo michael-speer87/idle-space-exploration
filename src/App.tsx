@@ -6,6 +6,9 @@ import { MapLegend } from "./components/MapLegend";
 import type { StarSystemId } from "./game/types";
 import { canBeginSurvey } from "./game/systems/explorationSystem";
 import { GameTicker } from "./game/GameTicker";
+import { ResourceBar } from "./components/ResourceBar";
+import { calculateRates } from "./game/systems/rateSystem";
+import { canClaimWithOutpost } from "./game/systems/outpostSystem";
 
 function App() {
   return (
@@ -23,6 +26,13 @@ function GameScreen() {
   const selectedSystem = gameState.selectedSystemId
     ? gameState.map.systemsById[gameState.selectedSystemId]
     : null;
+
+  const rates = calculateRates(gameState);
+
+  const canClaimSurveyArrayForSelectedSystem = 
+    selectedSystem !== null
+      ? canClaimWithOutpost(gameState, selectedSystem.id, "survey_array")
+      : false;
 
   const activeSurveyForSelectedSystem =
     selectedSystem !== null &&
@@ -56,14 +66,28 @@ function GameScreen() {
     });
   }, [dispatch, selectedSystem]);
 
+  const handleClaimSurveyArray = useCallback(() => {
+    if (selectedSystem === null) {
+      return;
+    }
+
+    dispatch({
+      type: "claimWithOutpost",
+      systemId: selectedSystem.id,
+      outpostId: "survey_array",
+    });
+  }, [dispatch, selectedSystem]);
+
   return (
     <main className="game-layout">
       <SelectedSystemPanel
         system={selectedSystem}
         activeSurvey={activeSurveyForSelectedSystem}
         canBeginSurvey={canBeginSurveyForSelectedSystem}
+        canClaimSurveyArray={canClaimSurveyArrayForSelectedSystem}
         firstFreeSurveyAvailable={gameState.exploration.firstFreeSurveyAvailable}
         onBeginSurvey={handleBeginSurvey}
+        onClaimSurveyArray={handleClaimSurveyArray}
       />
 
       <section className="map-section">
@@ -73,6 +97,12 @@ function GameScreen() {
             Seed {gameState.seed} · {gameState.map.systemIds.length} systems
           </p>
         </div>
+
+        <ResourceBar
+          credits={gameState.resources.credits}
+          science={gameState.resources.science}
+          rates={rates}
+        />
 
         <MapLegend />
 

@@ -1,5 +1,6 @@
 import type { GameState, StarSystemId } from "../types";
 import { getHexId, getHexNeighbors } from "../map/hexCoords";
+import { calculateRates } from "./rateSystem";
 
 const FIRST_FREE_SURVEY_SPEED_PER_SECOND = 2;
 
@@ -17,15 +18,21 @@ export function canBeginSurvey(
     return false;
   }
 
-  if (!state.exploration.firstFreeSurveyAvailable) {
-    return false;
-  }
-
   if (system.explorationState !== "detected") {
     return false;
   }
 
-  return hasSurveyedNeighbor(state, systemId);
+  if (!hasSurveyedNeighbor(state, systemId)) {
+    return false;
+  }
+
+  if (state.exploration.firstFreeSurveyAvailable) {
+    return true;
+  }
+
+  const rates = calculateRates(state);
+
+  return rates.epPerSecond > 0;
 }
 
 export function beginSurvey(
@@ -37,6 +44,8 @@ export function beginSurvey(
   }
 
   const system = state.map.systemsById[systemId];
+  const rates = calculateRates(state);
+  const isFirstFreeSurvey = state.exploration.firstFreeSurveyAvailable;
 
   return {
     ...state,
@@ -46,8 +55,10 @@ export function beginSurvey(
       activeSurvey: {
         systemId,
         progress: 0,
-        speedPerSecond: FIRST_FREE_SURVEY_SPEED_PER_SECOND,
-        isFirstFreeSurvey: true,
+        speedPerSecond: isFirstFreeSurvey
+          ? FIRST_FREE_SURVEY_SPEED_PER_SECOND
+          : rates.epPerSecond,
+        isFirstFreeSurvey,
       },
     },
 

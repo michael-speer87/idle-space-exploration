@@ -3,8 +3,6 @@ import type {
     AffinityProfile, 
     StarSystem 
 } from "../game/types";
-import { canClaimWithOutpost } from "../game/systems/outpostSystem";
-import type { GameState } from "../game/types";
 
 type SelectedSystemPanelProps = {
     system: StarSystem | null;

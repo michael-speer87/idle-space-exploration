@@ -9,12 +9,25 @@ type ResourceBarProps = {
 export function ResourceBar({ credits, science, rates }: ResourceBarProps) {
     return (
         <div className="resource-bar">
-            <ResourcePill label="Credits" value={credits.toFixed(0)} />
-            <ResourcePill label="Science" value={science.toFixed(0)} />
-            <ResourcePill label="EP/sec" value={rates.epPerSecond.toFixed(0)} />
+            <ResourcePill 
+                label="Credits" 
+                value={credits.toFixed(0)}
+                rate={rates.creditsPerSecond.toFixed(2)}
+            />
+            <ResourcePill 
+                label="Science" 
+                value={science.toFixed(0)}
+                rate={rates.sciencePerSecond.toFixed(2)} 
+            />
+            <ResourcePill 
+                label="EP/sec" 
+                value={rates.epPerSecond.toFixed(0)} 
+                rate={rates.epPerSecond.toFixed(2)}
+            />
             <ResourcePill 
                 label="Energy" 
                 value={`${rates.energySurplus >= 0 ? "+": ""}${rates.energySurplus}`} 
+                rate={rates.energyProduced.toFixed(2)}
             />
         </div> 
     );
@@ -23,13 +36,15 @@ export function ResourceBar({ credits, science, rates }: ResourceBarProps) {
 type ResourcePillProps = {
     label: string;
     value: string;
+    rate: string;
 };
 
-function ResourcePill({ label, value }: ResourcePillProps) {
+function ResourcePill({ label, value, rate }: ResourcePillProps) {
     return (
         <div className="resource-pill">
             <span>{label}</span>
             <strong>{value}</strong>
+            <span>{rate}</span>
         </div>
     )
 }

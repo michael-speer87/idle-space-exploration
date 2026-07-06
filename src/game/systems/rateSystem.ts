@@ -19,6 +19,9 @@ const AFFINITY_MULTIPLIERS = {
 
 const RESEARCH_EFFECTS = {
     improvedSurveyArraysMultiplier: 1.25,
+    commerceOptimizationMultiplier: 1.25,
+    appliedScienceMethodsMultiplier: 1.25,
+    powerRelayEfficiencyMultiplier: 1.25,
 } as const;
 
 export function calculateRates(state: GameState): CalculatedRates {
@@ -59,19 +62,39 @@ export function calculateRates(state: GameState): CalculatedRates {
             }
 
             case "commerce": {
-                creditsPerSecond +=
-                    outpost.baseOutput * AFFINITY_MULTIPLIERS[system.affinities.commerce];
+                let commerceOutput =
+                    outpost.baseOutput *
+                    AFFINITY_MULTIPLIERS[system.affinities.commerce];
+
+                if (isResearchCompleted(state, "commerce_optimization")) {
+                    commerceOutput *= RESEARCH_EFFECTS.commerceOptimizationMultiplier
+                }
+
+                creditsPerSecond += commerceOutput;
                 break;
             }
 
             case "science": {
-                sciencePerSecond +=
+                let scienceOutput =
                     outpost.baseOutput * AFFINITY_MULTIPLIERS[system.affinities.science];
+
+                if (isResearchCompleted(state, "applied_science_methods")) {
+                    scienceOutput *= RESEARCH_EFFECTS.appliedScienceMethodsMultiplier;
+                }
+
+                sciencePerSecond += scienceOutput;
                 break;
             }
             
             case "power": {
-                energyProduced += outpost.baseOutput;
+                let powerOutput =
+                    outpost.baseOutput * AFFINITY_MULTIPLIERS[system.affinities.power];
+                
+                if (isResearchCompleted(state, "power_relay_efficiency")) {
+                    powerOutput *= RESEARCH_EFFECTS.powerRelayEfficiencyMultiplier
+                }
+
+                energyProduced += powerOutput;
                 break;
             }
             

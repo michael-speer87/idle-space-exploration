@@ -19,28 +19,28 @@ export const RESEARCH_PROJECTS: Record<
     ResearchProjectId,
     ResearchProjectDefinition
 > = {
-    improved_survey_arrays: {
-        id: "improved_survey_arrays",
-        name: "Improved Survey Arrays",
-        scienceCost: 10,
-        prerequisiteIds: [],
-        description: "Increses Survey Array EP/sec output by 25%.",
-    },
+  improved_survey_arrays: {
+    id: "improved_survey_arrays",
+    name: "Improved Survey Arrays",
+    scienceCost: 10,
+    prerequisiteIds: [],
+    description: "Increses Survey Array EP/sec output by 25%.",
+  },
 
-    commerce_optimization: {
-        id: "commerce_optimization",
-        name: "Commerce Optimization",
-        scienceCost: 12,
-        prerequisiteIds: [],
-        description: "Improve research speed or science output.",
-    },
+  commerce_optimization: {
+    id: "commerce_optimization",
+    name: "Commerce Optimization",
+    scienceCost: 12,
+    prerequisiteIds: [],
+    description: "Increases Commerce Hub Credits/sec output by 25%.",
+  },
 
-    applied_science_methods: {
+  applied_science_methods: {
     id: "applied_science_methods",
     name: "Applied Science Methods",
     scienceCost: 12,
     prerequisiteIds: [],
-    description: "Future effect: improve research speed or Science output.",
+    description: "Increases Science Station Science/sec output by 25%.",
   },
 
   power_relay_efficiency: {
@@ -48,7 +48,7 @@ export const RESEARCH_PROJECTS: Record<
     name: "Power Relay Efficiency",
     scienceCost: 15,
     prerequisiteIds: [],
-    description: "Future effect: improve Power Relay output.",
+    description: "Increases Power Relay Energy output by 25%.",
   },
 
   extraction_handling: {

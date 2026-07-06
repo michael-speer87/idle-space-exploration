@@ -373,3 +373,24 @@ dd {
   cursor: not-allowed;
   opacity: 0.45;
 }
+
+.outpost-action-card {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.outpost-blocked-reason {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.35;
+  opacity: 0.65;
+}
+
+.primary-action-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.primary-action-button:hover:not(:disabled) {
+  background: rgba(114, 224, 255, 0.18);
+}

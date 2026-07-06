@@ -3,13 +3,17 @@ import type {
     AffinityProfile, 
     StarSystem 
 } from "../game/types";
-import { PRIMARY_OUTPOSTS, type PrimaryOutpostId } from "../game/config/outposts";
+import {
+  PRIMARY_OUTPOSTS,
+  type PrimaryOutpostId,
+} from "../game/config/outposts"
+import type { OutpostClaimOption } from "../game/systems/outpostSystem";
 
 type SelectedSystemPanelProps = {
     system: StarSystem | null;
     activeSurvey: ActiveSurveyState | null;
     canBeginSurvey: boolean;
-    claimableOutpostIds: PrimaryOutpostId[];
+    outpostClaimOptions: OutpostClaimOption[];
     firstFreeSurveyAvailable: boolean;
     onBeginSurvey: () => void;
     onClaimOutpost: (outpostId: PrimaryOutpostId) => void;
@@ -19,7 +23,7 @@ export function SelectedSystemPanel({
     system,
     activeSurvey,
     canBeginSurvey,
-    claimableOutpostIds,
+    outpostClaimOptions,
     firstFreeSurveyAvailable,
     onBeginSurvey,
     onClaimOutpost,
@@ -123,24 +127,37 @@ export function SelectedSystemPanel({
 
         <dl>
           
-          {claimableOutpostIds.length > 0 && (
-            <div className="outpost-action-list">
-              {claimableOutpostIds.map((outpostId) =>{
-                const outpost = PRIMARY_OUTPOSTS[outpostId];
+          {system.explorationState === "surveyed" &&
+            system.claimState === "unclaimed" && (
+              <div className="outpost-action-list">
+                {outpostClaimOptions.map((option) => {
+                  const outpost = PRIMARY_OUTPOSTS[option.outpostId];
 
-                return (
-                  <button
-                    key={outpostId}
-                    className="primary-action-button"
-                    type="button"
-                    onClick={() => onClaimOutpost(outpostId)}
-                  >
-                    Claim with {outpost.name}
-                  </button>
-                );
-              })}
-            </div>
-          )}
+                  return (
+                    <div key={option.outpostId} className="outpost-action-card">
+                      <button
+                        className="primary-action-button"
+                        type="button"
+                        disabled={!option.canClaim}
+                        onClick={() => onClaimOutpost(option.outpostId)}
+                      >
+                        Claim with {outpost.name}
+                        { " . " }
+                        {option.creditCost === 0
+                          ? "Free"
+                          : `${option.creditCost.toFixed(0)} Credits`}
+                      </button>
+
+                      {!option.canClaim && option.blockedReason !== null && (
+                        <p className="outpost-blocked-reason">
+                          {option.blockedReason}
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
 
           <PanelRow
             label="Support Slots"

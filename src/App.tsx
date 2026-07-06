@@ -8,7 +8,7 @@ import { canBeginSurvey } from "./game/systems/explorationSystem";
 import { GameTicker } from "./game/GameTicker";
 import { ResourceBar } from "./components/ResourceBar";
 import { calculateRates } from "./game/systems/rateSystem";
-import { getClaimableOutpostIds } from "./game/systems/outpostSystem";
+import { getOutpostClaimOptions } from "./game/systems/outpostSystem";
 import type { PrimaryOutpostId } from "./game/config/outposts";
 import { ResearchPanel } from "./components/ResearchPanel";
 import type { ResearchProjectId } from "./game/config/research";
@@ -34,9 +34,9 @@ function GameScreen() {
 
   const rates = calculateRates(gameState);
 
-  const claimableOutpostIds =
+  const outpostClaimOptions =
     selectedSystem !== null
-      ? getClaimableOutpostIds(gameState, selectedSystem.id)
+      ? getOutpostClaimOptions(gameState, selectedSystem.id)
       : [];
 
   const activeSurveyForSelectedSystem =
@@ -102,7 +102,7 @@ function GameScreen() {
         system={selectedSystem}
         activeSurvey={activeSurveyForSelectedSystem}
         canBeginSurvey={canBeginSurveyForSelectedSystem}
-        claimableOutpostIds={claimableOutpostIds}
+        outpostClaimOptions={outpostClaimOptions}
         firstFreeSurveyAvailable={gameState.exploration.firstFreeSurveyAvailable}
         onBeginSurvey={handleBeginSurvey}
         onClaimOutpost={handleClaimOutpost}

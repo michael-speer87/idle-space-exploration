@@ -17,6 +17,7 @@ export type PrimaryOutpostDefinition = {
     name: string;
     category: OutpostCategory;
     baseOutput: number;
+    claimCreditCost: number;
     usesEnergy: boolean;
     description: string;
 };
@@ -30,6 +31,7 @@ export const PRIMARY_OUTPOSTS: Record<
         name: "Survey Array",
         category: "survey",
         baseOutput: 1,
+        claimCreditCost: 10,
         usesEnergy: true,
         description: "Produces EP/sec and enables continued surveying.",
     },
@@ -39,6 +41,7 @@ export const PRIMARY_OUTPOSTS: Record<
         name: "Commerce Hub",
         category: "commerce",
         baseOutput: 1,
+        claimCreditCost: 10,
         usesEnergy: true,
         description: "Produces Credits/sec.",
     },
@@ -48,6 +51,7 @@ export const PRIMARY_OUTPOSTS: Record<
         name: "Science Station",
         category: "science",
         baseOutput: 1,
+        claimCreditCost: 15,
         usesEnergy: true,
         description: "Produces Science/sec.",
     },
@@ -57,6 +61,7 @@ export const PRIMARY_OUTPOSTS: Record<
         name: "Power Relay",
         category: "power",
         baseOutput: 5,
+        claimCreditCost: 20,
         usesEnergy: false,
         description: "Provides Evergy Capacity.",
     },
@@ -66,6 +71,7 @@ export const PRIMARY_OUTPOSTS: Record<
         name: "Extraction Rig",
         category: "extraction",
         baseOutput: 1,
+        claimCreditCost: 15,
         usesEnergy: true,
         description: "Produces Raw Materials.",
     },

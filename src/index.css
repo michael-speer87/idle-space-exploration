@@ -286,3 +286,9 @@ dd {
 .resource-pill strong {
   font-size: 0.95rem;
 }
+
+.outpost-action-list {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 0.85rem;
+}

@@ -1,5 +1,22 @@
 import type { GameState, StarSystemId } from "../types";
 import type { PrimaryOutpostId } from "../config/outposts";
+import { calculateRates } from "./rateSystem";
+
+export const CLAIMABLE_PRIMARY_OUTPOST_IDS: readonly PrimaryOutpostId[] = [
+    "survey_array",
+    "commerce_hub",
+    "science_station",
+    "power_relay",
+];
+
+export function getClaimableOutpostIds(
+    state: GameState,
+    systemId: StarSystemId,
+): PrimaryOutpostId[] {
+    return CLAIMABLE_PRIMARY_OUTPOST_IDS.filter((outpostId) =>
+        canClaimWithOutpost(state, systemId, outpostId),
+    );
+}
 
 export function canClaimWithOutpost(
     state: GameState,
@@ -28,11 +45,13 @@ export function canClaimWithOutpost(
         return false;
     }
 
-    if (outpostId !== "survey_array") {
+    const rates = calculateRates(state);
+
+    if (rates.epPerSecond <= 0 && outpostId !== "survey_array") {
         return false;
     }
 
-    return true;
+    return CLAIMABLE_PRIMARY_OUTPOST_IDS.includes(outpostId);
 }
 
 export function claimWithOutpost(

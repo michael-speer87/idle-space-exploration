@@ -3,25 +3,26 @@ import type {
     AffinityProfile, 
     StarSystem 
 } from "../game/types";
+import { PRIMARY_OUTPOSTS, type PrimaryOutpostId } from "../game/config/outposts";
 
 type SelectedSystemPanelProps = {
     system: StarSystem | null;
     activeSurvey: ActiveSurveyState | null;
     canBeginSurvey: boolean;
-    canClaimSurveyArray: boolean;
+    claimableOutpostIds: PrimaryOutpostId[];
     firstFreeSurveyAvailable: boolean;
     onBeginSurvey: () => void;
-    onClaimSurveyArray: () => void;
+    onClaimOutpost: (outpostId: PrimaryOutpostId) => void;
 };
 
 export function SelectedSystemPanel({ 
     system,
     activeSurvey,
     canBeginSurvey,
-    canClaimSurveyArray,
+    claimableOutpostIds,
     firstFreeSurveyAvailable,
     onBeginSurvey,
-    onClaimSurveyArray,
+    onClaimOutpost,
 }: SelectedSystemPanelProps) {
     if (system === null) {
         return (
@@ -121,22 +122,37 @@ export function SelectedSystemPanel({
         <h3>Outpost Potential</h3>
 
         <dl>
-          {canClaimSurveyArray && (
-            <button
-              className="primary-action-button"
-              type="button"
-              onClick={onClaimSurveyArray}
-              >
-                Claim with Survey Array
-              </button>
+          
+          {claimableOutpostIds.length > 0 && (
+            <div className="outpost-action-list">
+              {claimableOutpostIds.map((outpostId) =>{
+                const outpost = PRIMARY_OUTPOSTS[outpostId];
+
+                return (
+                  <button
+                    key={outpostId}
+                    className="primary-action-button"
+                    type="button"
+                    onClick={() => onClaimOutpost(outpostId)}
+                  >
+                    Claim with {outpost.name}
+                  </button>
+                );
+              })}
+            </div>
           )}
+
           <PanelRow
             label="Support Slots"
             value={system.supportSlotCount.toString()}
           />
           <PanelRow
             label="Primary Outpost"
-            value={system.primaryOutpostId ?? "None"}
+            value={
+              system.primaryOutpostId === null
+                ? "None"
+                : PRIMARY_OUTPOSTS[system.primaryOutpostId].name
+            }
           />
         </dl>
       </section>

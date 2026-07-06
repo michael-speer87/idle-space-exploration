@@ -8,7 +8,8 @@ import { canBeginSurvey } from "./game/systems/explorationSystem";
 import { GameTicker } from "./game/GameTicker";
 import { ResourceBar } from "./components/ResourceBar";
 import { calculateRates } from "./game/systems/rateSystem";
-import { canClaimWithOutpost } from "./game/systems/outpostSystem";
+import { getClaimableOutpostIds } from "./game/systems/outpostSystem";
+import type { PrimaryOutpostId } from "./game/config/outposts";
 
 function App() {
   return (
@@ -29,10 +30,10 @@ function GameScreen() {
 
   const rates = calculateRates(gameState);
 
-  const canClaimSurveyArrayForSelectedSystem = 
+  const claimableOutpostIds =
     selectedSystem !== null
-      ? canClaimWithOutpost(gameState, selectedSystem.id, "survey_array")
-      : false;
+      ? getClaimableOutpostIds(gameState, selectedSystem.id)
+      : [];
 
   const activeSurveyForSelectedSystem =
     selectedSystem !== null &&
@@ -66,17 +67,20 @@ function GameScreen() {
     });
   }, [dispatch, selectedSystem]);
 
-  const handleClaimSurveyArray = useCallback(() => {
-    if (selectedSystem === null) {
-      return;
-    }
+  const handleClaimOutpost = useCallback(
+    (outpostId: PrimaryOutpostId) => {
+      if (selectedSystem === null) {
+        return;
+      }
 
-    dispatch({
-      type: "claimWithOutpost",
-      systemId: selectedSystem.id,
-      outpostId: "survey_array",
-    });
-  }, [dispatch, selectedSystem]);
+      dispatch({
+        type: "claimWithOutpost",
+        systemId: selectedSystem.id,
+        outpostId,
+      });
+    },
+    [dispatch, selectedSystem]
+  )
 
   return (
     <main className="game-layout">
@@ -84,10 +88,10 @@ function GameScreen() {
         system={selectedSystem}
         activeSurvey={activeSurveyForSelectedSystem}
         canBeginSurvey={canBeginSurveyForSelectedSystem}
-        canClaimSurveyArray={canClaimSurveyArrayForSelectedSystem}
+        claimableOutpostIds={claimableOutpostIds}
         firstFreeSurveyAvailable={gameState.exploration.firstFreeSurveyAvailable}
         onBeginSurvey={handleBeginSurvey}
-        onClaimSurveyArray={handleClaimSurveyArray}
+        onClaimOutpost={handleClaimOutpost}
       />
 
       <section className="map-section">

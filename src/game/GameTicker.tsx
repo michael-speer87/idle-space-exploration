@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useGameDispatch, useGameState } from "./GameContext";
+import { calculateRates } from "./systems/rateSystem";
 
 const TICK_INTERVAL_MS = 250;
 const MAX_DELTA_SECONDS = 0.5;
@@ -8,12 +9,18 @@ export function GameTicker() {
     const gameState = useGameState();
     const dispatch = useGameDispatch();
 
-    const lastTickTimeRef = useRef<number | null>(null)
+    const lastTickTimeRef = useRef<number | null>(null);
+
+    const hasActiveSurvey = gameState.exploration.activeSurvey !== null;
+    const rates = calculateRates(gameState);
+
+    const hasActiveProduction =
+        rates.creditsPerSecond > 0 || rates.sciencePerSecond > 0;
+    
+    const shouldTick = hasActiveSurvey || hasActiveProduction;
 
     useEffect(() => {
-        const activeSurvey = gameState.exploration.activeSurvey;
-
-        if (activeSurvey === null) {
+        if (!shouldTick) {
             lastTickTimeRef.current = null;
             return;
         }
@@ -40,7 +47,7 @@ export function GameTicker() {
         return () => {
             window.clearInterval(intervalId);
         };
-    }, [dispatch, gameState.exploration.activeSurvey?.systemId]);
+    }, [dispatch, shouldTick]);
 
     return null;
 }

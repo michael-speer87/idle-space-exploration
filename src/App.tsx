@@ -13,11 +13,15 @@ import type { PrimaryOutpostId } from "./game/config/outposts";
 import { ResearchPanel } from "./components/ResearchPanel";
 import type { ResearchProjectId } from "./game/config/research";
 import { getStartableResearchProjectIds } from "./game/systems/researchSystem";
+import { GameAutosave } from "./game/GameAutosave";
+import { SaveControls } from "./components/SaveControls";
+import { saveGame, deleteSave } from "./game/save/saveSystem";
 
 function App() {
   return (
     <GameProvider>
       <GameTicker />
+      <GameAutosave />
       <GameScreen />
     </GameProvider>
   );
@@ -96,6 +100,19 @@ function GameScreen() {
     [dispatch],
   );
 
+  const handleSaveGame = useCallback(() => {
+    saveGame(gameState);
+  }, [gameState]);
+
+  const handleResetGame = useCallback(() => {
+    deleteSave();
+
+    dispatch({
+      type: "resetGame",
+      seed: 12345,
+    });
+  }, [dispatch]);
+
   return (
     <main className="game-layout">
       <SelectedSystemPanel
@@ -127,6 +144,12 @@ function GameScreen() {
           startableProjectIds={startableResearchProjectIds}
           science={gameState.resources.science}
           onStartResearch={handleStartResearch}
+        />
+
+        <SaveControls
+          gameState={gameState}
+          onSave={handleSaveGame}
+          onResetGame={handleResetGame}
         />
 
         <MapLegend />

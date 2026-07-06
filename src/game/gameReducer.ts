@@ -5,6 +5,7 @@ import { claimWithOutpost } from "./systems/outpostSystem";
 import { advanceGameTime } from "./systems/timeSystem";
 import type { ResearchProjectId } from "./config/research";
 import { startResearch } from "./systems/researchSystem";
+import { createNewGame } from "./createNewGame";
 
 export type GameAction =
     | {
@@ -27,6 +28,10 @@ export type GameAction =
     | {
         type: "startResearch";
         projectId: ResearchProjectId;
+    }
+    | {
+        type: "resetGame";
+        seed?: number;
     }
 
 export function gameReducer(
@@ -61,6 +66,10 @@ export function gameReducer(
 
         case "startResearch": {
             return startResearch(state, action.projectId);
+        }
+
+        case "resetGame": {
+            return createNewGame(action.seed ?? 12345);
         }
 
         default: {

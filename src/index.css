@@ -394,3 +394,41 @@ dd {
 .primary-action-button:hover:not(:disabled) {
   background: rgba(114, 224, 255, 0.18);
 }
+
+.save-controls {
+  position: absolute;
+  z-index: 1;
+  right: 1rem;
+  bottom: 10.5rem;
+  width: 220px;
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 0.75rem;
+  background: rgba(8, 11, 20, 0.72);
+  backdrop-filter: blur(8px);
+}
+
+.save-controls h2 {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.save-controls p {
+  margin: 0;
+  font-size: 0.8rem;
+  opacity: 0.78;
+}
+
+.danger-action-button {
+  padding: 0.55rem 0.65rem;
+  border: 1px solid rgba(255, 120, 120, 0.32);
+  border-radius: 0.55rem;
+  background: rgba(255, 120, 120, 0.08);
+  color: #ffd6d6;
+}
+
+.danger-action-button:hover {
+  background: rgba(255, 120, 120, 0.14);
+}

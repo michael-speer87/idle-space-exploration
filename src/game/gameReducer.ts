@@ -3,6 +3,8 @@ import { beginSurvey } from "./systems/explorationSystem";
 import type { PrimaryOutpostId } from "./config/outposts";
 import { claimWithOutpost } from "./systems/outpostSystem";
 import { advanceGameTime } from "./systems/timeSystem";
+import type { ResearchProjectId } from "./config/research";
+import { startResearch } from "./systems/researchSystem";
 
 export type GameAction =
     | {
@@ -21,6 +23,10 @@ export type GameAction =
         type: "claimWithOutpost";
         systemId: StarSystemId;
         outpostId: PrimaryOutpostId;
+    }
+    | {
+        type: "startResearch";
+        projectId: ResearchProjectId;
     }
 
 export function gameReducer(
@@ -51,6 +57,10 @@ export function gameReducer(
 
         case "claimWithOutpost": {
             return claimWithOutpost(state, action.systemId, action.outpostId);
+        }
+
+        case "startResearch": {
+            return startResearch(state, action.projectId);
         }
 
         default: {

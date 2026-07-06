@@ -1,4 +1,5 @@
 import type { PrimaryOutpostId } from "./config/outposts";
+import type { ResearchProjectId } from "./config/research";
 
 export type GameVersion = 1;
 
@@ -28,6 +29,18 @@ export type ExplorationState =
   | "surveyed";
 
 export type ClaimState = "unclaimed" | "claimed";
+
+export type ResearchProjectState = {
+  id: ResearchProjectId;
+  progress: number;
+  isCompleted: boolean;
+};
+
+export type ResearchState = {
+  activeProjectId: ResearchProjectId | null;
+  speedPerSecond: number;
+  projectsById: Record<ResearchProjectId, ResearchProjectState>;
+}
 
 export type StarSystem = {
   id: StarSystemId;
@@ -84,6 +97,7 @@ export type GameState = {
 
   resources: ResourceState;
   exploration: ExplorationRunState;
+  research: ResearchState;
   map: StarMapState;
 
   selectedSystemId: StarSystemId | null;

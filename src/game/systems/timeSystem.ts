@@ -1,6 +1,7 @@
 import type { GameState } from "../types";
 import { advanceActiveSurvey } from "./explorationSystem";
 import { calculateRates } from "./rateSystem";
+import { advanceActiveResearch } from "./researchSystem";
 
 export function advanceGameTime(
     state: GameState,
@@ -11,7 +12,8 @@ export function advanceGameTime(
     }
 
     let nextState = addResourceProduction(state, seconds);
-    
+
+    nextState = advanceActiveResearch(nextState, seconds);
     nextState = advanceActiveSurvey(nextState, seconds);
 
     return nextState;

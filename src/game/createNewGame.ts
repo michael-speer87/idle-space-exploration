@@ -1,5 +1,6 @@
 import type { GameState } from "./types";
 import { generateHexMap } from "./map/generateHexMap";
+import { createInitialResearchState } from "./systems/researchSystem";
 
 export function createNewGame(seed = 12345): GameState {
     const map = generateHexMap({
@@ -20,6 +21,8 @@ export function createNewGame(seed = 12345): GameState {
             firstFreeSurveyAvailable: true,
             activeSurvey: null,
         },
+
+        research: createInitialResearchState(),
 
         map,
 

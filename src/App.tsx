@@ -10,6 +10,9 @@ import { ResourceBar } from "./components/ResourceBar";
 import { calculateRates } from "./game/systems/rateSystem";
 import { getClaimableOutpostIds } from "./game/systems/outpostSystem";
 import type { PrimaryOutpostId } from "./game/config/outposts";
+import { ResearchPanel } from "./components/ResearchPanel";
+import type { ResearchProjectId } from "./game/config/research";
+import { getStartableResearchProjectIds } from "./game/systems/researchSystem";
 
 function App() {
   return (
@@ -23,6 +26,7 @@ function App() {
 function GameScreen() {
   const gameState = useGameState();
   const dispatch = useGameDispatch();
+  const startableResearchProjectIds = getStartableResearchProjectIds(gameState);
 
   const selectedSystem = gameState.selectedSystemId
     ? gameState.map.systemsById[gameState.selectedSystemId]
@@ -82,6 +86,16 @@ function GameScreen() {
     [dispatch, selectedSystem]
   )
 
+  const handleStartResearch = useCallback(
+    (projectId: ResearchProjectId) => {
+      dispatch({
+        type: "startResearch",
+        projectId,
+      });
+    },
+    [dispatch],
+  );
+
   return (
     <main className="game-layout">
       <SelectedSystemPanel
@@ -106,6 +120,13 @@ function GameScreen() {
           credits={gameState.resources.credits}
           science={gameState.resources.science}
           rates={rates}
+        />
+
+        <ResearchPanel
+          research={gameState.research}
+          startableProjectIds={startableResearchProjectIds}
+          science={gameState.resources.science}
+          onStartResearch={handleStartResearch}
         />
 
         <MapLegend />

@@ -12,12 +12,13 @@ export function GameTicker() {
     const lastTickTimeRef = useRef<number | null>(null);
 
     const hasActiveSurvey = gameState.exploration.activeSurvey !== null;
+    const hasActiveResearch = gameState.research.activeProjectId !== null;
     const rates = calculateRates(gameState);
 
     const hasActiveProduction =
         rates.creditsPerSecond > 0 || rates.sciencePerSecond > 0;
     
-    const shouldTick = hasActiveSurvey || hasActiveProduction;
+    const shouldTick = hasActiveSurvey || hasActiveProduction || hasActiveResearch;
 
     useEffect(() => {
         if (!shouldTick) {

@@ -1,5 +1,6 @@
 import type { GameState } from "../types";
 import { PRIMARY_OUTPOSTS } from "../config/outposts";
+import { isResearchCompleted } from "./researchSystem";
 
 export type CalculatedRates = {
     epPerSecond: number;
@@ -14,6 +15,10 @@ const AFFINITY_MULTIPLIERS = {
     low: 0.75,
     neutral: 1,
     high: 1.25,
+} as const;
+
+const RESEARCH_EFFECTS = {
+    improvedSurveyArraysMultiplier: 1.25,
 } as const;
 
 export function calculateRates(state: GameState): CalculatedRates {
@@ -42,8 +47,14 @@ export function calculateRates(state: GameState): CalculatedRates {
 
         switch (outpost.category) {
             case "survey": {
-                epPerSecond += 
+                let surveyOutput =
                     outpost.baseOutput * AFFINITY_MULTIPLIERS[system.affinities.survey];
+                
+                if (isResearchCompleted(state, "improved_survey_arrays")) {
+                    surveyOutput *= RESEARCH_EFFECTS.improvedSurveyArraysMultiplier
+                }
+
+                epPerSecond += surveyOutput;
                 break;
             }
 

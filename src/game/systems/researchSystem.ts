@@ -168,6 +168,13 @@ export function advanceActiveResearch(
     );
 }
 
+export function isResearchCompleted(
+    state: GameState,
+    projectId: ResearchProjectId,
+): boolean {
+    return state.research.projectsById[projectId]?.isCompleted === true;
+}
+
 function completeResearchProject(
     state: GameState,
     projectId: ResearchProjectId,

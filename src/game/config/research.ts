@@ -24,7 +24,7 @@ export const RESEARCH_PROJECTS: Record<
         name: "Improved Survey Arrays",
         scienceCost: 10,
         prerequisiteIds: [],
-        description: "Improve Survey Array Output.",
+        description: "Increses Survey Array EP/sec output by 25%.",
     },
 
     commerce_optimization: {

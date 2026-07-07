@@ -1,0 +1,1 @@
+export const INFLUENCE_OUTPUT_BONUS_PER_POINT = 0.05;

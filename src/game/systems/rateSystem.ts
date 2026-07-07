@@ -1,6 +1,7 @@
 import type { GameState, StarSystem } from "../types";
 import { PRIMARY_OUTPOSTS } from "../config/outposts";
 import { isResearchCompleted } from "./researchSystem";
+import { getInfluenceOutputMultiplier } from "./influenceSystem";
 
 export type CalculatedRates = {
     epPerSecond: number;
@@ -33,6 +34,7 @@ export function calculateRates(state: GameState): CalculatedRates {
   const energyProduced = calculateEnergyProduced(state);
   const energyUsed = calculateEnergyUsed(state);
   const energySurplus = energyProduced - energyUsed;
+  const influenceOutputMultiplier = getInfluenceOutputMultiplier(state);
 
   const productionEfficiency =
     energySurplus < 0 ? ENERGY_SHORTAGE_PRODUCTION_EFFICIENCY : 1;
@@ -56,17 +58,23 @@ export function calculateRates(state: GameState): CalculatedRates {
 
     switch (outpost.category) {
       case "survey": {
-        epPerSecond += getSurveyOutput(state, system) * productionEfficiency;
+        epPerSecond += getSurveyOutput(state, system) * 
+          productionEfficiency *
+          influenceOutputMultiplier;
         break;
       }
 
       case "commerce": {
-        creditsPerSecond += getCommerceOutput(state, system) * productionEfficiency;
+        creditsPerSecond += getCommerceOutput(state, system) * 
+          productionEfficiency *
+          influenceOutputMultiplier;
         break;
       }
 
       case "science": {
-        sciencePerSecond += getScienceOutput(state, system) * productionEfficiency;
+        sciencePerSecond += getScienceOutput(state, system) * 
+          productionEfficiency *
+          influenceOutputMultiplier;
         break;
       }
 
@@ -76,7 +84,9 @@ export function calculateRates(state: GameState): CalculatedRates {
       }
 
       case "extraction": {
-        creditsPerSecond += getExtractionOutput(state, system) * productionEfficiency;
+        creditsPerSecond += getExtractionOutput(state, system) * 
+          productionEfficiency *
+          influenceOutputMultiplier;;
         break;
       }
     }

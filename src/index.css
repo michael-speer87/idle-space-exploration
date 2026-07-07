@@ -469,3 +469,17 @@ dd {
   color: #c8ffd3;
   font-size: 0.85rem;
 }
+
+.influence-summary {
+  display: grid;
+  gap: 0.3rem;
+  padding: 0.65rem;
+  border-radius: 0.65rem;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.influence-summary p {
+  margin: 0;
+  font-size: 0.82rem;
+  opacity: 0.84;
+}

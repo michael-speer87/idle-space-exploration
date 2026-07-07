@@ -32,22 +32,23 @@ export function loadGame(): LoadGameResult {
   }
 
   try {
-    const parsedSave: unknown = JSON.parse(rawSave);
+    const parsedSave: unknown = JSON.parse(rawSave)
+    const migratedSave = migrateGameState(parsedSave);
 
-    if (!isValidGameState(parsedSave)) {
+    if (!isValidGameState(migratedSave)) {
       const backupKey = preserveCorruptedSave(rawSave);
 
       localStorage.removeItem(SAVE_KEY);
 
       return {
         status: "corrupted",
-        backupKey,
+        backupKey
       };
     }
 
     return {
       status: "loaded",
-      gameState: parsedSave,
+      gameState: migratedSave,
     };
   } catch {
     const backupKey = preserveCorruptedSave(rawSave);
@@ -71,6 +72,28 @@ function preserveCorruptedSave(rawSave: string): string {
   localStorage.setItem(backupKey, rawSave);
 
   return backupKey;
+}
+
+function migrateGameState(value: unknown): unknown {
+  if (!isRecord(value)) {
+    return value;
+  }
+
+  if (value.version !== 1) {
+    return value;
+  }
+
+  const influence = isRecord(value.influence)
+    ? value.influence
+    : {
+      lifetimeInfluence: 0,
+      totalResets: 0,
+    };
+
+  return {
+    ...value,
+    influence,
+  };
 }
 
 function isValidGameState(value: unknown): value is GameState {
@@ -107,6 +130,18 @@ function isValidGameState(value: unknown): value is GameState {
   }
 
   if (!isRecord(value.research)) {
+    return false;
+  }
+
+  if (!isRecord(value.influence)) {
+    return false;
+  }
+
+  if (typeof value.influence.lifetimeInfluence !== "number") {
+    return false;
+  }
+
+  if (typeof value.influence.totalResets !== "number") {
     return false;
   }
 

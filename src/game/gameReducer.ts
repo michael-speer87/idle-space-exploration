@@ -6,6 +6,7 @@ import { advanceGameTime } from "./systems/timeSystem";
 import type { ResearchProjectId } from "./config/research";
 import { startResearch } from "./systems/researchSystem";
 import { createNewGame } from "./createNewGame";
+import { performInfluenceReset } from "./systems/influenceSystem";
 
 export type GameAction =
     | {
@@ -32,6 +33,9 @@ export type GameAction =
     | {
         type: "resetGame";
         seed?: number;
+    }
+    | {
+        type: "performInfluenceReset"
     }
 
 export function gameReducer(
@@ -70,6 +74,10 @@ export function gameReducer(
 
         case "resetGame": {
             return createNewGame(action.seed ?? 12345);
+        }
+
+        case "performInfluenceReset": {
+            return performInfluenceReset(state);
         }
 
         default: {

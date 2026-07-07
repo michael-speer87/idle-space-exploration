@@ -36,12 +36,6 @@ export type ResearchProjectState = {
   isCompleted: boolean;
 };
 
-export type ResearchState = {
-  activeProjectId: ResearchProjectId | null;
-  speedPerSecond: number;
-  projectsById: Record<ResearchProjectId, ResearchProjectState>;
-}
-
 export type StarSystem = {
   id: StarSystemId;
   name: string;
@@ -79,6 +73,17 @@ export type ResourceState = {
   science: number;
 };
 
+export type ResearchState = {
+  activeProjectId: ResearchProjectId | null;
+  speedPerSecond: number;
+  projectsById: Record<ResearchProjectId, ResearchProjectState>;
+};
+
+export type InfluenceState = {
+  lifetimeInfluence: number;
+  totalResets: number;
+}
+
 export type ActiveSurveyState = {
   systemId: StarSystemId;
   progress: number;
@@ -98,6 +103,7 @@ export type GameState = {
   resources: ResourceState;
   exploration: ExplorationRunState;
   research: ResearchState;
+  influence: InfluenceState;
   map: StarMapState;
 
   selectedSystemId: StarSystemId | null;

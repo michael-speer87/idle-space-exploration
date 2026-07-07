@@ -432,3 +432,40 @@ dd {
 .danger-action-button:hover {
   background: rgba(255, 120, 120, 0.14);
 }
+
+.run-progress-panel {
+  position: absolute;
+  z-index: 1;
+  left: 1rem;
+  bottom: 1rem;
+  width: 280px;
+  display: grid;
+  gap: 0.65rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 0.75rem;
+  background: rgba(8, 11, 20, 0.72);
+  backdrop-filter: blur(8px);
+}
+
+.run-progress-panel h2 {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.run-progress-status {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.35;
+  opacity: 0.78;
+}
+
+.run-progress-ready {
+  margin: 0;
+  padding: 0.65rem;
+  border: 1px solid rgba(156, 255, 177, 0.35);
+  border-radius: 0.65rem;
+  background: rgba(156, 255, 177, 0.08);
+  color: #c8ffd3;
+  font-size: 0.85rem;
+}

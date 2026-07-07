@@ -16,6 +16,8 @@ import { getStartableResearchProjectIds } from "./game/systems/researchSystem";
 import { GameAutosave } from "./game/GameAutosave";
 import { SaveControls } from "./components/SaveControls";
 import { saveGame, deleteSave } from "./game/save/saveSystem";
+import { RunProgressPanel } from "./components/RunProgressPanel";
+import { getRunObjectiveProgress } from "./game/systems/progressionSystem";
 
 function App() {
   return (
@@ -31,6 +33,7 @@ function GameScreen() {
   const gameState = useGameState();
   const dispatch = useGameDispatch();
   const startableResearchProjectIds = getStartableResearchProjectIds(gameState);
+  const runObjectiveProgress = getRunObjectiveProgress(gameState);
 
   const selectedSystem = gameState.selectedSystemId
     ? gameState.map.systemsById[gameState.selectedSystemId]
@@ -151,6 +154,8 @@ function GameScreen() {
           onSave={handleSaveGame}
           onResetGame={handleResetGame}
         />
+
+        <RunProgressPanel progress={runObjectiveProgress} />
 
         <MapLegend />
 

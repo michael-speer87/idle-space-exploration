@@ -29,6 +29,11 @@ export function ResourceBar({ credits, science, rates }: ResourceBarProps) {
                 value={`${rates.energySurplus >= 0 ? "+": ""}${rates.energySurplus}`} 
                 rate={rates.energyProduced.toFixed(2)}
             />
+            <ResourcePill
+                label="Efficiency"
+                value={`${Math.round(rates.productionEfficiency * 100)}`}
+                rate={`${rates.energyUsed.toFixed(2)} / ${rates.energyProduced.toFixed(2)}`}
+            />
         </div> 
     );
 }

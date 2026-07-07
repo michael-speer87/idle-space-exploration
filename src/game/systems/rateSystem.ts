@@ -1,4 +1,4 @@
-import type { GameState } from "../types";
+import type { GameState, StarSystem } from "../types";
 import { PRIMARY_OUTPOSTS } from "../config/outposts";
 import { isResearchCompleted } from "./researchSystem";
 
@@ -9,6 +9,7 @@ export type CalculatedRates = {
     energyProduced: number;
     energyUsed: number;
     energySurplus: number;
+    productionEfficiency: number;
 };
 
 const AFFINITY_MULTIPLIERS = {
@@ -24,95 +25,181 @@ const RESEARCH_EFFECTS = {
     powerRelayEfficiencyMultiplier: 1.25,
 } as const;
 
+const GRAD_COMMAND_STARTER_ENERGY = 2;
+const ENERGY_SHORTAGE_PRODUCTION_EFFICIENCY = 0.5
+
 export function calculateRates(state: GameState): CalculatedRates {
-    let epPerSecond = 0;
-    let creditsPerSecond = 0;
-    let sciencePerSecond = 0;
-    let energyProduced = 0;
-    let energyUsed = 0;
+  const energyProduced = calculateEnergyProduced(state);
+  const energyUsed = calculateEnergyUsed(state);
+  const energySurplus = energyProduced - energyUsed;
 
-    for (const systemId of state.map.systemIds) {
-        const system = state.map.systemsById[systemId]
+  const productionEfficiency =
+    energySurplus < 0 ? ENERGY_SHORTAGE_PRODUCTION_EFFICIENCY : 1;
 
-        if (system.claimState !== "claimed") {
-            continue;
-        }
+  let epPerSecond = 0;
+  let creditsPerSecond = 0;
+  let sciencePerSecond = 0;
 
-        if (system.primaryOutpostId === null) {
-            continue;
-        }
+  for (const systemId of state.map.systemIds) {
+    const system = state.map.systemsById[systemId];
 
-        const outpost = PRIMARY_OUTPOSTS[system.primaryOutpostId];
-
-        if (outpost.usesEnergy) {
-            energyUsed += 1;
-        }
-
-        switch (outpost.category) {
-            case "survey": {
-                let surveyOutput =
-                    outpost.baseOutput * AFFINITY_MULTIPLIERS[system.affinities.survey];
-                
-                if (isResearchCompleted(state, "improved_survey_arrays")) {
-                    surveyOutput *= RESEARCH_EFFECTS.improvedSurveyArraysMultiplier
-                }
-
-                epPerSecond += surveyOutput;
-                break;
-            }
-
-            case "commerce": {
-                let commerceOutput =
-                    outpost.baseOutput *
-                    AFFINITY_MULTIPLIERS[system.affinities.commerce];
-
-                if (isResearchCompleted(state, "commerce_optimization")) {
-                    commerceOutput *= RESEARCH_EFFECTS.commerceOptimizationMultiplier
-                }
-
-                creditsPerSecond += commerceOutput;
-                break;
-            }
-
-            case "science": {
-                let scienceOutput =
-                    outpost.baseOutput * AFFINITY_MULTIPLIERS[system.affinities.science];
-
-                if (isResearchCompleted(state, "applied_science_methods")) {
-                    scienceOutput *= RESEARCH_EFFECTS.appliedScienceMethodsMultiplier;
-                }
-
-                sciencePerSecond += scienceOutput;
-                break;
-            }
-            
-            case "power": {
-                let powerOutput =
-                    outpost.baseOutput * AFFINITY_MULTIPLIERS[system.affinities.power];
-                
-                if (isResearchCompleted(state, "power_relay_efficiency")) {
-                    powerOutput *= RESEARCH_EFFECTS.powerRelayEfficiencyMultiplier
-                }
-
-                energyProduced += powerOutput;
-                break;
-            }
-            
-            case "extraction": {
-                // Extraction exists in the config, but its economy is later.
-            break;
-            }
-        }
+    if (system.claimState !== "claimed") {
+      continue;
     }
 
-    const energySurplus = energyProduced - energyUsed;
+    if (system.primaryOutpostId === null) {
+      continue;
+    }
 
-    return {
-        epPerSecond,
-        creditsPerSecond,
-        sciencePerSecond,
-        energyProduced,
-        energyUsed,
-        energySurplus,
-    };
+    const outpost = PRIMARY_OUTPOSTS[system.primaryOutpostId];
+
+    switch (outpost.category) {
+      case "survey": {
+        epPerSecond += getSurveyOutput(state, system) * productionEfficiency;
+        break;
+      }
+
+      case "commerce": {
+        creditsPerSecond += getCommerceOutput(state, system) * productionEfficiency;
+        break;
+      }
+
+      case "science": {
+        sciencePerSecond += getScienceOutput(state, system) * productionEfficiency;
+        break;
+      }
+
+      case "power": {
+        // Power Relays create Energy and are not reduced by Energy shortage.
+        break;
+      }
+
+      case "extraction": {
+        // Extraction exists in the config, but its economy is later.
+        break;
+      }
+    }
+  }
+
+  return {
+    epPerSecond,
+    creditsPerSecond,
+    sciencePerSecond,
+    energyProduced,
+    energyUsed,
+    energySurplus,
+    productionEfficiency,
+  };
+}
+
+function calculateEnergyProduced(state: GameState): number {
+  let energyProduced = getGradCommandEnergyProduced(state);
+
+  for (const systemId of state.map.systemIds) {
+    const system = state.map.systemsById[systemId];
+
+    if (system.claimState !== "claimed") {
+      continue;
+    }
+
+    if (system.primaryOutpostId === null) {
+      continue;
+    }
+
+    const outpost = PRIMARY_OUTPOSTS[system.primaryOutpostId];
+
+    if (outpost.category !== "power") {
+      continue;
+    }
+
+    energyProduced += getPowerOutput(state, system);
+  }
+
+  return energyProduced;
+}
+
+function calculateEnergyUsed(state: GameState): number {
+  let energyUsed = 0;
+
+  for (const systemId of state.map.systemIds) {
+    const system = state.map.systemsById[systemId];
+
+    if (system.claimState !== "claimed") {
+      continue;
+    }
+
+    if (system.primaryOutpostId === null) {
+      continue;
+    }
+
+    const outpost = PRIMARY_OUTPOSTS[system.primaryOutpostId];
+
+    if (outpost.usesEnergy) {
+      energyUsed += 1;
+    }
+  }
+
+  return energyUsed;
+}
+
+function getGradCommandEnergyProduced(state: GameState): number {
+  const hasGradCommand = state.map.systemIds.some((systemId) => {
+    const system = state.map.systemsById[systemId];
+
+    return system.claimState === "claimed" && system.hasGradCommand;
+  });
+
+  return hasGradCommand ? GRAD_COMMAND_STARTER_ENERGY : 0;
+}
+
+function getSurveyOutput(state: GameState, system: StarSystem): number {
+  const outpost = PRIMARY_OUTPOSTS.survey_array;
+
+  let output =
+    outpost.baseOutput * AFFINITY_MULTIPLIERS[system.affinities.survey];
+
+  if (isResearchCompleted(state, "improved_survey_arrays")) {
+    output *= RESEARCH_EFFECTS.improvedSurveyArraysMultiplier;
+  }
+
+  return output;
+}
+
+function getCommerceOutput(state: GameState, system: StarSystem): number {
+  const outpost = PRIMARY_OUTPOSTS.commerce_hub;
+
+  let output =
+    outpost.baseOutput * AFFINITY_MULTIPLIERS[system.affinities.commerce];
+
+  if (isResearchCompleted(state, "commerce_optimization")) {
+    output *= RESEARCH_EFFECTS.commerceOptimizationMultiplier;
+  }
+
+  return output;
+}
+
+function getScienceOutput(state: GameState, system: StarSystem): number {
+  const outpost = PRIMARY_OUTPOSTS.science_station;
+
+  let output =
+    outpost.baseOutput * AFFINITY_MULTIPLIERS[system.affinities.science];
+
+  if (isResearchCompleted(state, "applied_science_methods")) {
+    output *= RESEARCH_EFFECTS.appliedScienceMethodsMultiplier;
+  }
+
+  return output;
+}
+
+function getPowerOutput(state: GameState, system: StarSystem): number {
+  const outpost = PRIMARY_OUTPOSTS.power_relay;
+
+  let output =
+    outpost.baseOutput * AFFINITY_MULTIPLIERS[system.affinities.power];
+
+  if (isResearchCompleted(state, "power_relay_efficiency")) {
+    output *= RESEARCH_EFFECTS.powerRelayEfficiencyMultiplier;
+  }
+
+  return output;
 }

@@ -73,6 +73,6 @@ export const PRIMARY_OUTPOSTS: Record<
         baseOutput: 1,
         claimCreditCost: 15,
         usesEnergy: true,
-        description: "Produces Raw Materials.",
+        description: "Extracts materials that are automatically converted into Credits/sec.",
     },
 };

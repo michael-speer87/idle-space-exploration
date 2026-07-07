@@ -56,7 +56,7 @@ export const RESEARCH_PROJECTS: Record<
     name: "Extraction Handling",
     scienceCost: 15,
     prerequisiteIds: [],
-    description: "Future effect: enable or improve Extraction Rigs.",
+    description: "Increases Extraction Rig Credits/sec output by 25%.",
   },
 
   outpost_tier_ii: {

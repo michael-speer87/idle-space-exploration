@@ -10,6 +10,7 @@ export const CLAIMABLE_PRIMARY_OUTPOST_IDS: readonly PrimaryOutpostId[] = [
   "commerce_hub",
   "science_station",
   "power_relay",
+  "extraction_rig",
 ];
 
 const STARTER_FREE_OUTPOST_IDS: readonly PrimaryOutpostId[] = [

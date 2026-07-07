@@ -23,6 +23,7 @@ const RESEARCH_EFFECTS = {
     commerceOptimizationMultiplier: 1.25,
     appliedScienceMethodsMultiplier: 1.25,
     powerRelayEfficiencyMultiplier: 1.25,
+    extractionHandlingMultiplier: 1.25,
 } as const;
 
 const GRAD_COMMAND_STARTER_ENERGY = 2;
@@ -75,7 +76,7 @@ export function calculateRates(state: GameState): CalculatedRates {
       }
 
       case "extraction": {
-        // Extraction exists in the config, but its economy is later.
+        creditsPerSecond += getExtractionOutput(state, system) * productionEfficiency;
         break;
       }
     }
@@ -199,6 +200,19 @@ function getPowerOutput(state: GameState, system: StarSystem): number {
 
   if (isResearchCompleted(state, "power_relay_efficiency")) {
     output *= RESEARCH_EFFECTS.powerRelayEfficiencyMultiplier;
+  }
+
+  return output;
+}
+
+function getExtractionOutput(state: GameState, system: StarSystem): number {
+  const outpost = PRIMARY_OUTPOSTS.extraction_rig;
+
+  let output =
+    outpost.baseOutput * AFFINITY_MULTIPLIERS[system.affinities.extraction];
+
+  if (isResearchCompleted(state, "extraction_handling")) {
+    output *= RESEARCH_EFFECTS.extractionHandlingMultiplier;
   }
 
   return output;

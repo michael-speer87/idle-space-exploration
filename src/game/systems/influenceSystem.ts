@@ -14,6 +14,7 @@ export type InfluenceResetPreview = {
     influenceGain: number;
     currentLifetimeInfluence: number;
     nextLifetimeInfluence: number;
+    totalResets: number;
     currentOutputMultiplier: number;
     nextOutputMultiplier: number;
     blockedReason: string | null;
@@ -39,6 +40,7 @@ export function getInfluenceResetPreview(
         influenceGain,
         currentLifetimeInfluence,
         nextLifetimeInfluence,
+        totalResets: state.influence.totalResets,
         currentOutputMultiplier: getInfluenceOutputMultiplier(state),
         nextOutputMultiplier: 1 + nextLifetimeInfluence * INFLUENCE_OUTPUT_BONUS_PER_POINT,
         blockedReason: canReset
@@ -61,7 +63,7 @@ export function performInfluenceReset(state: GameState): GameState {
 
     const nextSeed = createNextRunSeed(state);
 
-    return createNewGame(nextSeed, nextInfluence)
+    return createNewGame(nextSeed, nextInfluence, state.research);
 }
 
 export function getInfluenceOutputMultiplier(state: GameState): number {

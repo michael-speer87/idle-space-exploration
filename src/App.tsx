@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { GameProvider, useGameDispatch, useGameState } from "./game/GameContext";
 import { SelectedSystemPanel } from "./components/SelectedSystemPanel";
 import { StarMapCanvas } from "./components/StarMapCanvas";
@@ -34,6 +34,7 @@ function App() {
 function GameScreen() {
   const gameState = useGameState();
   const dispatch = useGameDispatch();
+  const shouldSaveAfterNextStateChangeRef = useRef(false);
   const startableResearchProjectIds = getStartableResearchProjectIds(gameState);
   const runObjectiveProgress = getRunObjectiveProgress(gameState);
   const influenceResetPreview = getInfluenceResetPreview(gameState);
@@ -111,19 +112,55 @@ function GameScreen() {
   }, [gameState]);
 
   const handleResetGame = useCallback(() => {
+    const confirmed = window.confirm(
+      "Start a new game? This will erase the current run, resources, research, Influence, and saved progress.",
+    )
+
+    if (!confirmed) {
+      return;
+    }
+
     deleteSave();
+    shouldSaveAfterNextStateChangeRef.current = true;
 
     dispatch({
       type: "resetGame",
       seed: 12345,
-    });
+    })
   }, [dispatch]);
 
   const handlePerformInfluenceReset = useCallback(() => {
+    const confirmed = window.confirm(
+      [
+        "Perform Influence Reset?",
+        "",
+        `You will gain +${influenceResetPreview.influenceGain} Lifetime Influence.`,
+        `Current bonus: ${formatOutputBonus(influenceResetPreview.currentOutputMultiplier)}`,
+        `Next bonus: ${formatOutputBonus(influenceResetPreview.nextOutputMultiplier)}`,
+        "",
+        "This will restart the current map, resources, claims, outposts, and exploration progress.",
+      ].join("\n"),
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    shouldSaveAfterNextStateChangeRef.current = true;
+    
     dispatch({
       type: "performInfluenceReset"
     });
-  }, [dispatch]);
+  }, [dispatch, influenceResetPreview]);
+
+  useEffect(() => {
+    if (!shouldSaveAfterNextStateChangeRef.current) {
+      return;
+    }
+
+    saveGame(gameState);
+    shouldSaveAfterNextStateChangeRef.current = false;
+  }, [gameState]);
 
   return (
     <main className="game-layout">
@@ -180,6 +217,12 @@ function GameScreen() {
       </section>
     </main>
   );
+}
+
+function formatOutputBonus(multiplier: number): string {
+  const bonusPercent = Math.round((multiplier - 1) * 100);
+
+  return `+${bonusPercent}% output`
 }
 
 export default App;

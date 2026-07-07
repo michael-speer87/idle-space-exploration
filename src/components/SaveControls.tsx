@@ -42,7 +42,7 @@ export function SaveControls({
         type="button"
         onClick={onResetGame}
       >
-        New Game
+        Start New Game
       </button>
 
       {lastManualSaveTime !== null && (

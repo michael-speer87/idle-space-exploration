@@ -17,7 +17,7 @@ export function RunProgressPanel({
       <h2>Run Objective</h2>
 
       <p className="run-progress-status">
-        Claim systems to authorize the first Influence reset.
+        Claim systems to authorize an Influence reset.
       </p>
 
       <div className="survey-progress">
@@ -37,22 +37,31 @@ export function RunProgressPanel({
       </div>
 
       <div className="influence-summary">
-        <p>
-          Lifetime Influence:{" "}
-          <strong>{resetPreview.currentLifetimeInfluence}</strong>
-        </p>
+        <InfluenceRow
+          label="Lifetime Influence"
+          value={resetPreview.currentLifetimeInfluence.toString()}
+        />
 
-        <p>
-          Current Bonus:{" "}
-          <strong>
-            {formatMultiplierBonus(resetPreview.currentOutputMultiplier)}
-          </strong>
-        </p>
+        <InfluenceRow
+          label="Total Resets"
+          value={resetPreview.totalResets.toString()}
+        />
+
+        <InfluenceRow
+          label="Current Bonus"
+          value={formatMultiplierBonus(resetPreview.currentOutputMultiplier)}
+        />
+
+        <InfluenceRow
+          label="Next Bonus"
+          value={formatMultiplierBonus(resetPreview.nextOutputMultiplier)}
+        />
 
         {resetPreview.canReset && (
-          <p>
-            Reset Gain: <strong>+{resetPreview.influenceGain}</strong>
-          </p>
+          <InfluenceRow
+            label="Reset Gain"
+            value={`+${resetPreview.influenceGain} Influence`}
+          />
         )}
       </div>
 
@@ -71,6 +80,21 @@ export function RunProgressPanel({
       )}
     </div>
   );
+}
+
+type InfluenceRowProps = {
+  label: string;
+  value: string;
+};
+
+function InfluenceRow({ label, value }: InfluenceRowProps) {
+  return (
+    <div className="influence-row">
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
+
+  )
 }
 
 function formatMultiplierBonus(multiplier: number): string {

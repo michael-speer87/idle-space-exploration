@@ -1,4 +1,4 @@
-import type { GameState, InfluenceState } from "./types";
+import type { GameState, InfluenceState, ResearchState } from "./types";
 import { generateHexMap } from "./map/generateHexMap";
 import { createInitialResearchState } from "./systems/researchSystem";
 
@@ -8,6 +8,7 @@ export function createNewGame(
         lifetimeInfluence: 0,
         totalResets: 0,
     },
+    research: ResearchState = createInitialResearchState(),
 ): GameState {
     const map = generateHexMap({
         seed,
@@ -28,7 +29,7 @@ export function createNewGame(
             activeSurvey: null,
         },
 
-        research: createInitialResearchState(),
+        research,
 
         influence,
 

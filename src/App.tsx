@@ -19,7 +19,8 @@ import { saveGame, deleteSave } from "./game/save/saveSystem";
 import { RunProgressPanel } from "./components/RunProgressPanel";
 import { getRunObjectiveProgress } from "./game/systems/progressionSystem";
 import { getInfluenceResetPreview } from "./game/systems/influenceSystem";
-
+import { RunStatsPanel } from "./components/RunStatsPanel";
+import { getRunStatsSummary } from "./game/systems/runStatsSystem";
 
 function App() {
   return (
@@ -38,6 +39,7 @@ function GameScreen() {
   const startableResearchProjectIds = getStartableResearchProjectIds(gameState);
   const runObjectiveProgress = getRunObjectiveProgress(gameState);
   const influenceResetPreview = getInfluenceResetPreview(gameState);
+  const runStatsSummary = getRunStatsSummary(gameState);
 
   const selectedSystem = gameState.selectedSystemId
     ? gameState.map.systemsById[gameState.selectedSystemId]
@@ -206,6 +208,8 @@ function GameScreen() {
           resetPreview={influenceResetPreview}
           onPerformInfluenceReset={handlePerformInfluenceReset}  
         />
+
+        <RunStatsPanel stats={runStatsSummary} />
 
         <MapLegend />
 

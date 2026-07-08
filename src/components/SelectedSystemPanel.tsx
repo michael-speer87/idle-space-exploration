@@ -1,6 +1,7 @@
 import type { 
     ActiveSurveyState, 
     AffinityProfile, 
+    GameState,
     StarSystem 
 } from "../game/types";
 import {
@@ -8,8 +9,10 @@ import {
   type PrimaryOutpostId,
 } from "../game/config/outposts"
 import type { OutpostClaimOption } from "../game/systems/outpostSystem";
+import { getSurveyRequirementForSystem } from "../game/systems/explorationSystem";
 
 type SelectedSystemPanelProps = {
+    gameState: GameState;
     system: StarSystem | null;
     activeSurvey: ActiveSurveyState | null;
     canBeginSurvey: boolean;
@@ -20,6 +23,7 @@ type SelectedSystemPanelProps = {
 };
 
 export function SelectedSystemPanel({ 
+    gameState,
     system,
     activeSurvey,
     canBeginSurvey,
@@ -37,12 +41,17 @@ export function SelectedSystemPanel({
         );
     }
 
+    const surveyRequirement =
+      activeSurvey !== null
+        ? activeSurvey.requiredProgress
+        : getSurveyRequirementForSystem(gameState, system.id);
+    
     const surveyProgress =
-        activeSurvey !== null
-            ? Math.round((activeSurvey.progress / system.surveyRequirement) * 100)
-            : system.explorationState === "surveyed"
-                ? 100
-                : 0;
+      activeSurvey !== null
+        ? Math.round((activeSurvey.progress / surveyRequirement) * 100)
+        : system.explorationState === "surveyed"
+          ? 100
+          : 0;
 
     return (
         <aside className="system-panel">
@@ -66,7 +75,7 @@ export function SelectedSystemPanel({
                     <PanelRow label="Claim" value={system.claimState} />
                     <PanelRow
                         label="Survey Requirement"
-                        value={system.surveyRequirement.toString()}
+                        value={surveyRequirement.toString()}
                     />
                 </dl>
             </section>

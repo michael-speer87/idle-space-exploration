@@ -22,7 +22,7 @@ export const RESEARCH_PROJECTS: Record<
   improved_survey_arrays: {
     id: "improved_survey_arrays",
     name: "Improved Survey Arrays",
-    scienceCost: 10,
+    scienceCost: 1000000,
     prerequisiteIds: [],
     description: "Increses Survey Array EP/sec output by 25%.",
   },

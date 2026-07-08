@@ -1,4 +1,5 @@
 import type { GameState } from "../types";
+import { getSurveyRequirementForSystem } from "../systems/explorationSystem";
 
 const SAVE_KEY = "idle-space-exploration.save.v1";
 const CORRUPTED_SAVE_KEY_PREFIX = "idle-space-exploration.corrupted-save";
@@ -90,10 +91,41 @@ function migrateGameState(value: unknown): unknown {
       totalResets: 0,
     };
 
-  return {
-    ...value,
-    influence,
-  };
+    const migratedValue = {
+      ...value,
+      influence,
+    };
+
+    if (!isValidGameStateShapeForMigration(migratedValue)) {
+      return migratedValue;
+    }
+
+    const activeSurvey =  migratedValue.exploration.activeSurvey;
+
+    if (
+      isRecord(activeSurvey) &&
+      typeof activeSurvey.systemId === "string" &&
+      typeof activeSurvey.progress === "number" &&
+      typeof activeSurvey.speedPerSecond === "number" &&
+      typeof activeSurvey.isFirstFreeSurvey === "boolean" &&
+      typeof activeSurvey.requiredProgress !== "number"
+    ) {
+      return {
+      ...migratedValue,
+      exploration: {
+        ...migratedValue.exploration,
+        activeSurvey: {
+          ...activeSurvey,
+          requiredProgress: getSurveyRequirementForSystem(
+            migratedValue,
+            activeSurvey.systemId,
+          ),
+        },
+      },
+    };
+  }
+
+  return migratedValue;
 }
 
 function isValidGameState(value: unknown): value is GameState {
@@ -177,4 +209,30 @@ function isValidGameState(value: unknown): value is GameState {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
+}
+
+function isValidGameStateShapeForMigration(
+  value: unknown,
+): value is GameState {
+  if (!isRecord(value)) {
+    return false;
+  }
+
+  if (!isRecord(value.exploration)) {
+    return false;
+  }
+
+  if (!isRecord(value.map)) {
+    return false;
+  }
+
+  if (!Array.isArray(value.map.systemIds)) {
+    return false;
+  }
+
+  if (!isRecord(value.map.systemsById)) {
+    return false;
+  }
+
+  return true;
 }

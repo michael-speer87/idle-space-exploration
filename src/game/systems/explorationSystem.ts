@@ -1,6 +1,10 @@
 import type { GameState, StarSystemId } from "../types";
 import { getHexId, getHexNeighbors } from "../map/hexCoords";
 import { calculateRates } from "./rateSystem";
+import {
+  BASE_SURVEY_REQUIREMENT,
+  SURVEY_REQUIREMENT_GROWTH_RATE,
+} from "../config/exploration";
 
 const FIRST_FREE_SURVEY_SPEED_PER_SECOND = 2;
 
@@ -35,6 +39,36 @@ export function canBeginSurvey(
   return rates.epPerSecond > 0;
 }
 
+export function getSurveyRequirementForSystem(
+  state: GameState,
+  systemId: StarSystemId,
+): number {
+  const system = state.map.systemsById[systemId];
+
+  if (!system) {
+    return BASE_SURVEY_REQUIREMENT;
+  }
+
+  if (system.isHome) {
+    return 0;
+  }
+
+  const completedNonHomeSurveyCount = getCompletedNonHomeSurveyCount(state);
+
+  return Math.ceil(
+    BASE_SURVEY_REQUIREMENT *
+      Math.pow(SURVEY_REQUIREMENT_GROWTH_RATE, completedNonHomeSurveyCount),
+  );
+}
+
+export function getCompletedNonHomeSurveyCount(state: GameState): number {
+  return state.map.systemIds.filter((systemId) => {
+    const system = state.map.systemsById[systemId];
+
+    return system.explorationState === "surveyed" && !system.isHome;
+  }).length;
+}
+
 export function beginSurvey(
   state: GameState,
   systemId: StarSystemId,
@@ -46,6 +80,7 @@ export function beginSurvey(
   const system = state.map.systemsById[systemId];
   const rates = calculateRates(state);
   const isFirstFreeSurvey = state.exploration.firstFreeSurveyAvailable;
+  const requiredProgress = getSurveyRequirementForSystem(state, systemId);
 
   return {
     ...state,
@@ -55,6 +90,7 @@ export function beginSurvey(
       activeSurvey: {
         systemId,
         progress: 0,
+        requiredProgress,
         speedPerSecond: isFirstFreeSurvey
           ? FIRST_FREE_SURVEY_SPEED_PER_SECOND
           : rates.epPerSecond,
@@ -101,12 +137,14 @@ export function advanceActiveSurvey(
     };
   }
 
+  const requiredProgress = activeSurvey.requiredProgress;
+
   const nextProgress = Math.min(
-    system.surveyRequirement,
+    requiredProgress,
     activeSurvey.progress + activeSurvey.speedPerSecond * seconds,
   );
 
-  if (nextProgress < system.surveyRequirement) {
+  if (nextProgress < requiredProgress) {
     return {
       ...state,
       exploration: {

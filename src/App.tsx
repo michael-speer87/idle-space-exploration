@@ -167,6 +167,7 @@ function GameScreen() {
   return (
     <main className="game-layout">
       <SelectedSystemPanel
+        gameState={gameState}
         system={selectedSystem}
         activeSurvey={activeSurveyForSelectedSystem}
         canBeginSurvey={canBeginSurveyForSelectedSystem}

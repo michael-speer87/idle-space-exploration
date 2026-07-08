@@ -131,7 +131,7 @@ function createStarSystem(
     isHome: false,
     hasGradCommand: false,
 
-    surveyRequirement: 5 + distanceFromHome * 3,
+    surveyRequirement: 0,
 
     hazardId: null,
     modifierIds: [],

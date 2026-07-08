@@ -86,8 +86,8 @@ export function getRunStatsSummary(state: GameState): RunStatsSummary {
       activeSurveySystem !== null ? activeSurveySystem.name : "None",
 
     activeSurveyProgressLabel:
-      activeSurvey !== null && activeSurveySystem !== null
-        ? `${activeSurvey.progress.toFixed(1)} / ${activeSurveySystem.surveyRequirement.toFixed(1)}`
+      activeSurvey !== null
+        ? `${activeSurvey.progress.toFixed(1)} / ${activeSurvey.requiredProgress.toFixed(1)}`
         : "None",
 
     activeResearchLabel:

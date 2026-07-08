@@ -1,0 +1,2 @@
+export const BASE_SURVEY_REQUIREMENT = 8;
+export const SURVEY_REQUIREMENT_GROWTH_RATE = 1.18;

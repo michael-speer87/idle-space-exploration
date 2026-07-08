@@ -1,5 +1,8 @@
 import type { GameState, StarSystem } from "../types";
-import { PRIMARY_OUTPOSTS } from "../config/outposts";
+import { 
+  getOutpostLevelOutputMultiplier,
+  PRIMARY_OUTPOSTS 
+} from "../config/outposts";
 import { isResearchCompleted } from "./researchSystem";
 import { getInfluenceOutputMultiplier } from "./influenceSystem";
 
@@ -165,9 +168,14 @@ function getGradCommandEnergyProduced(state: GameState): number {
 
 function getSurveyOutput(state: GameState, system: StarSystem): number {
   const outpost = PRIMARY_OUTPOSTS.survey_array;
+  const levelMultiplier = getOutpostLevelOutputMultiplier(
+    system.primaryOutpostLevel,
+  );
 
   let output =
-    outpost.baseOutput * AFFINITY_MULTIPLIERS[system.affinities.survey];
+    outpost.baseOutput * 
+    levelMultiplier * 
+    AFFINITY_MULTIPLIERS[system.affinities.survey];
 
   if (isResearchCompleted(state, "improved_survey_arrays")) {
     output *= RESEARCH_EFFECTS.improvedSurveyArraysMultiplier;
@@ -178,9 +186,14 @@ function getSurveyOutput(state: GameState, system: StarSystem): number {
 
 function getCommerceOutput(state: GameState, system: StarSystem): number {
   const outpost = PRIMARY_OUTPOSTS.commerce_hub;
+  const levelMultiplier = getOutpostLevelOutputMultiplier(
+    system.primaryOutpostLevel,
+  );
 
   let output =
-    outpost.baseOutput * AFFINITY_MULTIPLIERS[system.affinities.commerce];
+    outpost.baseOutput * 
+    levelMultiplier *
+    AFFINITY_MULTIPLIERS[system.affinities.commerce];
 
   if (isResearchCompleted(state, "commerce_optimization")) {
     output *= RESEARCH_EFFECTS.commerceOptimizationMultiplier;
@@ -191,9 +204,14 @@ function getCommerceOutput(state: GameState, system: StarSystem): number {
 
 function getScienceOutput(state: GameState, system: StarSystem): number {
   const outpost = PRIMARY_OUTPOSTS.science_station;
+  const levelMultiplier = getOutpostLevelOutputMultiplier(
+    system.primaryOutpostLevel,
+  );
 
   let output =
-    outpost.baseOutput * AFFINITY_MULTIPLIERS[system.affinities.science];
+    outpost.baseOutput * 
+    levelMultiplier *
+    AFFINITY_MULTIPLIERS[system.affinities.science];
 
   if (isResearchCompleted(state, "applied_science_methods")) {
     output *= RESEARCH_EFFECTS.appliedScienceMethodsMultiplier;
@@ -204,9 +222,14 @@ function getScienceOutput(state: GameState, system: StarSystem): number {
 
 function getPowerOutput(state: GameState, system: StarSystem): number {
   const outpost = PRIMARY_OUTPOSTS.power_relay;
+  const levelMultiplier = getOutpostLevelOutputMultiplier(
+    system.primaryOutpostLevel,
+  );
 
   let output =
-    outpost.baseOutput * AFFINITY_MULTIPLIERS[system.affinities.power];
+    outpost.baseOutput * 
+    levelMultiplier *
+    AFFINITY_MULTIPLIERS[system.affinities.power];
 
   if (isResearchCompleted(state, "power_relay_efficiency")) {
     output *= RESEARCH_EFFECTS.powerRelayEfficiencyMultiplier;
@@ -217,9 +240,14 @@ function getPowerOutput(state: GameState, system: StarSystem): number {
 
 function getExtractionOutput(state: GameState, system: StarSystem): number {
   const outpost = PRIMARY_OUTPOSTS.extraction_rig;
+  const levelMultiplier = getOutpostLevelOutputMultiplier(
+    system.primaryOutpostLevel,
+  );
 
   let output =
-    outpost.baseOutput * AFFINITY_MULTIPLIERS[system.affinities.extraction];
+    outpost.baseOutput * 
+    levelMultiplier *
+    AFFINITY_MULTIPLIERS[system.affinities.extraction];
 
   if (isResearchCompleted(state, "extraction_handling")) {
     output *= RESEARCH_EFFECTS.extractionHandlingMultiplier;

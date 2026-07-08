@@ -1,7 +1,7 @@
 import type { GameState, StarSystemId } from "./types";
 import { beginSurvey } from "./systems/explorationSystem";
 import type { PrimaryOutpostId } from "./config/outposts";
-import { claimWithOutpost } from "./systems/outpostSystem";
+import { claimWithOutpost, upgradePrimaryOutpost } from "./systems/outpostSystem";
 import { advanceGameTime } from "./systems/timeSystem";
 import type { ResearchProjectId } from "./config/research";
 import { startResearch } from "./systems/researchSystem";
@@ -36,6 +36,10 @@ export type GameAction =
     }
     | {
         type: "performInfluenceReset"
+    }
+    | {
+        type: "upgradePrimaryOutpost";
+        systemId: StarSystemId;
     }
 
 export function gameReducer(
@@ -78,6 +82,10 @@ export function gameReducer(
 
         case "performInfluenceReset": {
             return performInfluenceReset(state);
+        }
+
+        case "upgradePrimaryOutpost": {
+            return upgradePrimaryOutpost(state, action.systemId);
         }
 
         default: {

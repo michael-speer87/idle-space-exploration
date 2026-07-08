@@ -101,6 +101,19 @@ function migrateGameState(value: unknown): unknown {
     }
 
     const activeSurvey =  migratedValue.exploration.activeSurvey;
+    const migratedSystemsById = migrateStarSystemsPrimaryOutpostLevel(
+      migratedValue.map.systemsById,
+    );
+
+    if (migratedSystemsById !== migratedValue.map.systemsById) {
+      return {
+        ...migratedValue,
+        map: {
+          ...migratedValue.map,
+          systemsById: migratedSystemsById,
+        },
+      };
+    }
 
     if (
       isRecord(activeSurvey) &&
@@ -235,4 +248,33 @@ function isValidGameStateShapeForMigration(
   }
 
   return true;
+}
+
+function migrateStarSystemsPrimaryOutpostLevel(
+  systemsById: Record<string, unknown>,
+): Record<string, unknown> {
+  let changed = false;
+  const migratedSystemsById: Record<string, unknown> = {};
+
+  for (const [systemId, systemValue] of Object.entries(systemsById)) {
+    if (!isRecord(systemValue)) {
+      migratedSystemsById[systemId] = systemValue;
+      continue;
+    }
+
+    if (typeof systemValue.primaryOutpostLevel === "number") {
+      migratedSystemsById[systemId] = systemValue;
+      continue;
+    }
+
+    changed = true;
+
+    migratedSystemsById[systemId] = {
+      ...systemValue,
+      primaryOutpostLevel:
+        typeof systemValue.primaryOutpostId === "string" ? 1 : 0,
+    };
+  }
+
+  return changed ? migratedSystemsById : systemsById;
 }

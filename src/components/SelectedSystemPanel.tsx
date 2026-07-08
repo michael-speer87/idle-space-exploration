@@ -1,85 +1,89 @@
-import type { 
-    ActiveSurveyState, 
-    AffinityProfile, 
-    GameState,
-    StarSystem 
+import type {
+  ActiveSurveyState,
+  AffinityProfile,
+  GameState,
+  StarSystem
 } from "../game/types";
 import {
   PRIMARY_OUTPOSTS,
   type PrimaryOutpostId,
 } from "../game/config/outposts"
-import type { OutpostClaimOption } from "../game/systems/outpostSystem";
+import type { OutpostClaimOption, PrimaryOutpostUpgradeOption } from "../game/systems/outpostSystem";
 import { getSurveyRequirementForSystem } from "../game/systems/explorationSystem";
 
 type SelectedSystemPanelProps = {
-    gameState: GameState;
-    system: StarSystem | null;
-    activeSurvey: ActiveSurveyState | null;
-    canBeginSurvey: boolean;
-    outpostClaimOptions: OutpostClaimOption[];
-    firstFreeSurveyAvailable: boolean;
-    onBeginSurvey: () => void;
-    onClaimOutpost: (outpostId: PrimaryOutpostId) => void;
+  gameState: GameState;
+  system: StarSystem | null;
+  activeSurvey: ActiveSurveyState | null;
+  canBeginSurvey: boolean;
+  outpostClaimOptions: OutpostClaimOption[];
+  firstFreeSurveyAvailable: boolean;
+  primaryOutpostUpgradeOption: PrimaryOutpostUpgradeOption;
+  onUpgradePrimaryOutpost: () => void;
+  onBeginSurvey: () => void;
+  onClaimOutpost: (outpostId: PrimaryOutpostId) => void;
 };
 
-export function SelectedSystemPanel({ 
-    gameState,
-    system,
-    activeSurvey,
-    canBeginSurvey,
-    outpostClaimOptions,
-    firstFreeSurveyAvailable,
-    onBeginSurvey,
-    onClaimOutpost,
+export function SelectedSystemPanel({
+  gameState,
+  system,
+  activeSurvey,
+  canBeginSurvey,
+  outpostClaimOptions,
+  firstFreeSurveyAvailable,
+  primaryOutpostUpgradeOption,
+  onUpgradePrimaryOutpost,
+  onBeginSurvey,
+  onClaimOutpost,
 }: SelectedSystemPanelProps) {
-    if (system === null) {
-        return (
-            <aside className="system-panel">
-                <h2>No System Selected</h2>
-                <p>Select a star system to inspect it.</p>
-            </aside>
-        );
-    }
-
-    const surveyRequirement =
-      activeSurvey !== null
-        ? activeSurvey.requiredProgress
-        : getSurveyRequirementForSystem(gameState, system.id);
-    
-    const surveyProgress =
-      activeSurvey !== null
-        ? Math.round((activeSurvey.progress / surveyRequirement) * 100)
-        : system.explorationState === "surveyed"
-          ? 100
-          : 0;
-
+  if (system === null) {
     return (
-        <aside className="system-panel">
-            <p className="panel-kicker">
-                {system.isHome ? "Home System" : "Star System"}
-            </p>
+      <aside className="system-panel">
+        <h2>No System Selected</h2>
+        <p>Select a star system to inspect it.</p>
+      </aside>
+    );
+  }
 
-            <h2>{system.name}</h2>
+  const surveyRequirement =
+    activeSurvey !== null
+      ? activeSurvey.requiredProgress
+      : getSurveyRequirementForSystem(gameState, system.id);
 
-            <section className="panel-section">
-                <h3>Status</h3>
+  const surveyProgress =
+    activeSurvey !== null
+      ? Math.round((activeSurvey.progress / surveyRequirement) * 100)
+      : system.explorationState === "surveyed"
+        ? 100
+        : 0;
 
-                <dl>
-                    <PanelRow label="ID" value={system.id} />
-                    <PanelRow 
-                        label="Coordinates"
-                        value={`q: ${system.coord.q}, r: ${system.coord.r}`}
-                    />
-                    <PanelRow label="Star" value={system.starVisual} />
-                    <PanelRow label="Exploration" value={system.explorationState} />
-                    <PanelRow label="Claim" value={system.claimState} />
-                    <PanelRow
-                        label="Survey Requirement"
-                        value={surveyRequirement.toString()}
-                    />
-                </dl>
-            </section>
-        <section className="panel-section">
+  return (
+    <aside className="system-panel">
+      <p className="panel-kicker">
+        {system.isHome ? "Home System" : "Star System"}
+      </p>
+
+      <h2>{system.name}</h2>
+
+      <section className="panel-section">
+        <h3>Status</h3>
+
+        <dl>
+          <PanelRow label="ID" value={system.id} />
+          <PanelRow
+            label="Coordinates"
+            value={`q: ${system.coord.q}, r: ${system.coord.r}`}
+          />
+          <PanelRow label="Star" value={system.starVisual} />
+          <PanelRow label="Exploration" value={system.explorationState} />
+          <PanelRow label="Claim" value={system.claimState} />
+          <PanelRow
+            label="Survey Requirement"
+            value={surveyRequirement.toString()}
+          />
+        </dl>
+      </section>
+      <section className="panel-section">
         <h3>Survey</h3>
 
         <div className="survey-progress">
@@ -135,7 +139,7 @@ export function SelectedSystemPanel({
         <h3>Outpost Potential</h3>
 
         <dl>
-          
+
           {system.explorationState === "surveyed" &&
             system.claimState === "unclaimed" && (
               <div className="outpost-action-list">
@@ -151,7 +155,7 @@ export function SelectedSystemPanel({
                         onClick={() => onClaimOutpost(option.outpostId)}
                       >
                         Claim with {outpost.name}
-                        { " . " }
+                        {" . "}
                         {option.creditCost === 0
                           ? "Free"
                           : `${option.creditCost.toFixed(0)} Credits`}
@@ -168,6 +172,28 @@ export function SelectedSystemPanel({
               </div>
             )}
 
+          {system.primaryOutpostId !== null && (
+            <div className="outpost-action-card">
+              <button
+                className="primary-action-button"
+                type="button"
+                disabled={!primaryOutpostUpgradeOption.canUpgrade}
+                onClick={onUpgradePrimaryOutpost}
+              >
+                Upgrade to Level {primaryOutpostUpgradeOption.nextLevel}
+                {" · "}
+                {primaryOutpostUpgradeOption.creditCost.toFixed(0)} Credits
+              </button>
+
+              {!primaryOutpostUpgradeOption.canUpgrade &&
+                primaryOutpostUpgradeOption.blockedReason !== null && (
+                  <p className="outpost-blocked-reason">
+                    {primaryOutpostUpgradeOption.blockedReason}
+                  </p>
+                )}
+            </div>
+          )}
+
           <PanelRow
             label="Support Slots"
             value={system.supportSlotCount.toString()}
@@ -179,6 +205,10 @@ export function SelectedSystemPanel({
                 ? "None"
                 : PRIMARY_OUTPOSTS[system.primaryOutpostId].name
             }
+          />
+          <PanelRow
+            label="Outpost Level"
+            value={system.primaryOutpostLevel.toString()}
           />
         </dl>
       </section>
@@ -196,32 +226,32 @@ export function SelectedSystemPanel({
 }
 
 type PanelRowProps = {
-    label: string;
-    value: string;
+  label: string;
+  value: string;
 };
 
 function PanelRow({ label, value }: PanelRowProps) {
-    return (
-        <div>
-            <dt>{label}</dt>
-            <dd>{value}</dd>
-        </div>
-    );
+  return (
+    <div>
+      <dt>{label}</dt>
+      <dd>{value}</dd>
+    </div>
+  );
 }
 
 type AffinityGridProps = {
-    affinities: AffinityProfile;
+  affinities: AffinityProfile;
 };
 
 function AffinityGrid({ affinities }: AffinityGridProps) {
-    return (
-        <div className="affinity-grid">
-            {Object.entries(affinities).map(([name, level]) => (
-                <div key={name} className={`affinity-pill affinity-#{level}`}>
-                    <span>{name}: </span>
-                    <strong>{level}</strong>
-                </div>
-            ))}
+  return (
+    <div className="affinity-grid">
+      {Object.entries(affinities).map(([name, level]) => (
+        <div key={name} className={`affinity-pill affinity-#{level}`}>
+          <span>{name}: </span>
+          <strong>{level}</strong>
         </div>
-    );
+      ))}
+    </div>
+  );
 }

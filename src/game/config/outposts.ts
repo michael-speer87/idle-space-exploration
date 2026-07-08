@@ -19,6 +19,8 @@ export type PrimaryOutpostDefinition = {
     baseOutput: number;
     claimCreditCost: number;
     claimCreditCostGrowthRate: number;
+    upgradeCreditCost: number;
+    upgradeCreditCostGrowthRate: number;
     usesEnergy: boolean;
     description: string;
 };
@@ -34,6 +36,8 @@ export const PRIMARY_OUTPOSTS: Record<
         baseOutput: 1,
         claimCreditCost: 10,
         claimCreditCostGrowthRate: 1.18,
+        upgradeCreditCost: 15,
+        upgradeCreditCostGrowthRate: 1.35,
         usesEnergy: true,
         description: "Produces EP/sec and enables continued surveying.",
     },
@@ -45,6 +49,8 @@ export const PRIMARY_OUTPOSTS: Record<
         baseOutput: 1,
         claimCreditCost: 10,
         claimCreditCostGrowthRate: 1.18,
+        upgradeCreditCost: 15,
+        upgradeCreditCostGrowthRate: 1.35,
         usesEnergy: true,
         description: "Produces Credits/sec.",
     },
@@ -56,6 +62,8 @@ export const PRIMARY_OUTPOSTS: Record<
         baseOutput: 1,
         claimCreditCost: 15,
         claimCreditCostGrowthRate: 1.2,
+        upgradeCreditCost: 20,
+        upgradeCreditCostGrowthRate: 1.4,
         usesEnergy: true,
         description: "Produces Science/sec.",
     },
@@ -67,6 +75,8 @@ export const PRIMARY_OUTPOSTS: Record<
         baseOutput: 5,
         claimCreditCost: 20,
         claimCreditCostGrowthRate: 1.22,
+        upgradeCreditCost: 25,
+        upgradeCreditCostGrowthRate: 1.4,
         usesEnergy: false,
         description: "Provides Evergy Capacity.",
     },
@@ -78,7 +88,17 @@ export const PRIMARY_OUTPOSTS: Record<
         baseOutput: 1,
         claimCreditCost: 15,
         claimCreditCostGrowthRate: 1.2,
+        upgradeCreditCost: 20,
+        upgradeCreditCostGrowthRate: 1.4,
         usesEnergy: true,
         description: "Extracts materials that are automatically converted into Credits/sec.",
     },
 };
+
+export function getOutpostLevelOutputMultiplier(level: number): number {
+  if (level <= 0) {
+    return 0;
+  }
+
+  return 1 + (level - 1) * 0.5;
+}

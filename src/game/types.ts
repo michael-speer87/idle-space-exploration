@@ -58,6 +58,7 @@ export type StarSystem = {
   modifierIds: string[];
 
   primaryOutpostId: PrimaryOutpostId | null;
+  primaryOutpostLevel: number;
   supportBuildingIds: string[];
 };
 

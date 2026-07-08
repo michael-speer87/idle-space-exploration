@@ -26,6 +26,7 @@ export type RunStatsSummary = {
     activeResearchProgressLabel: string;
 
     outpostCountsById: Record<PrimaryOutpostId, number>;
+    totalOutpostLevels: number;
 };
 
 export function getRunStatsSummary(state: GameState): RunStatsSummary {
@@ -34,6 +35,7 @@ export function getRunStatsSummary(state: GameState): RunStatsSummary {
   let detectedSystems = 0;
   let surveyingSystems = 0;
   let surveyedSystems = 0;
+  let totalOutpostLevels = 0;
 
   const outpostCountsById: Record<PrimaryOutpostId, number> = {
     survey_array: 0,
@@ -52,6 +54,10 @@ export function getRunStatsSummary(state: GameState): RunStatsSummary {
 
     if (system.primaryOutpostId !== null) {
       outpostCountsById[system.primaryOutpostId] += 1;
+    }
+
+    if (system.primaryOutpostId !== null) {
+      totalOutpostLevels += system.primaryOutpostLevel
     }
 
     switch (system.explorationState) {
@@ -116,5 +122,6 @@ export function getRunStatsSummary(state: GameState): RunStatsSummary {
         : "None",
 
     outpostCountsById,
+    totalOutpostLevels,
   };
 }

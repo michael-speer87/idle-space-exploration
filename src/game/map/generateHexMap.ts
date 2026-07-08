@@ -97,6 +97,7 @@ export function generateHexMap(options: GenerateHexMapOptions): StarMapState {
     hazardId: null,
     modifierIds: [],
     primaryOutpostId: null,
+    primaryOutpostLevel: 0,
     supportBuildingIds: [],
   };
 
@@ -137,6 +138,7 @@ function createStarSystem(
     modifierIds: [],
 
     primaryOutpostId: null,
+    primaryOutpostLevel: 0,
     supportBuildingIds: [],
   };
 }

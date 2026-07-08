@@ -37,7 +37,10 @@ export function RunStatsPanel({ stats }: RunStatsPanelProps) {
           label="Extraction Rigs"
           value={stats.outpostCountsById.extraction_rig.toString()}
         />
-
+        <StatRow
+          label="Total Outpost Levels"
+          value={stats.totalOutpostLevels.toString()}
+        />
         <StatRow
           label="Unknown Systems"
           value={stats.unknownSystems.toString()}

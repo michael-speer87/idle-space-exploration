@@ -8,7 +8,10 @@ import { canBeginSurvey } from "./game/systems/explorationSystem";
 import { GameTicker } from "./game/GameTicker";
 import { ResourceBar } from "./components/ResourceBar";
 import { calculateRates } from "./game/systems/rateSystem";
-import { getOutpostClaimOptions } from "./game/systems/outpostSystem";
+import { 
+  getOutpostClaimOptions,
+  getPrimaryOutpostUpgradeOption,
+} from "./game/systems/outpostSystem";
 import type { PrimaryOutpostId } from "./game/config/outposts";
 import { ResearchPanel } from "./components/ResearchPanel";
 import type { ResearchProjectId } from "./game/config/research";
@@ -44,6 +47,18 @@ function GameScreen() {
   const selectedSystem = gameState.selectedSystemId
     ? gameState.map.systemsById[gameState.selectedSystemId]
     : null;
+
+  
+  const primaryOutpostUpgradeOption =
+    selectedSystem !== null
+      ? getPrimaryOutpostUpgradeOption(gameState, selectedSystem.id)
+      : {
+          canUpgrade: false,
+          creditCost: 0,
+          currentLevel: 0,
+          nextLevel: 0,
+          blockedReason: "No system selected",
+      };
 
   const rates = calculateRates(gameState);
 
@@ -155,6 +170,17 @@ function GameScreen() {
     });
   }, [dispatch, influenceResetPreview]);
 
+  const handleUpgradePrimaryOutpost = useCallback(() => {
+    if (selectedSystem === null) {
+      return;
+    }
+
+    dispatch({
+      type: "upgradePrimaryOutpost",
+      systemId: selectedSystem.id,
+    });
+  }, [dispatch, selectedSystem]);
+
   useEffect(() => {
     if (!shouldSaveAfterNextStateChangeRef.current) {
       return;
@@ -173,6 +199,8 @@ function GameScreen() {
         canBeginSurvey={canBeginSurveyForSelectedSystem}
         outpostClaimOptions={outpostClaimOptions}
         firstFreeSurveyAvailable={gameState.exploration.firstFreeSurveyAvailable}
+        primaryOutpostUpgradeOption={primaryOutpostUpgradeOption}
+        onUpgradePrimaryOutpost={handleUpgradePrimaryOutpost}
         onBeginSurvey={handleBeginSurvey}
         onClaimOutpost={handleClaimOutpost}
       />

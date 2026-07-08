@@ -25,6 +25,14 @@ export type OutpostClaimOption = {
   blockedReason: string | null;
 };
 
+export type PrimaryOutpostUpgradeOption = {
+  canUpgrade: boolean;
+  creditCost: number;
+  currentLevel: number;
+  nextLevel: number;
+  blockedReason: string | null;
+};
+
 export function getOutpostClaimOptions(
   state: GameState,
   systemId: StarSystemId,
@@ -46,6 +54,8 @@ export function getOutpostClaimOptions(
     };
   });
 }
+
+
 
 export function getClaimableOutpostIds(
   state: GameState,
@@ -99,6 +109,7 @@ export function claimWithOutpost(
           ...system,
           claimState: "claimed",
           primaryOutpostId: outpostId,
+          primaryOutpostLevel: 1,
         },
       },
     },
@@ -181,4 +192,120 @@ export function getClaimedPrimaryOutpostCount(
       system.primaryOutpostId === outpostId
     );
   }).length;
+}
+
+export function getPrimaryOutpostUpgradeOption(
+  state: GameState,
+  systemId: StarSystemId,
+): PrimaryOutpostUpgradeOption {
+  const system = state.map.systemsById[systemId];
+
+  if (!system) {
+    return {
+      canUpgrade: false,
+      creditCost: 0,
+      currentLevel: 0,
+      nextLevel: 0,
+      blockedReason: "System does not exist.",
+    };
+  }
+
+  const currentLevel = getPrimaryOutpostLevel(system.primaryOutpostLevel);
+  const nextLevel = currentLevel + 1;
+  const creditCost = getPrimaryOutpostUpgradeCreditCost(state, systemId);
+  const blockedReason = getPrimaryOutpostUpgradeBlockedReason(
+    state,
+    systemId,
+    creditCost,
+  );
+
+  return {
+    canUpgrade: blockedReason === null,
+    creditCost,
+    currentLevel,
+    nextLevel,
+    blockedReason,
+  };
+}
+
+export function upgradePrimaryOutpost(
+  state: GameState,
+  systemId: StarSystemId,
+): GameState {
+  const upgradeOption = getPrimaryOutpostUpgradeOption(state, systemId);
+
+  if (!upgradeOption.canUpgrade) {
+    return state;
+  }
+
+  const system = state.map.systemsById[systemId];
+
+  return {
+    ...state,
+
+    resources: {
+      ...state.resources,
+      credits: state.resources.credits - upgradeOption.creditCost,
+    },
+
+    map: {
+      ...state.map,
+      systemsById: {
+        ...state.map.systemsById,
+        [systemId]: {
+          ...system,
+          primaryOutpostLevel: upgradeOption.nextLevel,
+        },
+      },
+    },
+  };
+}
+
+export function getPrimaryOutpostUpgradeCreditCost(
+  state: GameState,
+  systemId: StarSystemId,
+): number {
+  const system = state.map.systemsById[systemId];
+
+  if (!system || system.primaryOutpostId === null) {
+    return 0;
+  }
+
+  const outpost = PRIMARY_OUTPOSTS[system.primaryOutpostId];
+  const currentLevel = getPrimaryOutpostLevel(system.primaryOutpostLevel);
+
+  return Math.ceil(
+    outpost.upgradeCreditCost *
+      Math.pow(outpost.upgradeCreditCostGrowthRate, currentLevel - 1),
+  );
+}
+
+export function getPrimaryOutpostLevel(level: number | undefined): number {
+  return level ?? 0;
+}
+
+function getPrimaryOutpostUpgradeBlockedReason(
+  state: GameState,
+  systemId: StarSystemId,
+  creditCost: number,
+): string | null {
+  const system = state.map.systemsById[systemId];
+
+  if (!system) {
+    return "System does not exist.";
+  }
+
+  if (system.primaryOutpostId === null) {
+    return "Claim this system with an outpost first.";
+  }
+
+  if (system.claimState !== "claimed") {
+    return "System must be claimed first.";
+  }
+
+  if (state.resources.credits < creditCost) {
+    return `Requires ${creditCost.toFixed(0)} Credits.`;
+  }
+
+  return null;
 }

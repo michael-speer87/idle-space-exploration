@@ -17,6 +17,26 @@ export function RunStatsPanel({ stats }: RunStatsPanelProps) {
           label="Claimed Systems"
           value={stats.claimedSystems.toString()}
         />
+        <StatRow
+          label="Survey Arrays"
+          value={stats.outpostCountsById.survey_array.toString()}
+        />
+        <StatRow
+          label="Commerce Hubs"
+          value={stats.outpostCountsById.commerce_hub.toString()}
+        />
+        <StatRow
+          label="Science Stations"
+          value={stats.outpostCountsById.science_station.toString()}
+        />
+        <StatRow
+          label="Power Relays"
+          value={stats.outpostCountsById.power_relay.toString()}
+        />
+        <StatRow
+          label="Extraction Rigs"
+          value={stats.outpostCountsById.extraction_rig.toString()}
+        />
 
         <StatRow
           label="Unknown Systems"

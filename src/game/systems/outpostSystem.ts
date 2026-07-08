@@ -109,17 +109,19 @@ export function getOutpostClaimCreditCost(
   state: GameState,
   outpostId: PrimaryOutpostId,
 ): number {
+  const ownedCount = getClaimedPrimaryOutpostCount(state, outpostId);
   const isStarterFreeOutpost = STARTER_FREE_OUTPOST_IDS.includes(outpostId);
-  const hasAlreadyClaimedThisOutpost = hasClaimedPrimaryOutpost(
-    state,
-    outpostId,
-  );
 
-  if (isStarterFreeOutpost && !hasAlreadyClaimedThisOutpost) {
+  if (isStarterFreeOutpost && ownedCount === 0) {
     return 0;
   }
 
-  return PRIMARY_OUTPOSTS[outpostId].claimCreditCost;
+  const outpost = PRIMARY_OUTPOSTS[outpostId];
+
+  return Math.ceil(
+    outpost.claimCreditCost *
+      Math.pow(outpost.claimCreditCostGrowthRate, ownedCount),
+  );
 }
 
 function getOutpostClaimBlockedReason(
@@ -167,16 +169,16 @@ function getOutpostClaimBlockedReason(
   return null;
 }
 
-function hasClaimedPrimaryOutpost(
+export function getClaimedPrimaryOutpostCount(
   state: GameState,
   outpostId: PrimaryOutpostId,
-): boolean {
-  return state.map.systemIds.some((systemId) => {
+): number {
+  return state.map.systemIds.filter((systemId) => {
     const system = state.map.systemsById[systemId];
 
     return (
       system.claimState === "claimed" &&
       system.primaryOutpostId === outpostId
     );
-  });
+  }).length;
 }

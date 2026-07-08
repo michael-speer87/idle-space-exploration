@@ -1,5 +1,8 @@
 import { RESEARCH_PROJECTS } from "../config/research";
 import type { GameState } from "../types";
+import {
+  type PrimaryOutpostId,
+} from "../config/outposts";
 
 export type RunStatsSummary = {
     seed: number;
@@ -21,6 +24,8 @@ export type RunStatsSummary = {
 
     activeResearchLabel: string;
     activeResearchProgressLabel: string;
+
+    outpostCountsById: Record<PrimaryOutpostId, number>;
 };
 
 export function getRunStatsSummary(state: GameState): RunStatsSummary {
@@ -30,11 +35,23 @@ export function getRunStatsSummary(state: GameState): RunStatsSummary {
   let surveyingSystems = 0;
   let surveyedSystems = 0;
 
+  const outpostCountsById: Record<PrimaryOutpostId, number> = {
+    survey_array: 0,
+    commerce_hub: 0,
+    science_station: 0,
+    power_relay: 0,
+    extraction_rig: 0,
+  };
+
   for (const systemId of state.map.systemIds) {
     const system = state.map.systemsById[systemId];
 
     if (system.claimState === "claimed") {
       claimedSystems += 1;
+    }
+
+    if (system.primaryOutpostId !== null) {
+      outpostCountsById[system.primaryOutpostId] += 1;
     }
 
     switch (system.explorationState) {
@@ -97,5 +114,7 @@ export function getRunStatsSummary(state: GameState): RunStatsSummary {
       activeResearchProject !== null && activeResearchState !== null
         ? `${activeResearchState.progress.toFixed(1)} / ${activeResearchProject.scienceCost.toFixed(1)}`
         : "None",
+
+    outpostCountsById,
   };
 }

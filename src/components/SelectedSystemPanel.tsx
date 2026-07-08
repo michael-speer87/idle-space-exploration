@@ -38,10 +38,10 @@ export function SelectedSystemPanel({
 }: SelectedSystemPanelProps) {
   if (system === null) {
     return (
-      <aside className="system-panel">
+      <section className="system-panel">
         <h2>No System Selected</h2>
         <p>Select a star system to inspect it.</p>
-      </aside>
+      </section>
     );
   }
 
@@ -58,7 +58,7 @@ export function SelectedSystemPanel({
         : 0;
 
   return (
-    <aside className="system-panel">
+    <section className="system-panel">
       <p className="panel-kicker">
         {system.isHome ? "Home System" : "Star System"}
       </p>
@@ -221,7 +221,7 @@ export function SelectedSystemPanel({
       {system.hasGradCommand && (
         <p className="grad-command-note">GRaD Command established.</p>
       )}
-    </aside>
+    </section>
   );
 }
 

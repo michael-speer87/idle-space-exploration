@@ -25,8 +25,6 @@ export function ResearchPanel({
 
     return (
         <div className="research-panel">
-            <h2>Research</h2>
-
             <p className="research-summary">
                 Science available: <strong>{science.toFixed(1)}</strong>
             </p>"

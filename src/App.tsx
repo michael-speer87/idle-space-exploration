@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { GameProvider, useGameDispatch, useGameState } from "./game/GameContext";
 import { SelectedSystemPanel } from "./components/SelectedSystemPanel";
 import { StarMapCanvas } from "./components/StarMapCanvas";
@@ -8,7 +8,7 @@ import { canBeginSurvey } from "./game/systems/explorationSystem";
 import { GameTicker } from "./game/GameTicker";
 import { ResourceBar } from "./components/ResourceBar";
 import { calculateRates } from "./game/systems/rateSystem";
-import { 
+import {
   getOutpostClaimOptions,
   getPrimaryOutpostUpgradeOption,
 } from "./game/systems/outpostSystem";
@@ -24,6 +24,7 @@ import { getRunObjectiveProgress } from "./game/systems/progressionSystem";
 import { getInfluenceResetPreview } from "./game/systems/influenceSystem";
 import { RunStatsPanel } from "./components/RunStatsPanel";
 import { getRunStatsSummary } from "./game/systems/runStatsSystem";
+import { ResearchDrawer } from "./components/ResearchDrawer";
 
 function App() {
   return (
@@ -43,21 +44,22 @@ function GameScreen() {
   const runObjectiveProgress = getRunObjectiveProgress(gameState);
   const influenceResetPreview = getInfluenceResetPreview(gameState);
   const runStatsSummary = getRunStatsSummary(gameState);
+  const [isResearchDrawerOpen, setIsResearchDrawerOpen] = useState(true);
 
   const selectedSystem = gameState.selectedSystemId
     ? gameState.map.systemsById[gameState.selectedSystemId]
     : null;
 
-  
+
   const primaryOutpostUpgradeOption =
     selectedSystem !== null
       ? getPrimaryOutpostUpgradeOption(gameState, selectedSystem.id)
       : {
-          canUpgrade: false,
-          creditCost: 0,
-          currentLevel: 0,
-          nextLevel: 0,
-          blockedReason: "No system selected",
+        canUpgrade: false,
+        creditCost: 0,
+        currentLevel: 0,
+        nextLevel: 0,
+        blockedReason: "No system selected",
       };
 
   const rates = calculateRates(gameState);
@@ -69,7 +71,7 @@ function GameScreen() {
 
   const activeSurveyForSelectedSystem =
     selectedSystem !== null &&
-    gameState.exploration.activeSurvey?.systemId === selectedSystem.id
+      gameState.exploration.activeSurvey?.systemId === selectedSystem.id
       ? gameState.exploration.activeSurvey
       : null;
 
@@ -164,7 +166,7 @@ function GameScreen() {
     }
 
     shouldSaveAfterNextStateChangeRef.current = true;
-    
+
     dispatch({
       type: "performInfluenceReset"
     });
@@ -181,6 +183,10 @@ function GameScreen() {
     });
   }, [dispatch, selectedSystem]);
 
+  const handleToggleResearchDrawer = useCallback(() => {
+    setIsResearchDrawerOpen((current) => !current);
+  }, []);
+
   useEffect(() => {
     if (!shouldSaveAfterNextStateChangeRef.current) {
       return;
@@ -192,18 +198,28 @@ function GameScreen() {
 
   return (
     <main className="game-layout">
-      <SelectedSystemPanel
-        gameState={gameState}
-        system={selectedSystem}
-        activeSurvey={activeSurveyForSelectedSystem}
-        canBeginSurvey={canBeginSurveyForSelectedSystem}
-        outpostClaimOptions={outpostClaimOptions}
-        firstFreeSurveyAvailable={gameState.exploration.firstFreeSurveyAvailable}
-        primaryOutpostUpgradeOption={primaryOutpostUpgradeOption}
-        onUpgradePrimaryOutpost={handleUpgradePrimaryOutpost}
-        onBeginSurvey={handleBeginSurvey}
-        onClaimOutpost={handleClaimOutpost}
-      />
+      <aside className="left-sidebar">
+        <SelectedSystemPanel
+          gameState={gameState}
+          system={selectedSystem}
+          activeSurvey={activeSurveyForSelectedSystem}
+          canBeginSurvey={canBeginSurveyForSelectedSystem}
+          outpostClaimOptions={outpostClaimOptions}
+          primaryOutpostUpgradeOption={primaryOutpostUpgradeOption}
+          firstFreeSurveyAvailable={gameState.exploration.firstFreeSurveyAvailable}
+          onBeginSurvey={handleBeginSurvey}
+          onClaimOutpost={handleClaimOutpost}
+          onUpgradePrimaryOutpost={handleUpgradePrimaryOutpost}
+        />
+
+        <RunProgressPanel
+          progress={runObjectiveProgress}
+          resetPreview={influenceResetPreview}
+          onPerformInfluenceReset={handlePerformInfluenceReset}
+        />
+
+        <RunStatsPanel stats={runStatsSummary} />
+      </aside>
 
       <section className="map-section">
         <div className="map-header">
@@ -219,26 +235,23 @@ function GameScreen() {
           rates={rates}
         />
 
-        <ResearchPanel
-          research={gameState.research}
-          startableProjectIds={startableResearchProjectIds}
-          science={gameState.resources.science}
-          onStartResearch={handleStartResearch}
-        />
+        <ResearchDrawer
+          isOpen={isResearchDrawerOpen}
+          onToggle={handleToggleResearchDrawer}
+        >
+          <ResearchPanel
+            research={gameState.research}
+            startableProjectIds={startableResearchProjectIds}
+            science={gameState.resources.science}
+            onStartResearch={handleStartResearch}
+          />
+        </ResearchDrawer>
 
         <SaveControls
           gameState={gameState}
           onSave={handleSaveGame}
           onResetGame={handleResetGame}
         />
-
-        <RunProgressPanel 
-          progress={runObjectiveProgress} 
-          resetPreview={influenceResetPreview}
-          onPerformInfluenceReset={handlePerformInfluenceReset}  
-        />
-
-        <RunStatsPanel stats={runStatsSummary} />
 
         <MapLegend />
 

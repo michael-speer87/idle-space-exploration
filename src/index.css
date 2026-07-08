@@ -17,14 +17,35 @@ button {
 .game-layout {
   min-height: 100vh;
   display: grid;
-  grid-template-columns: 320px minmax(0, 1fr);
+  grid-template-columns: 340px minmax(0, 1fr);
+  background: 
+    radial-gradient(circle at center, rgba(16, 55, 92, 0.18), transparent 38%),
+    #080b14;
 }
 
-aside {
-  border-right: 1px solid rgba(255, 255, 255, 0.14);
-  background: rgba(255, 255, 255, 0.04);
-  padding: 1.5rem;
+.left-sidebar {
+  height: 100vh;
   overflow: auto;
+  display: grid;
+  align-content: start;
+  gap: 0.85rem;
+  padding: 0.85rem;
+  border-right: 1px solid rgba(114, 224, 155, 0.18);
+  background: rgba(5, 10, 20, 0.82)
+}
+
+.system-panel,
+.run-progress-panel,
+.run-stats-panel {
+  position: static;
+  width: auto;
+  max-height: none;
+  overflow: visible;
+  padding: 1rem;
+  border: 1px solid rgba(114, 224, 255, 0.16);
+  border-radius: 0.75rem;
+  background: rgba(9, 17, 31, 0.78);
+  backdrop-filter: blur(8px);
 }
 
 .map-section {
@@ -294,18 +315,15 @@ dd {
 }
 
 .research-panel {
-  position: absolute;
-  z-index: 1;
-  top: 7.25rem;
-  right: 1rem;
-  width: 320px;
-  max-height: 58vh;
+  position: static;
+  width: auto;
+  max-height: none;
   overflow: auto;
-  padding: 0.85rem 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 0.75rem;
-  background: rgba(8, 11, 20, 0.72);
-  backdrop-filter: blur(8px);
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  backdrop-filter: none;
 }
 
 .research-panel h2 {
@@ -434,17 +452,14 @@ dd {
 }
 
 .run-progress-panel {
-  position: absolute;
-  z-index: 1;
-  left: 1rem;
-  bottom: 1rem;
-  width: 280px;
-  display: grid;
-  gap: 0.65rem;
-  padding: 0.85rem 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  position: static;
+  width: auto;
+  max-height: none;
+  overflow: visible;
+  padding: 1rem;
+  border: 1px solid rgba(114, 224, 255, 0.16);
   border-radius: 0.75rem;
-  background: rgba(8, 11, 20, 0.72);
+  background: rgba(9, 17, 31, 0.78);
   backdrop-filter: blur(8px);
 }
 
@@ -500,19 +515,14 @@ dd {
 }
 
 .run-stats-panel {
-  position: absolute;
-  z-index: 1;
-  left: 1rem;
-  top: 5.5rem;
-  width: 300px;
-  max-height: 58vh;
-  overflow: auto;
-  display: grid;
-  gap: 0.75rem;
-  padding: 0.85rem 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  position: static;
+  width: auto;
+  max-height: none;
+  overflow: visible;
+  padding: 1rem;
+  border: 1px solid rgba(114, 224, 255, 0.16);
   border-radius: 0.75rem;
-  background: rgba(8, 11, 20, 0.72);
+  background: rgba(9, 17, 31, 0.78);
   backdrop-filter: blur(8px);
 }
 
@@ -539,4 +549,65 @@ dd {
 
 .run-stat-row strong {
   text-align: right;
+}
+
+.research-drawer-toggle {
+  position: absolute;
+  z-index: 4;
+  top: 5.25rem;
+  right: 1rem;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid rgba(114, 224, 255, 0.35);
+  border-radius: 0.65rem;
+  background: rgba(8, 22, 38, 0.88);
+  color: #dff8ff;
+}
+
+.research-drawer {
+  position: absolute;
+  z-index: 3;
+  top: 5.25rem;
+  right: 1rem;
+  bottom: 1rem;
+  width: 380px;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 0.75rem;
+  padding: 0.85rem;
+  border: 1px solid rgba(114, 224, 255, 0.22);
+  border-radius: 0.85rem;
+  background: rgba(5, 13, 25, 0.92);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 0 32px rgba(0, 0, 0, 0.35);
+  transform: translateX(calc(100% + 2rem));
+  transition: transform 180ms ease-out;
+}
+
+.research-drawer-open {
+  transform: translateX(0);
+}
+
+.research-drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 0.65rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.research-drawer-header h2 {
+  margin: 0;
+  font-size: 0.95rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.research-drawer-header button {
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #f4f7ff;
 }

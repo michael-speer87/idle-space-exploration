@@ -69,6 +69,8 @@ export function SelectedSystemPanel({
       ? formatDuration(surveySecondsRemaining)
       : "Not surveying"
 
+  const isSurveyed = system.explorationState === "surveyed";
+
   return (
     <section className="system-panel">
       <p className="panel-kicker">
@@ -152,10 +154,13 @@ export function SelectedSystemPanel({
       <section className="panel-section">
         <h3>Outpost Potential</h3>
 
-        <dl>
-
-          {system.explorationState === "surveyed" &&
-            system.claimState === "unclaimed" && (
+        {!isSurveyed ? (
+          <p className="panel-note">
+            Survey this system to reveal support slots and outpost potential.
+          </p>
+        ) : (
+          <dl>
+            {system.claimState === "unclaimed" && (
               <div className="outpost-action-list">
                 {outpostClaimOptions.map((option) => {
                   const outpost = PRIMARY_OUTPOSTS[option.outpostId];
@@ -186,51 +191,54 @@ export function SelectedSystemPanel({
               </div>
             )}
 
-          {system.primaryOutpostId !== null && (
-            <div className="outpost-action-card">
-              <button
-                className="primary-action-button"
-                type="button"
-                disabled={!primaryOutpostUpgradeOption.canUpgrade}
-                onClick={onUpgradePrimaryOutpost}
-              >
-                Upgrade to Level {primaryOutpostUpgradeOption.nextLevel}
-                {" · "}
-                {primaryOutpostUpgradeOption.creditCost.toFixed(0)} Credits
-              </button>
+            {system.primaryOutpostId !== null && (
+              <div className="outpost-action-card">
+                <button 
+                  className="primary-action-button"
+                  type="button"
+                  disabled={!primaryOutpostUpgradeOption.canUpgrade}
+                  onClick={onUpgradePrimaryOutpost}
+                >
+                  Upgrade to Level {primaryOutpostUpgradeOption.nextLevel}
+                  {" . "}
+                  {primaryOutpostUpgradeOption.creditCost.toFixed(0)} Credits
+                </button>
+                
+                {!primaryOutpostUpgradeOption.canUpgrade &&
+                  primaryOutpostUpgradeOption.blockedReason !== null && (
+                    <p className="outpost-blocked-reason">
+                      {primaryOutpostUpgradeOption.blockedReason}
+                    </p>
+                  )}
+              </div>
+            )}
 
-              {!primaryOutpostUpgradeOption.canUpgrade &&
-                primaryOutpostUpgradeOption.blockedReason !== null && (
-                  <p className="outpost-blocked-reason">
-                    {primaryOutpostUpgradeOption.blockedReason}
-                  </p>
-                )}
-            </div>
-          )}
-
-          <PanelRow
-            label="Support Slots"
-            value={system.supportSlotCount.toString()}
-          />
-          <PanelRow
-            label="Primary Outpost"
-            value={
-              system.primaryOutpostId === null
-                ? "None"
-                : PRIMARY_OUTPOSTS[system.primaryOutpostId].name
-            }
-          />
-          <PanelRow
-            label="Outpost Level"
-            value={system.primaryOutpostLevel.toString()}
-          />
-        </dl>
+            <PanelRow
+              label="Support Slots"
+              value={system.supportSlotCount.toString()}
+            />
+            <PanelRow
+              label="Primary Outpost"
+              value={
+                system.primaryOutpostId === null
+                  ? "None"
+                  : PRIMARY_OUTPOSTS[system.primaryOutpostId].name
+              }
+            />
+            <PanelRow
+              label="Outpost Level"
+              value={system.primaryOutpostLevel.toString()}
+            />
+          </dl>
+        )}
       </section>
 
-      <section className="panel-section">
-        <h3>Affinities</h3>
-        <AffinityGrid affinities={system.affinities} />
-      </section>
+      {isSurveyed && (
+        <section className="panel-section">
+          <h3>Affinities</h3>
+          <AffinityGrid affinities={system.affinities} />
+        </section>
+      )}
 
       {system.hasGradCommand && (
         <p className="grad-command-note">GRaD Command established.</p>

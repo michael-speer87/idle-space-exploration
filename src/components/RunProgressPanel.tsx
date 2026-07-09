@@ -7,10 +7,10 @@ type RunProgressPanelProps = {
   onPerformInfluenceReset: () => void;
 };
 
-export function RunProgressPanel({ 
+export function RunProgressPanel({
   progress,
   resetPreview,
-  onPerformInfluenceReset, 
+  onPerformInfluenceReset,
 }: RunProgressPanelProps) {
   return (
     <div className="run-progress-panel">
@@ -24,7 +24,10 @@ export function RunProgressPanel({
         <div className="survey-progress-label">
           <span>Claimed Systems</span>
           <strong>
-            {progress.claimedSystemCount} / {progress.claimedSystemRequirement}
+            {progress.claimedSystemCount}
+            {progress.isInfluenceResetReady
+              ? " claimed"
+              : ` / ${progress.claimedSystemRequirement}`}
           </strong>
         </div>
 
@@ -58,21 +61,35 @@ export function RunProgressPanel({
         />
 
         {resetPreview.canReset && (
-          <InfluenceRow
-            label="Reset Gain"
-            value={`+${resetPreview.influenceGain} Influence`}
-          />
+          <>
+            <InfluenceRow
+              label="Reset Gain"
+              value={`+${resetPreview.influenceGain} Influence`}
+            />
+
+            <InfluenceRow
+              label="Next Influence"
+              value={`${resetPreview.claimedSystemsNeededForNextInfluence} more claims`}
+            />
+          </>
         )}
       </div>
 
       {progress.isInfluenceResetReady ? (
-        <button
-          className="primary-action-button"
-          type="button"
-          onClick={onPerformInfluenceReset}
-        >
-          Perform Influence Reset
-        </button>
+        <>
+          <p className="run-progress-ready">
+            Reset authorized. Claim more systems before resetting to gain more
+            Influence.
+          </p>
+
+          <button
+            className="primary-action-button"
+            type="button"
+            onClick={onPerformInfluenceReset}
+          >
+            Perform Influence Reset
+          </button>
+        </>
       ) : (
         <p className="panel-note">
           {resetPreview.blockedReason ?? "Influence reset locked."}
@@ -99,6 +116,6 @@ function InfluenceRow({ label, value }: InfluenceRowProps) {
 
 function formatMultiplierBonus(multiplier: number): string {
   const bonusPercent = Math.round((multiplier - 1) * 100);
-  
+
   return `+${bonusPercent}% output`;
 }

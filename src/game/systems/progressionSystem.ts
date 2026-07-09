@@ -9,7 +9,7 @@ export type RunObjectiveProgress = {
 };
 
 export function getRunObjectiveProgress(
-    state: GameState
+    state: GameState,
 ): RunObjectiveProgress {
     const claimedSystemCount = getClaimedSystemCount(state);
     const claimedSystemRequirement =

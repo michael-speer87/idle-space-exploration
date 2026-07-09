@@ -17,36 +17,52 @@ export type InfluenceResetPreview = {
     totalResets: number;
     currentOutputMultiplier: number;
     nextOutputMultiplier: number;
+    nextInfluenceAtClaimedSystems: number;
+    claimedSystemsTowardNextInfluence: number;
+    claimedSystemsNeededForNextInfluence: number;
     blockedReason: string | null;
 };
 
 export function getInfluenceResetPreview(
-    state: GameState,
+  state: GameState,
 ): InfluenceResetPreview {
-    const claimedSystemCount = getClaimedSystemCount(state);
-    const claimedSystemRequirement =
-        FIRST_INFLUENCE_RESET_CLAIMED_SYSTEM_REQUIREMENT
-    
-    const canReset = canPerformInfluenceReset(state);
-    const influenceGain = canReset ? calculateInfluenceGain(state) : 0;
+  const claimedSystemCount = getClaimedSystemCount(state);
+  const claimedSystemRequirement =
+    FIRST_INFLUENCE_RESET_CLAIMED_SYSTEM_REQUIREMENT;
 
-    const  currentLifetimeInfluence = state.influence.lifetimeInfluence;
-    const nextLifetimeInfluence = currentLifetimeInfluence + influenceGain;
+  const canReset = canPerformInfluenceReset(state);
+  const influenceGain = canReset ? calculateInfluenceGain(state) : 0;
 
-    return {
-        canReset,
-        claimedSystemCount,
-        claimedSystemRequirement,
-        influenceGain,
-        currentLifetimeInfluence,
-        nextLifetimeInfluence,
-        totalResets: state.influence.totalResets,
-        currentOutputMultiplier: getInfluenceOutputMultiplier(state),
-        nextOutputMultiplier: 1 + nextLifetimeInfluence * INFLUENCE_OUTPUT_BONUS_PER_POINT,
-        blockedReason: canReset
-            ? null
-            : `Cliam ${claimedSystemRequirement} systems to autorize reset.`,
-    };
+  const currentLifetimeInfluence = state.influence.lifetimeInfluence;
+  const nextLifetimeInfluence = currentLifetimeInfluence + influenceGain;
+
+  const nextInfluenceAtClaimedSystems =
+    (influenceGain + 1) * claimedSystemRequirement;
+
+  const claimedSystemsTowardNextInfluence =
+    claimedSystemCount % claimedSystemRequirement;
+
+  const claimedSystemsNeededForNextInfluence =
+    nextInfluenceAtClaimedSystems - claimedSystemCount;
+
+  return {
+    canReset,
+    claimedSystemCount,
+    claimedSystemRequirement,
+    influenceGain,
+    currentLifetimeInfluence,
+    nextLifetimeInfluence,
+    totalResets: state.influence.totalResets,
+    currentOutputMultiplier: getInfluenceOutputMultiplier(state),
+    nextOutputMultiplier:
+      1 + nextLifetimeInfluence * INFLUENCE_OUTPUT_BONUS_PER_POINT,
+    nextInfluenceAtClaimedSystems,
+    claimedSystemsTowardNextInfluence,
+    claimedSystemsNeededForNextInfluence,
+    blockedReason: canReset
+      ? null
+      : `Claim ${claimedSystemRequirement} systems to authorize reset.`,
+  };
 }
 
 export function performInfluenceReset(state: GameState): GameState {

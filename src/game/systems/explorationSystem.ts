@@ -1,9 +1,10 @@
 import type { GameState, StarSystemId } from "../types";
-import { getHexId, getHexNeighbors } from "../map/hexCoords";
+import { getHexDistance, getHexId, getHexNeighbors } from "../map/hexCoords";
 import { calculateRates } from "./rateSystem";
 import {
   BASE_SURVEY_REQUIREMENT,
   SURVEY_REQUIREMENT_GROWTH_RATE,
+  SURVEY_DISTANCE_MULTIPLIER,
 } from "../config/exploration";
 
 const FIRST_FREE_SURVEY_SPEED_PER_SECOND = 2;
@@ -54,10 +55,17 @@ export function getSurveyRequirementForSystem(
   }
 
   const completedNonHomeSurveyCount = getCompletedNonHomeSurveyCount(state);
+  const distanceFromHome = getHexDistance(system.coord);
+
+  const expansionMultiplier = Math.pow(
+    SURVEY_REQUIREMENT_GROWTH_RATE,
+    completedNonHomeSurveyCount,
+  );
+
+  const distanceMultipler = 1 + distanceFromHome  * SURVEY_DISTANCE_MULTIPLIER
 
   return Math.ceil(
-    BASE_SURVEY_REQUIREMENT *
-      Math.pow(SURVEY_REQUIREMENT_GROWTH_RATE, completedNonHomeSurveyCount),
+    BASE_SURVEY_REQUIREMENT * expansionMultiplier * distanceMultipler,
   );
 }
 

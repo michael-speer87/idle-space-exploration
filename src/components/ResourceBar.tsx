@@ -26,7 +26,7 @@ export function ResourceBar({ credits, science, rates }: ResourceBarProps) {
             />
             <ResourcePill 
                 label="Energy" 
-                value={`${rates.energySurplus >= 0 ? "+": ""}${rates.energySurplus}`} 
+                value={`${rates.energySurplus >= 0 ? "+": ""}${rates.energySurplus.toFixed(1)}`} 
                 rate={rates.energyProduced.toFixed(2)}
             />
             <ResourcePill

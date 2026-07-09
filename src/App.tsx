@@ -25,6 +25,7 @@ import { getInfluenceResetPreview } from "./game/systems/influenceSystem";
 import { RunStatsPanel } from "./components/RunStatsPanel";
 import { getRunStatsSummary } from "./game/systems/runStatsSystem";
 import { ResearchDrawer } from "./components/ResearchDrawer";
+import { DevAdminPanel } from "./components/DevAdminPanel";
 
 function App() {
   return (
@@ -254,6 +255,8 @@ function GameScreen() {
         />
 
         <MapLegend />
+
+        {import.meta.env.DEV && <DevAdminPanel />}
 
         <StarMapCanvas
           map={gameState.map}

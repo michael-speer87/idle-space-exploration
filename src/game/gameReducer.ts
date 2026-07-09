@@ -7,6 +7,12 @@ import type { ResearchProjectId } from "./config/research";
 import { startResearch } from "./systems/researchSystem";
 import { createNewGame } from "./createNewGame";
 import { performInfluenceReset } from "./systems/influenceSystem";
+import {
+    devAddResources,
+    devClaimWithOutpost,
+    devDetectAllSystems,
+    devSurveySystem,
+} from "./systems/devAdminSystem";
 
 export type GameAction =
     | {
@@ -40,6 +46,23 @@ export type GameAction =
     | {
         type: "upgradePrimaryOutpost";
         systemId: StarSystemId;
+    }
+    | {
+        type: "devAddResources";
+        credits?: number;
+        science?: number;
+    }
+    |{
+        type: "devSurveySystem";
+        systemId: StarSystemId;
+    }
+    | {
+        type: "devDetectAllSystems";
+    }
+    | {
+        type: "devClaimWithOutpost";
+        systemId: StarSystemId;
+        outpostId: PrimaryOutpostId;
     }
 
 export function gameReducer(
@@ -86,6 +109,41 @@ export function gameReducer(
 
         case "upgradePrimaryOutpost": {
             return upgradePrimaryOutpost(state, action.systemId);
+        }
+
+        case "devAddResources": {
+            if (!import.meta.env.DEV) {
+                return state;
+            }
+
+            return devAddResources(state, {
+                credits: action.credits,
+                science: action.science,
+            });
+        }
+
+        case "devSurveySystem": {
+            if (!import.meta.env.DEV) {
+                return state;
+            }
+
+            return devSurveySystem(state, action.systemId);
+        }
+
+        case "devDetectAllSystems": {
+            if (!import.meta.env.DEV) {
+                return state;
+            }
+
+            return devDetectAllSystems(state);
+        }
+
+        case "devClaimWithOutpost": {
+            if (!import.meta.env.DEV) { 
+                return state;
+            }
+
+            return devClaimWithOutpost(state, action.systemId, action.outpostId);
         }
 
         default: {

@@ -261,7 +261,7 @@ function AffinityGrid({ affinities }: AffinityGridProps) {
   return (
     <div className="affinity-grid">
       {Object.entries(affinities).map(([name, level]) => (
-        <div key={name} className={`affinity-pill affinity-#{level}`}>
+        <div key={name} className={`affinity-pill affinity-${level}`}>
           <span>{name}: </span>
           <strong>{level}</strong>
         </div>

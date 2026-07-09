@@ -21,6 +21,7 @@ export type PrimaryOutpostDefinition = {
     claimCreditCostGrowthRate: number;
     upgradeCreditCost: number;
     upgradeCreditCostGrowthRate: number;
+    baseEnergyUse: number;
     usesEnergy: boolean;
     description: string;
 };
@@ -38,6 +39,7 @@ export const PRIMARY_OUTPOSTS: Record<
         claimCreditCostGrowthRate: 1.18,
         upgradeCreditCost: 15,
         upgradeCreditCostGrowthRate: 1.35,
+        baseEnergyUse: 2,
         usesEnergy: true,
         description: "Produces EP/sec and enables continued surveying.",
     },
@@ -51,6 +53,7 @@ export const PRIMARY_OUTPOSTS: Record<
         claimCreditCostGrowthRate: 1.18,
         upgradeCreditCost: 15,
         upgradeCreditCostGrowthRate: 1.35,
+        baseEnergyUse: 2,
         usesEnergy: true,
         description: "Produces Credits/sec.",
     },
@@ -64,6 +67,7 @@ export const PRIMARY_OUTPOSTS: Record<
         claimCreditCostGrowthRate: 1.2,
         upgradeCreditCost: 20,
         upgradeCreditCostGrowthRate: 1.4,
+        baseEnergyUse: 3,
         usesEnergy: true,
         description: "Produces Science/sec.",
     },
@@ -77,6 +81,7 @@ export const PRIMARY_OUTPOSTS: Record<
         claimCreditCostGrowthRate: 1.22,
         upgradeCreditCost: 25,
         upgradeCreditCostGrowthRate: 1.4,
+        baseEnergyUse: 0,
         usesEnergy: false,
         description: "Provides Evergy Capacity.",
     },
@@ -90,6 +95,7 @@ export const PRIMARY_OUTPOSTS: Record<
         claimCreditCostGrowthRate: 1.2,
         upgradeCreditCost: 20,
         upgradeCreditCostGrowthRate: 1.4,
+        baseEnergyUse: 3,
         usesEnergy: true,
         description: "Extracts materials that are automatically converted into Credits/sec.",
     },
@@ -101,4 +107,12 @@ export function getOutpostLevelOutputMultiplier(level: number): number {
   }
 
   return 1 + (level - 1) * 0.5;
+}
+
+export function getOutpostLevelEnergyUseMultiplier(level: number): number {
+    if (level <= 0) {
+        return 0;
+    }
+
+    return 1 + (level - 1) * 0.1;
 }

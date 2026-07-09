@@ -1,5 +1,6 @@
 import type { GameState, StarSystem } from "../types";
 import { 
+  getOutpostLevelEnergyUseMultiplier,
   getOutpostLevelOutputMultiplier,
   PRIMARY_OUTPOSTS 
 } from "../config/outposts";
@@ -30,7 +31,7 @@ const RESEARCH_EFFECTS = {
     extractionHandlingMultiplier: 1.25,
 } as const;
 
-const GRAD_COMMAND_STARTER_ENERGY = 2;
+const GRAD_COMMAND_STARTER_ENERGY = 6;
 const ENERGY_SHORTAGE_PRODUCTION_EFFICIENCY = 0.5
 
 export function calculateRates(state: GameState): CalculatedRates {
@@ -148,9 +149,13 @@ function calculateEnergyUsed(state: GameState): number {
 
     const outpost = PRIMARY_OUTPOSTS[system.primaryOutpostId];
 
-    if (outpost.usesEnergy) {
-      energyUsed += 1;
+    if (!outpost.usesEnergy) {
+      continue;
     }
+
+    energyUsed +=
+      outpost.baseEnergyUse *
+      getOutpostLevelEnergyUseMultiplier(system.primaryOutpostLevel);
   }
 
   return energyUsed;

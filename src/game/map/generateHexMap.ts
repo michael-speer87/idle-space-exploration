@@ -52,12 +52,21 @@ const NAME_SUFFIXES = [
   "Point",
 ] as const;
 
-const AFFINITY_LEVELS: readonly AffinityLevel[] = [
+const AFFINITY_KEYS = [
+  "survey",
+  "science",
+  "commerce",
+  "power",
+  "extraction",
+] as const satisfies readonly (keyof AffinityProfile)[];
+
+const HIGH_AFFINITY_CHANCE = 0.67;
+
+const NON_HIGH_AFFINITY_LEVELS: readonly AffinityLevel[] = [
   "low",
   "neutral",
   "neutral",
   "neutral",
-  "high",
 ];
 
 export function generateHexMap(options: GenerateHexMapOptions): StarMapState {
@@ -151,13 +160,25 @@ function createSystemName(random: () => number): string {
 }
 
 function createAffinityProfile(random: () => number): AffinityProfile {
-  return {
-    survey: pickOne(random, AFFINITY_LEVELS),
-    science: pickOne(random, AFFINITY_LEVELS),
-    commerce: pickOne(random, AFFINITY_LEVELS),
-    power: pickOne(random, AFFINITY_LEVELS),
-    extraction: pickOne(random, AFFINITY_LEVELS),
+  const highAffinity =
+    random() < HIGH_AFFINITY_CHANCE ? pickOne(random, AFFINITY_KEYS) : null;
+
+  const profile: AffinityProfile = {
+    survey: "neutral",
+    science: "neutral",
+    commerce: "neutral",
+    power: "neutral",
+    extraction: "neutral",
   };
+
+  for (const affinityKey of AFFINITY_KEYS) {
+    profile[affinityKey] =
+      affinityKey === highAffinity
+        ? "high"
+        : pickOne(random, NON_HIGH_AFFINITY_LEVELS);
+  }
+
+  return profile;
 }
 
 function createSupportSlotCount(random: () => number): number {

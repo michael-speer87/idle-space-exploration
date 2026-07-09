@@ -244,6 +244,7 @@ function GameScreen() {
             research={gameState.research}
             startableProjectIds={startableResearchProjectIds}
             science={gameState.resources.science}
+            researchSpeedPerSecond={rates.researchSpeedPerSecond}
             onStartResearch={handleStartResearch}
           />
         </ResearchDrawer>

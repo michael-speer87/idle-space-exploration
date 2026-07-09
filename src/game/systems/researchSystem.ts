@@ -77,6 +77,7 @@ export function startResearch(
 export function advanceActiveResearch(
     state: GameState,
     seconds: number,
+    researchSpeedPerSecond = state.research.speedPerSecond,
 ): GameState {
     const activeProjectId = state.research.activeProjectId;
 
@@ -108,9 +109,7 @@ export function advanceActiveResearch(
         return completeResearchProject(state, activeProjectId);
     }
 
-    const maxScienceToSpend = state.research.speedPerSecond * seconds;
-
-    console.log(maxScienceToSpend)
+    const maxScienceToSpend = researchSpeedPerSecond * seconds;
 
     const scienceSpent = Math.min(
         state.resources.science,

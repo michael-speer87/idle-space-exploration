@@ -11,6 +11,7 @@ export type CalculatedRates = {
     epPerSecond: number;
     creditsPerSecond: number;
     sciencePerSecond: number;
+    researchSpeedPerSecond: number;
     energyProduced: number;
     energyUsed: number;
     energySurplus: number;
@@ -32,7 +33,8 @@ const RESEARCH_EFFECTS = {
 } as const;
 
 const GRAD_COMMAND_STARTER_ENERGY = 6;
-const ENERGY_SHORTAGE_PRODUCTION_EFFICIENCY = 0.5
+const ENERGY_SHORTAGE_PRODUCTION_EFFICIENCY = 0.5;
+const BASE_RESEARCH_SPEED_PER_SECOND = 1;
 
 export function calculateRates(state: GameState): CalculatedRates {
   const energyProduced = calculateEnergyProduced(state);
@@ -96,10 +98,16 @@ export function calculateRates(state: GameState): CalculatedRates {
     }
   }
 
+  const researchSpeedPerSecond = Math.max(
+    BASE_RESEARCH_SPEED_PER_SECOND,
+    sciencePerSecond,
+  );
+
   return {
     epPerSecond,
     creditsPerSecond,
     sciencePerSecond,
+    researchSpeedPerSecond,
     energyProduced,
     energyUsed,
     energySurplus,

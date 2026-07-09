@@ -10,6 +10,7 @@ type ResearchPanelProps = {
     research: ResearchState;
     startableProjectIds: ResearchProjectId[];
     science: number;
+    researchSpeedPerSecond: number;
     onStartResearch: (projectId: ResearchProjectId) => void;
 };
 
@@ -17,6 +18,7 @@ export function ResearchPanel({
     research,
     startableProjectIds,
     science,
+    researchSpeedPerSecond,
     onStartResearch,
 }: ResearchPanelProps) {
     const activeProject =
@@ -25,9 +27,12 @@ export function ResearchPanel({
             : null;
 
     const activeResearchSecondsRemaining =
-        activeProject !== null && research.speedPerSecond > 0 && research.activeProjectId !== null
-            ? (activeProject.scienceCost - research.projectsById[research.activeProjectId].progress) /
-            research.speedPerSecond
+        activeProject !== null &&
+        researchSpeedPerSecond > 0 &&
+        research.activeProjectId !== null
+            ? (activeProject.scienceCost -
+                    research.projectsById[research.activeProjectId].progress) /
+                researchSpeedPerSecond
             : null;
 
     const activeResearchEtaLabel =
@@ -41,6 +46,9 @@ export function ResearchPanel({
         <div className="research-panel">
             <p className="research-summary">
                 Science available: <strong>{science.toFixed(1)}</strong>
+                {" . "}
+                Research speed:{" "}
+                <strong>{researchSpeedPerSecond.toFixed(2)}/sec</strong>
             </p>"
 
             {activeProject === null ? (

@@ -11,9 +11,16 @@ export function advanceGameTime(
         return state;
     }
 
-    let nextState = addResourceProduction(state, seconds);
+    const rates = calculateRates(state);
 
-    nextState = advanceActiveResearch(nextState, seconds);
+    let nextState = addResourceProduction(state, seconds, rates);
+
+    nextState = advanceActiveResearch(
+        nextState,
+        seconds,
+        rates.researchSpeedPerSecond,
+    )
+
     nextState = advanceActiveSurvey(nextState, seconds);
 
     return nextState;
@@ -22,9 +29,8 @@ export function advanceGameTime(
 function addResourceProduction(
     state: GameState,
     seconds: number,
+    rates: ReturnType<typeof calculateRates>
 ): GameState {
-    const rates = calculateRates(state);
-
     if (rates.creditsPerSecond <= 0 && rates.sciencePerSecond <= 0) {
         return state;
     }

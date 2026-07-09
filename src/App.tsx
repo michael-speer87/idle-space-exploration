@@ -27,6 +27,8 @@ import { getRunStatsSummary } from "./game/systems/runStatsSystem";
 import { ResearchDrawer } from "./components/ResearchDrawer";
 import { DevAdminPanel } from "./components/DevAdminPanel";
 
+const GAME_VERSION_LABEL = "v0.1";
+
 function App() {
   return (
     <GameProvider>
@@ -224,9 +226,15 @@ function GameScreen() {
 
       <section className="map-section">
         <div className="map-header">
-          <h1>Idle Space Exploration</h1>
+          <div className="map-title-row">
+            <h1>Idle Space Exploration</h1>
+            <span className="version-badge" title="MVP Candidate v0.1">
+              {GAME_VERSION_LABEL}
+            </span>
+          </div>
+
           <p>
-            Seed {gameState.seed} · {gameState.map.systemIds.length} systems
+            Seed {gameState.seed} · {gameState.map.systemIds.length} systems 
           </p>
         </div>
 

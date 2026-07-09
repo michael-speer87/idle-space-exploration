@@ -110,6 +110,8 @@ export function advanceActiveResearch(
 
     const maxScienceToSpend = state.research.speedPerSecond * seconds;
 
+    console.log(maxScienceToSpend)
+
     const scienceSpent = Math.min(
         state.resources.science,
         maxScienceToSpend,

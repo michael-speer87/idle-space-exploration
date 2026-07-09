@@ -10,6 +10,7 @@ import {
 } from "../game/config/outposts"
 import type { OutpostClaimOption, PrimaryOutpostUpgradeOption } from "../game/systems/outpostSystem";
 import { getSurveyRequirementForSystem } from "../game/systems/explorationSystem";
+import { formatDuration } from "../game/utils/formatDuration";
 
 type SelectedSystemPanelProps = {
   gameState: GameState;
@@ -57,6 +58,17 @@ export function SelectedSystemPanel({
         ? 100
         : 0;
 
+  const surveySecondsRemaining =
+    activeSurvey !== null && activeSurvey.speedPerSecond > 0
+      ? (activeSurvey.requiredProgress - activeSurvey.progress) /
+        activeSurvey.speedPerSecond
+      : null;
+  
+  const surveyEtaLabel =
+    surveySecondsRemaining !== null
+      ? formatDuration(surveySecondsRemaining)
+      : "Not surveying"
+
   return (
     <section className="system-panel">
       <p className="panel-kicker">
@@ -103,6 +115,8 @@ export function SelectedSystemPanel({
         {activeSurvey !== null && (
           <p className="panel-note">Survey in progress...</p>
         )}
+        
+        <PanelRow label="Survey ETA" value={surveyEtaLabel} />
 
         {activeSurvey === null && canBeginSurvey && (
           <button
@@ -110,7 +124,7 @@ export function SelectedSystemPanel({
             type="button"
             onClick={onBeginSurvey}
           >
-            Begin First Free Survey
+            {firstFreeSurveyAvailable ? "Begin Free Survey" : "Begin Survey"}
           </button>
         )}
 

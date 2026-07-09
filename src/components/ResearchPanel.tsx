@@ -4,6 +4,7 @@ import {
     type ResearchProjectId,
 } from "../game/config/research";
 import type { ResearchState } from "../game/types";
+import { formatDuration } from "../game/utils/formatDuration";
 
 type ResearchPanelProps = {
     research: ResearchState;
@@ -23,6 +24,19 @@ export function ResearchPanel({
             ? RESEARCH_PROJECTS[research.activeProjectId]
             : null;
 
+    const activeResearchSecondsRemaining =
+        activeProject !== null && research.speedPerSecond > 0 && research.activeProjectId !== null
+            ? (activeProject.scienceCost - research.projectsById[research.activeProjectId].progress) /
+            research.speedPerSecond
+            : null;
+
+    const activeResearchEtaLabel =
+        activeResearchSecondsRemaining !== null
+            ? formatDuration(activeResearchSecondsRemaining)
+            : "No active research";
+
+
+
     return (
         <div className="research-panel">
             <p className="research-summary">
@@ -32,9 +46,14 @@ export function ResearchPanel({
             {activeProject === null ? (
                 <p className="panel-note">No active research.</p>
             ) : (
-                <p className="panel-note">
-                    Active: <strong>{activeProject.name}</strong>
-                </p>
+                <div>
+                    <p className="panel-note">
+                        Active: <strong>{activeProject.name}</strong>
+                    </p>
+                    <p className="panel-note">
+                        ETA: {activeResearchEtaLabel}
+                    </p>
+                </div>
             )}
 
             <div className="research-project-list">

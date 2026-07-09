@@ -22,7 +22,7 @@ export const RESEARCH_PROJECTS: Record<
   improved_survey_arrays: {
     id: "improved_survey_arrays",
     name: "Improved Survey Arrays",
-    scienceCost: 1000000,
+    scienceCost: 1_500,
     prerequisiteIds: [],
     description: "Increses Survey Array EP/sec output by 25%.",
   },
@@ -30,7 +30,7 @@ export const RESEARCH_PROJECTS: Record<
   commerce_optimization: {
     id: "commerce_optimization",
     name: "Commerce Optimization",
-    scienceCost: 12,
+    scienceCost: 1_500,
     prerequisiteIds: [],
     description: "Increases Commerce Hub Credits/sec output by 25%.",
   },
@@ -38,7 +38,7 @@ export const RESEARCH_PROJECTS: Record<
   applied_science_methods: {
     id: "applied_science_methods",
     name: "Applied Science Methods",
-    scienceCost: 12,
+    scienceCost: 2_000,
     prerequisiteIds: [],
     description: "Increases Science Station Science/sec output by 25%.",
   },
@@ -46,7 +46,7 @@ export const RESEARCH_PROJECTS: Record<
   power_relay_efficiency: {
     id: "power_relay_efficiency",
     name: "Power Relay Efficiency",
-    scienceCost: 15,
+    scienceCost: 2_500,
     prerequisiteIds: [],
     description: "Increases Power Relay Energy output by 25%.",
   },
@@ -54,7 +54,7 @@ export const RESEARCH_PROJECTS: Record<
   extraction_handling: {
     id: "extraction_handling",
     name: "Extraction Handling",
-    scienceCost: 15,
+    scienceCost: 2_000,
     prerequisiteIds: [],
     description: "Increases Extraction Rig Credits/sec output by 25%.",
   },
@@ -62,7 +62,7 @@ export const RESEARCH_PROJECTS: Record<
   outpost_tier_ii: {
     id: "outpost_tier_ii",
     name: "Outpost Tier II",
-    scienceCost: 25,
+    scienceCost: 7_500,
     prerequisiteIds: [
       "improved_survey_arrays",
       "commerce_optimization",
@@ -74,7 +74,7 @@ export const RESEARCH_PROJECTS: Record<
   basic_influence_calibration: {
     id: "basic_influence_calibration",
     name: "Basic Influence Calibration",
-    scienceCost: 30,
+    scienceCost: 5_000,
     prerequisiteIds: ["outpost_tier_ii"],
     description: "Future effect: prepare the first Influence reset.",
   },

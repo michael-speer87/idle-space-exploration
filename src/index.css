@@ -63,18 +63,6 @@ button {
   cursor: pointer;
 }
 
-.system-panel {
-  position: static;
-  width: auto;
-  max-height: none;
-  overflow: visible;
-  padding: 1rem;
-  border: 1px solid rgba(114, 224, 255, 0.16);
-  border-radius: 0.75rem;
-  background: rgba(9, 17, 31, 0.78);
-  backdrop-filter: blur(8px);
-}
-
 .star-map-canvas {
   width: 100%;
   height: 100vh;
@@ -99,29 +87,6 @@ dt {
 
 dd {
   margin: 0.15rem 0 0;
-}
-
-.system-panel h2 {
-  margin-top: 0.15rem;
-  margin-bottom: 1rem;
-}
-
-.panel-kicker {
-  margin: 0;
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  opacity: 0.65;
-}
-
-.panel-section {
-  margin-top: 1.5rem;
-}
-
-.panel-section h3 {
-  margin: 0 0 0.75rem;
-  font-size: 0.9rem;
-  color: #c8d7ff;
 }
 
 .grad-command-note {

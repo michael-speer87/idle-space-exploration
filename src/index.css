@@ -63,26 +63,6 @@ button {
   cursor: pointer;
 }
 
-.game-layout {
-  min-height: 100vh;
-  display: grid;
-  grid-template-columns: 340px minmax(0, 1fr);
-  background: 
-    radial-gradient(circle at center, rgba(16, 55, 92, 0.18), transparent 38%),
-    #080b14;
-}
-
-.left-sidebar {
-  height: 100vh;
-  overflow: auto;
-  display: grid;
-  align-content: start;
-  gap: 0.85rem;
-  padding: 0.85rem;
-  border-right: 1px solid rgba(114, 224, 155, 0.18);
-  background: rgba(5, 10, 20, 0.82)
-}
-
 .system-panel,
 .run-progress-panel,
 .run-stats-panel {
@@ -95,13 +75,6 @@ button {
   border-radius: 0.75rem;
   background: rgba(9, 17, 31, 0.78);
   backdrop-filter: blur(8px);
-}
-
-.map-section {
-  position: relative;
-  min-width: 0;
-  min-height: 100vh;
-  overflow: hidden;
 }
 
 .map-header {

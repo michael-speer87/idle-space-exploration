@@ -200,8 +200,19 @@ function GameScreen() {
   }, [gameState]);
 
   return (
-    <main className="game-layout">
-      <aside className="left-sidebar">
+    <main className="
+      grid min-h-screen
+      grid-cols-[340px_minmax(0,1fr)]
+      bg-ise-background
+      text-ise-text
+      "
+    >
+      <aside className="
+        grid h-screen content-start gap-3.5 overflow-y-auto
+        border-r border-ise-border
+        bg-ise-void/85 p-3.5
+        "
+      >
         <SelectedSystemPanel
           gameState={gameState}
           system={selectedSystem}
@@ -224,7 +235,7 @@ function GameScreen() {
         <RunStatsPanel stats={runStatsSummary} />
       </aside>
 
-      <section className="map-section">
+      <section className="relative min-h-screen min-w-0 overflow-hidden">
         <div className="map-header">
           <div className="map-title-row">
             <h1>Idle Space Exploration</h1>
@@ -234,7 +245,7 @@ function GameScreen() {
           </div>
 
           <p>
-            Seed {gameState.seed} · {gameState.map.systemIds.length} systems 
+            Seed {gameState.seed} · {gameState.map.systemIds.length} systems
           </p>
         </div>
 

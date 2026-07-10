@@ -236,24 +236,45 @@ function GameScreen() {
       </aside>
 
       <section className="relative min-h-screen min-w-0 overflow-hidden">
-        <div className="map-header">
-          <div className="map-title-row">
-            <h1>Idle Space Exploration</h1>
-            <span className="version-badge" title="MVP Candidate v0.1">
-              {GAME_VERSION_LABEL}
-            </span>
+       
+        <header className="
+          absolute inset-x-4 top-4 z-10
+          flex items-start justify-between gap-4
+          rounded-panel border border-ise-border
+          bg-ise-void/90 p-3 shadow-panel
+          backdrop-blur-md
+        "
+        >
+          <div className="min-w-0 shrink-0">
+            <div className="flex items-center gap-2">
+              <h1 className="m-0 text-base font-semibold tracking-wide text-ise-text">
+                Idle Space Exploration
+              </h1>
+
+              <span className="
+                rounded-full border border-ise-accent/35
+                b-ise-accent-muted px-2 py-0.5
+                text-[0.65rem] font-bold tracking-[0.08em]
+                text-ise-accent-hover
+              "
+              title="MVP Candidate v0.1"
+              >
+                {GAME_VERSION_LABEL}
+              </span>
+            </div>
+
+            <p className="mt-1 mb-0 text-xs text-ise-text-muted">
+              Home Cluster · Seed {gameState.seed} .{" "}
+              {gameState.map.systemIds.length} systems
+            </p>
           </div>
 
-          <p>
-            Seed {gameState.seed} · {gameState.map.systemIds.length} systems
-          </p>
-        </div>
-
-        <ResourceBar
-          credits={gameState.resources.credits}
-          science={gameState.resources.science}
-          rates={rates}
-        />
+          <ResourceBar
+            credits={gameState.resources.credits}
+            science={gameState.resources.science}
+            rates={rates}
+          />
+        </header>
 
         <ResearchDrawer
           isOpen={isResearchDrawerOpen}

@@ -1,5 +1,52 @@
 @import "tailwindcss";
 
+@theme {
+  --color-ise-void: #050914;
+  --color-ise-background: #080d19;
+  --color-ise-surface: #0d1626;
+  --color-ise-surface-raised: #132036;
+  --color-ise-surface-hover: #192a45;
+
+  /* Borders */
+  --color-ise-border: #263b56;
+  --color-ise-border-strong: #365878;
+
+  /* Text */
+  --color-ise-text: #e7f0fb;
+  --color-ise-text-muted: #91a4bb;
+  --color-ise-text-subtle: #64788f;
+
+  /* Brand and interaction */
+  --color-ise-accent: #4da3ff;
+  --color-ise-accent-hover: #70b7ff;
+  --color-ise-accent-muted: #163b61;
+
+  /* Resource and state colors */
+  --color-ise-credits: #f3c969;
+  --color-ise-science: #6fd5ff;
+  --color-ise-exploration: #9d8cff;
+  --color-ise-influence: #e38cff;
+  --color-ise-energy: #70d99b;
+
+  --color-ise-success: #70d99b;
+  --color-ise-warning: #f3c969;
+  --color-ise-danger: #ff7c85;
+  --color-ise-info: #6fd5ff;
+
+  /* Shape */
+  --radius-panel: 0.75rem;
+  --radius-control: 0.5rem;
+
+  /* Shadows */
+  --shadow-panel: 0 10px 30px rgb(0 0 0 / 0.28);
+  --shadow-control: 0 4px 12px rgb(0 0 0 / 0.2);
+
+  /* Typography */
+  --font-sans:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
+}
+
 * {
   box-sizing: border-box;
 }

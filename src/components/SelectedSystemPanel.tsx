@@ -525,15 +525,99 @@ type AffinityGridProps = {
   affinities: AffinityProfile;
 };
 
+type AffinityLevel = AffinityProfile[keyof AffinityProfile];
+
 function AffinityGrid({ affinities }: AffinityGridProps) {
+  const affinityEntries = Object.entries(affinities) as Array<[keyof AffinityProfile, AffinityLevel]>;
+
   return (
-    <div className="affinity-grid">
-      {Object.entries(affinities).map(([name, level]) => (
-        <div key={name} className={`affinity-pill affinity-${level}`}>
-          <span>{name}: </span>
-          <strong>{level}</strong>
-        </div>
+    <div className="grid grid-cols-2 gap-2">
+      {affinityEntries.map(([name, level]) => (
+        <AffinityCard
+          key={String(name)}
+          name={formatAffinityName(String(name))}
+          level={level}
+        />
       ))}
     </div>
+  )
+}
+
+type AffinityCardProps = {
+  name: string;
+  level: AffinityLevel;
+};
+
+function AffinityCard({
+  name,
+  level,
+}: AffinityCardProps) {
+  const levelClasses = getAffinityLevelClasses(level);
+
+  return (
+    <div
+      className="
+        min-w-0 rounded-control
+        border border-ise-border
+        bg-ise-background/60 p-2.5
+        transition-colors
+        hover:border-ise-border-strong
+        hover:bg-ise-surface-hover/50
+      "
+    >
+      <span
+        className="
+          block truncate
+          text-xs font-medium text-ise-text-muted
+        "
+        title={name}
+      >
+        {name}
+      </span>
+
+      <span
+        className={`
+          mt-1 inline-flex rounded-full border
+          px-2 py-0.5
+          text-[0.65rem] font-semibold uppercase
+          tracking-[0.08em]
+          ${levelClasses}
+        `}
+      >
+        {level}
+      </span>
+    </div>
   );
+}
+
+function getAffinityLevelClasses(level: AffinityLevel): string {
+  switch (level) {
+    case "high":
+      return `
+        border-ise-success/35
+        bg-ise-success/10
+        text-ise-success
+      `;
+
+    case "low":
+      return `
+        border-ise-danger/35
+        bg-ise-danger/10
+        text-ise-danger
+      `;
+
+    case "neutral":
+    default:
+      return `
+        border-ise-border-strong
+        bg-ise-surface-raised
+        text-ise-text-muted
+      `;
+  }
+}
+
+function formatAffinityName(name: string): string {
+  return name
+    .replaceAll("_", " ")
+    .replace(/\b\w/g, (character) => character.toUpperCase());
 }

@@ -257,84 +257,94 @@ export function SelectedSystemPanel({
         </Section>
 
         <Section title="Outpost Potential">
-          <h3>Outpost Potential</h3>
-
           {!isSurveyed ? (
-            <p className="panel-note">
-              Survey this system to reveal support slots and outpost potential.
-            </p>
+            <div
+              className="
+        rounded-control border border-dashed border-ise-border
+        bg-ise-background/45 px-4 py-5 text-center
+      "
+            >
+              <p className="m-0 text-xs leading-relaxed text-ise-text-muted">
+                Survey this system to reveal support slots and construction options.
+              </p>
+            </div>
           ) : (
-            <dl>
+            <div className="grid gap-3">
+              <div
+                className="
+          grid grid-cols-2 gap-2
+          rounded-control border border-ise-border
+          bg-ise-background/60 p-2
+        "
+              >
+                <OutpostSummary
+                  label="Support Slots"
+                  value={system.supportSlotCount.toString()}
+                />
+
+                <OutpostSummary
+                  label="Primary Outpost"
+                  value={
+                    system.primaryOutpostId === null
+                      ? "Unclaimed"
+                      : PRIMARY_OUTPOSTS[system.primaryOutpostId].name
+                  }
+                />
+
+                {system.primaryOutpostId !== null && (
+                  <OutpostSummary
+                    label="Outpost Level"
+                    value={system.primaryOutpostLevel.toString()}
+                  />
+                )}
+
+                <OutpostSummary
+                  label="Claim Status"
+                  value={system.claimState}
+                />
+              </div>
+
               {system.claimState === "unclaimed" && (
-                <div className="outpost-action-list">
+                <div className="grid gap-2">
+                  <p className="m-0 text-xs leading-relaxed text-ise-text-muted">
+                    Select a primary outpost to claim this system.
+                  </p>
+
                   {outpostClaimOptions.map((option) => {
                     const outpost = PRIMARY_OUTPOSTS[option.outpostId];
 
                     return (
-                      <div key={option.outpostId} className="outpost-action-card">
-                        <button
-                          className="primary-action-button"
-                          type="button"
-                          disabled={!option.canClaim}
-                          onClick={() => onClaimOutpost(option.outpostId)}
-                        >
-                          Claim with {outpost.name}
-                          {" . "}
-                          {option.creditCost === 0
-                            ? "Free"
-                            : `${option.creditCost.toFixed(0)} Credits`}
-                        </button>
-
-                        {!option.canClaim && option.blockedReason !== null && (
-                          <p className="outpost-blocked-reason">
-                            {option.blockedReason}
-                          </p>
-                        )}
-                      </div>
+                      <OutpostActionCard
+                        key={option.outpostId}
+                        title={outpost.name}
+                        detail={
+                          option.creditCost === 0
+                            ? "No credit cost"
+                            : `${option.creditCost.toFixed(0)} Credits`
+                        }
+                        actionLabel={`Claim with ${outpost.name}`}
+                        disabled={!option.canClaim}
+                        blockedReason={option.blockedReason}
+                        onAction={() => onClaimOutpost(option.outpostId)}
+                      />
                     );
                   })}
                 </div>
               )}
 
               {system.primaryOutpostId !== null && (
-                <div className="outpost-action-card">
-                  <button
-                    className="primary-action-button"
-                    type="button"
-                    disabled={!primaryOutpostUpgradeOption.canUpgrade}
-                    onClick={onUpgradePrimaryOutpost}
-                  >
-                    Upgrade to Level {primaryOutpostUpgradeOption.nextLevel}
-                    {" . "}
-                    {primaryOutpostUpgradeOption.creditCost.toFixed(0)} Credits
-                  </button>
-
-                  {!primaryOutpostUpgradeOption.canUpgrade &&
-                    primaryOutpostUpgradeOption.blockedReason !== null && (
-                      <p className="outpost-blocked-reason">
-                        {primaryOutpostUpgradeOption.blockedReason}
-                      </p>
-                    )}
-                </div>
+                <OutpostActionCard
+                  title={PRIMARY_OUTPOSTS[system.primaryOutpostId].name}
+                  detail={`Current level ${system.primaryOutpostLevel}`}
+                  actionLabel={`Upgrade to Level ${primaryOutpostUpgradeOption.nextLevel}`}
+                  actionCost={`${primaryOutpostUpgradeOption.creditCost.toFixed(0)} Credits`}
+                  disabled={!primaryOutpostUpgradeOption.canUpgrade}
+                  blockedReason={primaryOutpostUpgradeOption.blockedReason}
+                  onAction={onUpgradePrimaryOutpost}
+                  accent="success"
+                />
               )}
-
-              <PanelRow
-                label="Support Slots"
-                value={system.supportSlotCount.toString()}
-              />
-              <PanelRow
-                label="Primary Outpost"
-                value={
-                  system.primaryOutpostId === null
-                    ? "None"
-                    : PRIMARY_OUTPOSTS[system.primaryOutpostId].name
-                }
-              />
-              <PanelRow
-                label="Outpost Level"
-                value={system.primaryOutpostLevel.toString()}
-              />
-            </dl>
+            </div>
           )}
         </Section>
 
@@ -372,6 +382,142 @@ function PanelRow({ label, value }: PanelRowProps) {
       <dt>{label}</dt>
       <dd>{value}</dd>
     </div>
+  );
+}
+
+type OutpostSummaryProps = {
+  label: string;
+  value: string;
+};
+
+function OutpostSummary({
+  label,
+  value,
+}: OutpostSummaryProps) {
+  return (
+    <div
+      className="
+        min-w-0 rounded-control
+        px-2 py-1.5
+        hover:bg-ise-surface-hover/50
+      "
+    >
+      <span
+        className="
+          block text-[0.65rem] font-semibold uppercase
+          tracking-[0.08em] text-ise-text-subtle
+        "
+      >
+        {label}
+      </span>
+
+      <strong
+        className="
+          mt-0.5 block truncate
+          text-xs font-semibold capitalize text-ise-text
+        "
+        title={value}
+      >
+        {value}
+      </strong>
+    </div>
+  );
+}
+
+type OutpostActionCardProps = {
+  title: string;
+  detail: string;
+  actionLabel: string;
+  actionCost?: string;
+  disabled: boolean;
+  blockedReason: string | null;
+  onAction: () => void;
+  accent?: "primary" | "success";
+};
+
+function OutpostActionCard({
+  title,
+  detail,
+  actionLabel,
+  actionCost,
+  disabled,
+  blockedReason,
+  onAction,
+  accent = "primary",
+}: OutpostActionCardProps) {
+  const activeClasses =
+    accent === "success"
+      ? `
+          border-ise-success/40 bg-ise-success/10
+          text-ise-success hover:bg-ise-success/20
+          focus-visible:outline-ise-success
+        `
+      : `
+          border-ise-accent/40 bg-ise-accent-muted
+          text-ise-accent-hover hover:bg-ise-accent/25
+          focus-visible:outline-ise-accent
+        `;
+
+  return (
+    <article
+      className="
+        rounded-control border border-ise-border
+        bg-ise-background/60 p-3
+      "
+    >
+      <div className="mb-3 flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h4 className="m-0 truncate text-sm font-semibold text-ise-text">
+            {title}
+          </h4>
+
+          <p className="mt-1 mb-0 text-xs text-ise-text-muted">
+            {detail}
+          </p>
+        </div>
+
+        {actionCost && (
+          <span
+            className="
+              shrink-0 rounded-full border border-ise-credits/30
+              bg-ise-credits/10 px-2 py-0.5
+              text-[0.65rem] font-semibold text-ise-credits
+            "
+          >
+            {actionCost}
+          </span>
+        )}
+      </div>
+
+      <button
+        className={`
+          w-full rounded-control border px-3 py-2.5
+          text-sm font-semibold transition-colors
+          focus-visible:outline-2 focus-visible:outline-offset-2
+          disabled:cursor-not-allowed disabled:border-ise-border
+          disabled:bg-ise-void/60 disabled:text-ise-text-subtle
+          ${activeClasses}
+        `}
+        type="button"
+        disabled={disabled}
+        onClick={onAction}
+      >
+        {actionLabel}
+      </button>
+
+      {disabled && blockedReason !== null && (
+        <p
+          className="
+            mt-2 mb-0 rounded-control
+            border border-ise-warning/25
+            bg-ise-warning/10 p-2
+            text-xs leading-relaxed text-ise-warning
+          "
+        >
+          {blockedReason}
+        </p>
+      )}
+    </article>
   );
 }
 

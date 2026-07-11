@@ -89,15 +89,6 @@ dd {
   margin: 0.15rem 0 0;
 }
 
-.grad-command-note {
-  margin-top: 1.5rem;
-  padding: 0.75rem;
-  border: 1px solid rgba(156, 255, 177, 0.35);
-  border-radius: 0.65rem;
-  background: rgba(156, 255, 177, 0.08);
-  color: #c8ffd3;
-}
-
 .affinity-grid {
   display: grid;
   gap: 0.5rem;

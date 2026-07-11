@@ -24,10 +24,12 @@ import { getRunObjectiveProgress } from "./game/systems/progressionSystem";
 import { getInfluenceResetPreview } from "./game/systems/influenceSystem";
 import { RunStatsPanel } from "./components/RunStatsPanel";
 import { getRunStatsSummary } from "./game/systems/runStatsSystem";
-import { ResearchDrawer } from "./components/ResearchDrawer";
 import { DevAdminPanel } from "./components/DevAdminPanel";
+import { MissionWorkspace } from "./components/ui/MissionWorkspace";
 
 const GAME_VERSION_LABEL = "v0.1";
+
+type MissionWorkspaceId = "research" | "build";
 
 function App() {
   return (
@@ -47,7 +49,9 @@ function GameScreen() {
   const runObjectiveProgress = getRunObjectiveProgress(gameState);
   const influenceResetPreview = getInfluenceResetPreview(gameState);
   const runStatsSummary = getRunStatsSummary(gameState);
-  const [isResearchDrawerOpen, setIsResearchDrawerOpen] = useState(true);
+
+  const [activeWorkspace, setActiveWorkspace] =
+    useState<MissionWorkspaceId | null>(null);
 
   const selectedSystem = gameState.selectedSystemId
     ? gameState.map.systemsById[gameState.selectedSystemId]
@@ -186,8 +190,17 @@ function GameScreen() {
     });
   }, [dispatch, selectedSystem]);
 
-  const handleToggleResearchDrawer = useCallback(() => {
-    setIsResearchDrawerOpen((current) => !current);
+  const handleOpenWorkspace = useCallback(
+    (workspaceId: MissionWorkspaceId) => {
+      setActiveWorkspace((current) =>
+        current === workspaceId ? null : workspaceId,
+      );
+    },
+    [],
+  )
+
+  const handleCloseWorkspace = useCallback(() => {
+    setActiveWorkspace(null);
   }, []);
 
   useEffect(() => {
@@ -236,7 +249,7 @@ function GameScreen() {
       </aside>
 
       <section className="relative min-h-screen min-w-0 overflow-hidden">
-       
+
         <header className="
           absolute inset-x-4 top-4 z-10
           flex items-start justify-between gap-4
@@ -257,7 +270,7 @@ function GameScreen() {
                 text-[0.65rem] font-bold tracking-[0.08em]
                 text-ise-accent-hover
               "
-              title="MVP Candidate v0.1"
+                title="MVP Candidate v0.1"
               >
                 {GAME_VERSION_LABEL}
               </span>
@@ -276,18 +289,58 @@ function GameScreen() {
           />
         </header>
 
-        <ResearchDrawer
-          isOpen={isResearchDrawerOpen}
-          onToggle={handleToggleResearchDrawer}
+        <nav className={`
+          absolute top-28 z-30
+          grid gap-2
+          trasition-[right] duration-200
+          ${activeWorkspace === null ? "right-4" : "right-[396px]"}
+        `}
         >
-          <ResearchPanel
-            research={gameState.research}
-            startableProjectIds={startableResearchProjectIds}
-            science={gameState.resources.science}
-            researchSpeedPerSecond={rates.researchSpeedPerSecond}
-            onStartResearch={handleStartResearch}
+          <WorkspaceLauncher
+            label="Research"
+            isActive={activeWorkspace === "research"}
+            onClick={() => handleOpenWorkspace("research")}
           />
-        </ResearchDrawer>
+
+          <WorkspaceLauncher
+            label="Build"
+            isActive={activeWorkspace === "build"}
+            onClick={() => handleOpenWorkspace("build")}
+          />
+        </nav>
+
+        {activeWorkspace === "research" && (
+          <div className="absolute inset-y-0 right-0 z-20">
+            <MissionWorkspace
+              title="Research"
+              subtitle="GRaD Scientific Directorate"
+              onClose={handleCloseWorkspace}
+            >
+              <ResearchPanel
+                research={gameState.research}
+                startableProjectIds={startableResearchProjectIds}
+                science={gameState.resources.science}
+                researchSpeedPerSecond={rates.researchSpeedPerSecond}
+                onStartResearch={handleStartResearch}
+              />
+            </MissionWorkspace>
+          </div>
+        )}
+
+        {activeWorkspace === "build" && (
+          <div className="absolute inset-y-0 right-0 z-20">
+            <MissionWorkspace
+              title="Build"
+              subtitle={selectedSystem?.name ?? "No system selected"}
+              onClose={handleCloseWorkspace}
+            >
+              <BuildWorkspacePlaceholder
+                hasSelectedSystem={selectedSystem !== null}
+                selectedSystemName={selectedSystem?.name ?? null}
+              />
+            </MissionWorkspace>
+          </div>
+        )}
 
         <SaveControls
           gameState={gameState}
@@ -306,6 +359,91 @@ function GameScreen() {
         />
       </section>
     </main>
+  );
+}
+
+type WorkspaceLauncherProps = {
+  label: string;
+  isActive: boolean;
+  onClick: () => void;
+};
+
+function WorkspaceLauncher({
+  label,
+  isActive,
+  onClick,
+}: WorkspaceLauncherProps) {
+  return (
+    <button
+      className={`
+        min-w-24 rounded-control border
+        px-3 py-2 text-left
+        text-xs font-semibold tracking-wide
+        shadow-control
+        backdrop-blur-md
+        transition-colors
+        focus-visible:outline-2
+        focus-visible:outline-offset-2
+        focus-visible:outline-ise-accent
+        ${
+          isActive
+            ? `
+                border-ise-accent/50
+                bg-ise-accent-muted
+                text-ise-accent-hover
+              `
+            : `
+                border-ise-border
+                bg-ise-void/90
+                text-ise-text-muted
+                hover:border-ise-border-strong
+                hover:bg-ise-surface-hover
+                hover:text-ise-text
+              `
+        }
+      `}
+      type="button"
+      aria-pressed={isActive}
+      onClick={onClick}
+    >
+      {label}
+    </button>
+  );
+}
+
+type BuildWorkspacePlaceholderProps = {
+  hasSelectedSystem: boolean;
+  selectedSystemName: string | null;
+};
+
+function BuildWorkspacePlaceholder({
+  hasSelectedSystem,
+  selectedSystemName,
+}: BuildWorkspacePlaceholderProps) {
+  return (
+    <div className="grid gap-4">
+      <div
+        className="
+          rounded-panel border border-dashed border-ise-border
+          bg-ise-surface p-5 text-center
+        "
+      >
+        <h3 className="m-0 text-sm font-semibold text-ise-text">
+          Build Workspace
+        </h3>
+
+        <p className="mt-2 mb-0 text-xs leading-relaxed text-ise-text-muted">
+          {hasSelectedSystem
+            ? `Construction controls for ${selectedSystemName} will move here in a future UI milestone.`
+            : "Select a surveyed system to inspect its future construction options."}
+        </p>
+      </div>
+
+      <p className="m-0 text-xs leading-relaxed text-ise-text-subtle">
+        Outpost claim, upgrade, and replacement controls remain in Selected
+        System until the Build workspace migration is complete.
+      </p>
+    </div>
   );
 }
 

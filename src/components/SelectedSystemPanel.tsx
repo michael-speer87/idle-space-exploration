@@ -13,6 +13,7 @@ import { getSurveyRequirementForSystem } from "../game/systems/explorationSystem
 import { formatDuration } from "../game/utils/formatDuration";
 import { Panel } from "./ui/Panel";
 import { Section } from "./ui/Section";
+import { ProgressBar } from "./ui/ProgressBar";
 
 type SelectedSystemPanelProps = {
   gameState: GameState;
@@ -132,57 +133,127 @@ export function SelectedSystemPanel({
         </Section>
 
         <Section title="Survey">
-          <h3>Survey</h3>
-
-          <div className="survey-progress">
-            <div className="survey-progress-label">
-              <span>Progress</span>
-              <strong>{surveyProgress}%</strong>
-            </div>
-
-            <div className="survey-progress-bar">
-              <div
-                className="survey-progress-fill"
-                style={{ width: `${surveyProgress}%` }}
-              />
-            </div>
-          </div>
-
-          {activeSurvey !== null && (
-            <p className="panel-note">Survey in progress...</p>
-          )}
-
-          <PanelRow label="Survey ETA" value={surveyEtaLabel} />
-
-          {activeSurvey === null && canBeginSurvey && (
-            <button
-              className="primary-action-button"
-              type="button"
-              onClick={onBeginSurvey}
+          <div className="grid gap-3">
+            <div
+              className="
+                rounded-control border border-ise-border
+                bg-ise-background/60 p-3
+              "
             >
-              {firstFreeSurveyAvailable ? "Begin Free Survey" : "Begin Survey"}
-            </button>
-          )}
+              <ProgressBar
+                value={surveyProgress}
+                ariaLabel={`Survey progress for ${system.name}`}
+                colorClassName={
+                  system.explorationState === "surveyed"
+                    ? "bg-ise-success"
+                    : "bg-ise-accent"
+                }
+                label={
+                  <>
+                    <span className="font-medium text-ise-text-muted">
+                      {activeSurvey !== null
+                        ? "Surveying..."
+                        : system.explorationState === "surveyed"
+                          ? "Survey Complete"
+                          : "Survey Progress"}
+                    </span>
 
-          {activeSurvey === null &&
-            !canBeginSurvey &&
-            system.explorationState === "detected" &&
-            !firstFreeSurveyAvailable && (
-              <p className="panel-note">
-                Further surveys require EP infrastructure. Coming in a later
-                milestone.
+                    <strong className="tabular-nums text-ise-text">
+                      {surveyProgress}%
+                    </strong>
+                  </>
+                }
+              />
+
+              <div
+                className="
+                  mt-3 flex items-center justify-between gap-3
+                  text-xs
+                "
+              >
+                <span className="text-ise-text-muted">Estimated Time</span>
+
+                <strong className="tabular-nums text-ise-text">
+                  {surveyEtaLabel}
+                </strong>
+              </div>
+            </div>
+
+            {activeSurvey === null && canBeginSurvey && (
+              <button
+                className="
+                  w-full rounded-control
+                  border border-ise-accent/40
+                  bg-ise-accent-muted px-3 py-2.5
+                  text-sm font-semibold text-ise-accent-hover
+                  transition-colors
+                  hover:bg-ise-accent/25
+                  focus-visible:outline-2
+                  focus-visible:outline-offset-2
+                  focus-visible:outline-ise-accent
+                "
+                type="button"
+                onClick={onBeginSurvey}
+              >
+                Begin Survey
+              </button>
+            )}
+
+            {activeSurvey !== null && (
+              <p
+                className="
+                  m-0 rounded-control
+                  border border-ise-info/30
+                  bg-ise-info/10 p-3
+                  text-xs leading-relaxed text-ise-info
+                "
+              >
+                Survey operation in progress.
               </p>
             )}
 
-          {system.explorationState === "unknown" && (
-            <p className="panel-note">
-              This system is unknown. Survey nearby systems to detect it.
-            </p>
-          )}
+            {activeSurvey === null &&
+              !canBeginSurvey &&
+              system.explorationState === "detected" &&
+              !firstFreeSurveyAvailable && (
+                <p
+                  className="
+                    m-0 rounded-control
+                    border border-ise-border
+                    bg-ise-void/45 p-3
+                    text-xs leading-relaxed text-ise-text-muted
+                  "
+                >
+                  Further surveys require EP infrastructure.
+                </p>
+              )}
 
-          {system.explorationState === "surveyed" && (
-            <p className="panel-note">Survey complete.</p>
-          )}
+            {system.explorationState === "unknown" && (
+              <p
+                className="
+                  m-0 rounded-control
+                  border border-ise-warning/30
+                  bg-ise-warning/10 p-3
+                  text-xs leading-relaxed text-ise-warning
+                "
+              >
+                Survey a neighboring system to detect this location.
+              </p>
+            )}
+
+            {system.explorationState === "surveyed" && (
+              <p
+                className="
+                  m-0 rounded-control
+                  border border-ise-success/30
+                  bg-ise-success/10 p-3
+                  text-xs leading-relaxed text-ise-success
+                "
+              >
+                Survey complete. System data and outpost potential are available.
+              </p>
+            )}
+          </div>
         </Section>
 
         <Section title="Outpost Potential">

@@ -30,7 +30,7 @@ import { Dock } from "./components/ui/Dock";
 
 const GAME_VERSION_LABEL = "v0.1";
 
-type MissionWorkspaceId = "research" | "build";
+type MissionWorkspaceId = "research" | "build" | "dev";
 
 function App() {
   return (
@@ -343,6 +343,18 @@ function GameScreen() {
           </div>
         )}
 
+        {import.meta.env.DEV && activeWorkspace === "dev" && (
+          <div className="absolute inset-y-0 right-0 z-20">
+            <MissionWorkspace
+              title="Developer Console"
+              subtitle="Local Development tools only"
+              onClose={handleCloseWorkspace}
+            >
+              <DevAdminPanel />
+            </MissionWorkspace>
+          </div>
+        )}
+
         <div className={`
           absolute bottom-4 z-30
           transition-[right] duration-200
@@ -353,13 +365,47 @@ function GameScreen() {
             ariaLabel="Session utilities"
             orientation="horizontal"
           >
-            <SaveControls 
+            <SaveControls
               gameState={gameState}
               onSave={handleSaveGame}
               onResetGame={handleResetGame}
             />
+
+            {import.meta.env.DEV && (
+              <button
+                className={`
+                  rounded-control border px-3 py-2
+                  text-xs font-semibold tracking-wide
+                  transition-colors
+                  focus-visible:outline-2
+                  focus-visible:outline-offset-2
+                  focus-visible:outline-ise-warning
+                  ${activeWorkspace === "dev"
+                    ? `
+                        border-ise-warning/50
+                        bg-ise-warning/20
+                        text-ise-warning
+                      `
+                    : `
+                        border-ise-warning/30
+                        bg-ise-warning/10
+                        text-ise-warning
+                        hover:bg-ise-warning/20
+                      `
+                  }
+    `}
+                type="button"
+                aria-pressed={activeWorkspace === "dev"}
+                title="Open developer console"
+                onClick={() => handleOpenWorkspace("dev")}
+              >
+                DEV
+              </button>
+            )}
           </Dock>
         </div>
+
+
         <div className="absolute bottom-4 left-4 z-30">
           <Dock
             ariaLabel="Map utilities"
@@ -368,8 +414,6 @@ function GameScreen() {
             <MapLegend />
           </Dock>
         </div>
-
-        {import.meta.env.DEV && <DevAdminPanel />}
 
         <StarMapCanvas
           map={gameState.map}
@@ -404,14 +448,13 @@ function WorkspaceLauncher({
         focus-visible:outline-2
         focus-visible:outline-offset-2
         focus-visible:outline-ise-accent
-        ${
-          isActive
-            ? `
+        ${isActive
+          ? `
                 border-ise-accent/50
                 bg-ise-accent-muted
                 text-ise-accent-hover
               `
-            : `
+          : `
                 border-ise-border
                 bg-ise-void/90
                 text-ise-text-muted

@@ -31,6 +31,10 @@ const OUTPOST_MARKER_COLORS: Record<PrimaryOutpostId, number> = {
     extraction_rig: 0xff9f6e,
 };
 
+const MIN_MAP_SCALE = 0.55;
+const MAX_MAP_SCALE = 2.25;
+const MAP_ZOOM_SENSITIVITY = 0.0015;
+
 export function StarMapCanvas({
     map,
     selectedSystemId,
@@ -62,6 +66,7 @@ export function StarMapCanvas({
         cameraLayer.addChild(mapLayer);
 
         let removePanListeners: (() => void) | null = null;
+        let removeZoomListener: (() => void) | null = null;
 
         async function startPixi() {
             if (!hostElement) {
@@ -94,6 +99,11 @@ export function StarMapCanvas({
                 interactionStateRef.current,
             );
 
+            removeZoomListener = installMapZoom(
+                app,
+                cameraLayer,
+            );
+
             appRef.current = app;
             mapLayerRef.current = mapLayer
 
@@ -107,6 +117,7 @@ export function StarMapCanvas({
             setIsPixiReady(false);
 
             removePanListeners?.();
+            removeZoomListener?.();
 
             // If the app finished initializing it's stored on the ref — destroy that instance.
             if (appRef.current) {
@@ -146,118 +157,215 @@ export function StarMapCanvas({
 }
 
 type MapInteractionState = {
-  suppressSelection: boolean;
+    suppressSelection: boolean;
 };
 
 function installMapPanning(
-  canvas: HTMLCanvasElement,
-  cameraLayer: Container,
-  interactionState: MapInteractionState,
+    canvas: HTMLCanvasElement,
+    cameraLayer: Container,
+    interactionState: MapInteractionState,
 ): () => void {
-  let activePointerId: number | null = null;
-  let lastPointerX = 0;
-  let lastPointerY = 0;
-  let totalMovement = 0;
-  let selectionReleaseTimer: number | null = null;
+    let activePointerId: number | null = null;
+    let lastPointerX = 0;
+    let lastPointerY = 0;
+    let totalMovement = 0;
+    let selectionReleaseTimer: number | null = null;
 
-  function handlePointerDown(event: PointerEvent) {
-    const isUnsupportedMouseButton =
-      event.pointerType === "mouse" && event.button !== 0;
+    function handlePointerDown(event: PointerEvent) {
+        const isUnsupportedMouseButton =
+            event.pointerType === "mouse" && event.button !== 0;
 
-    if (
-      !event.isPrimary ||
-      isUnsupportedMouseButton ||
-      activePointerId !== null
-    ) {
-      return;
+        if (
+            !event.isPrimary ||
+            isUnsupportedMouseButton ||
+            activePointerId !== null
+        ) {
+            return;
+        }
+
+        event.preventDefault();
+
+        activePointerId = event.pointerId;
+        lastPointerX = event.clientX;
+        lastPointerY = event.clientY;
+        totalMovement = 0;
+
+        interactionState.suppressSelection = false;
+
+        canvas.setPointerCapture(event.pointerId);
+        canvas.style.cursor = "grabbing";
     }
 
-    event.preventDefault();
+    function handlePointerMove(event: PointerEvent) {
+        if (event.pointerId !== activePointerId) {
+            return;
+        }
 
-    activePointerId = event.pointerId;
-    lastPointerX = event.clientX;
-    lastPointerY = event.clientY;
-    totalMovement = 0;
+        event.preventDefault();
 
-    interactionState.suppressSelection = false;
+        const deltaX = event.clientX - lastPointerX;
+        const deltaY = event.clientY - lastPointerY;
 
-    canvas.setPointerCapture(event.pointerId);
-    canvas.style.cursor = "grabbing";
-  }
+        lastPointerX = event.clientX;
+        lastPointerY = event.clientY;
 
-  function handlePointerMove(event: PointerEvent) {
-    if (event.pointerId !== activePointerId) {
-      return;
+        cameraLayer.x += deltaX;
+        cameraLayer.y += deltaY;
+
+        totalMovement += Math.hypot(deltaX, deltaY);
+
+        if (totalMovement >= 6) {
+            interactionState.suppressSelection = true;
+        }
     }
 
-    event.preventDefault();
+    function handlePointerEnd(event: PointerEvent) {
+        if (event.pointerId !== activePointerId) {
+            return;
+        }
 
-    const deltaX = event.clientX - lastPointerX;
-    const deltaY = event.clientY - lastPointerY;
+        if (canvas.hasPointerCapture(event.pointerId)) {
+            canvas.releasePointerCapture(event.pointerId);
+        }
 
-    lastPointerX = event.clientX;
-    lastPointerY = event.clientY;
+        activePointerId = null;
+        canvas.style.cursor = "grab";
 
-    cameraLayer.x += deltaX;
-    cameraLayer.y += deltaY;
+        if (!interactionState.suppressSelection) {
+            return;
+        }
 
-    totalMovement += Math.hypot(deltaX, deltaY);
+        if (selectionReleaseTimer !== null) {
+            window.clearTimeout(selectionReleaseTimer);
+        }
 
-    if (totalMovement >= 6) {
-      interactionState.suppressSelection = true;
+        selectionReleaseTimer = window.setTimeout(() => {
+            interactionState.suppressSelection = false;
+            selectionReleaseTimer = null;
+        }, 0);
     }
-  }
 
-  function handlePointerEnd(event: PointerEvent) {
-    if (event.pointerId !== activePointerId) {
-      return;
-    }
-
-    if (canvas.hasPointerCapture(event.pointerId)) {
-      canvas.releasePointerCapture(event.pointerId);
-    }
-
-    activePointerId = null;
     canvas.style.cursor = "grab";
+    canvas.style.touchAction = "none";
+    canvas.style.userSelect = "none";
 
-    if (!interactionState.suppressSelection) {
-      return;
+    canvas.addEventListener("pointerdown", handlePointerDown);
+    canvas.addEventListener("pointermove", handlePointerMove);
+    canvas.addEventListener("pointerup", handlePointerEnd);
+    canvas.addEventListener("pointercancel", handlePointerEnd);
+    canvas.addEventListener("lostpointercapture", handlePointerEnd);
+
+    return () => {
+        canvas.removeEventListener("pointerdown", handlePointerDown);
+        canvas.removeEventListener("pointermove", handlePointerMove);
+        canvas.removeEventListener("pointerup", handlePointerEnd);
+        canvas.removeEventListener("pointercancel", handlePointerEnd);
+        canvas.removeEventListener(
+            "lostpointercapture",
+            handlePointerEnd,
+        );
+
+        if (selectionReleaseTimer !== null) {
+            window.clearTimeout(selectionReleaseTimer);
+        }
+    };
+}
+
+function installMapZoom(
+    app: Application,
+    cameraLayer: Container,
+): () => void {
+    const canvas = app.canvas;
+
+    function handleWheel(event: WheelEvent) {
+        event.preventDefault();
+
+        const canvasRect = canvas.getBoundingClientRect();
+
+        if (canvasRect.width <= 0 || canvasRect.height <= 0) {
+            return;
+        }
+
+        const pointerX =
+            (event.clientX - canvasRect.left) *
+            (app.screen.width / canvasRect.width);
+
+        const pointerY =
+            (event.clientY - canvasRect.top) *
+            (app.screen.height / canvasRect.height);
+
+        const currentScale = cameraLayer.scale.x;
+        const normalizedDelta = normalizeWheelDelta(
+            event,
+            app.screen.height,
+        );
+
+        const zoomFactor = Math.exp(
+            -normalizedDelta * MAP_ZOOM_SENSITIVITY,
+        );
+
+        const nextScale = clamp(
+            currentScale * zoomFactor,
+            MIN_MAP_SCALE,
+            MAX_MAP_SCALE,
+        );
+
+        if (nextScale === currentScale) {
+            return;
+        }
+
+        /*
+         * Convert the cursor position into map-space coordinates before
+         * changing the scale. After scaling, reposition the camera so the
+         * same map coordinate remains beneath the cursor.
+         */
+        const mapPointX =
+            (pointerX - cameraLayer.x) / currentScale;
+
+        const mapPointY =
+            (pointerY - cameraLayer.y) / currentScale;
+
+        cameraLayer.scale.set(nextScale);
+
+        cameraLayer.x =
+            pointerX - mapPointX * nextScale;
+
+        cameraLayer.y =
+            pointerY - mapPointY * nextScale;
     }
 
-    if (selectionReleaseTimer !== null) {
-      window.clearTimeout(selectionReleaseTimer);
+    canvas.addEventListener("wheel", handleWheel, {
+        passive: false,
+    });
+
+    return () => {
+        canvas.removeEventListener("wheel", handleWheel);
+    };
+}
+
+function normalizeWheelDelta(
+    event: WheelEvent,
+    viewportHeight: number,
+): number {
+    switch (event.deltaMode) {
+        case WheelEvent.DOM_DELTA_LINE:
+            return event.deltaY * 16;
+
+        case WheelEvent.DOM_DELTA_PAGE:
+            return event.deltaY * viewportHeight;
+
+        case WheelEvent.DOM_DELTA_PIXEL:
+        default:
+            return event.deltaY;
     }
+}
 
-    selectionReleaseTimer = window.setTimeout(() => {
-      interactionState.suppressSelection = false;
-      selectionReleaseTimer = null;
-    }, 0);
-  }
-
-  canvas.style.cursor = "grab";
-  canvas.style.touchAction = "none";
-  canvas.style.userSelect = "none";
-
-  canvas.addEventListener("pointerdown", handlePointerDown);
-  canvas.addEventListener("pointermove", handlePointerMove);
-  canvas.addEventListener("pointerup", handlePointerEnd);
-  canvas.addEventListener("pointercancel", handlePointerEnd);
-  canvas.addEventListener("lostpointercapture", handlePointerEnd);
-
-  return () => {
-    canvas.removeEventListener("pointerdown", handlePointerDown);
-    canvas.removeEventListener("pointermove", handlePointerMove);
-    canvas.removeEventListener("pointerup", handlePointerEnd);
-    canvas.removeEventListener("pointercancel", handlePointerEnd);
-    canvas.removeEventListener(
-      "lostpointercapture",
-      handlePointerEnd,
-    );
-
-    if (selectionReleaseTimer !== null) {
-      window.clearTimeout(selectionReleaseTimer);
-    }
-  };
+function clamp(
+  value: number,
+  minimum: number,
+  maximum: number,
+): number {
+  return Math.min(maximum, Math.max(minimum, value));
 }
 
 type DrawStarMapOptions = {

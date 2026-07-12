@@ -291,7 +291,7 @@ function GameScreen() {
         </header>
 
         <nav className={`
-          absolute top-28 z-30
+          absolute top-35 z-30
           grid gap-2
           trasition-[right] duration-200
           ${activeWorkspace === null ? "right-4" : "right-[396px]"}

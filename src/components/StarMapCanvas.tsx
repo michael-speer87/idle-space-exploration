@@ -39,6 +39,11 @@ export function StarMapCanvas({
     const hostRef = useRef<HTMLDivElement | null>(null);
     const appRef = useRef<Application | null>(null);
     const mapLayerRef = useRef<Container | null>(null);
+
+    const interactionStateRef = useRef<MapInteractionState>({
+        suppressSelection: false,
+    });
+
     const [isPixiReady, setIsPixiReady] = useState(false);
 
     useEffect(() => {
@@ -51,7 +56,12 @@ export function StarMapCanvas({
         let isCancelled = false;
 
         const app = new Application();
+        const cameraLayer = new Container();
         const mapLayer = new Container();
+
+        cameraLayer.addChild(mapLayer);
+
+        let removePanListeners: (() => void) | null = null;
 
         async function startPixi() {
             if (!hostElement) {
@@ -71,10 +81,21 @@ export function StarMapCanvas({
 
             hostElement.appendChild(app.canvas);
 
-            app.stage.addChild(mapLayer);
+            app.stage.addChild(cameraLayer);
+
+            cameraLayer.position.set(
+                app.screen.width / 2,
+                app.screen.height / 2,
+            );
+
+            removePanListeners = installMapPanning(
+                app.canvas,
+                cameraLayer,
+                interactionStateRef.current,
+            );
 
             appRef.current = app;
-            mapLayerRef.current = mapLayer;
+            mapLayerRef.current = mapLayer
 
             setIsPixiReady(true);
         }
@@ -84,6 +105,8 @@ export function StarMapCanvas({
         return () => {
             isCancelled = true;
             setIsPixiReady(false);
+
+            removePanListeners?.();
 
             // If the app finished initializing it's stored on the ref — destroy that instance.
             if (appRef.current) {
@@ -111,36 +134,149 @@ export function StarMapCanvas({
         }
 
         drawStarMap({
-            app,
             mapLayer,
             map,
             selectedSystemId,
             onSelectSystem,
+            canSelectSystem: () => !interactionStateRef.current.suppressSelection,
         });
     }, [isPixiReady, map, selectedSystemId, onSelectSystem]);
 
     return <div ref={hostRef} className="star-map-canvas" />;
 }
 
+type MapInteractionState = {
+  suppressSelection: boolean;
+};
+
+function installMapPanning(
+  canvas: HTMLCanvasElement,
+  cameraLayer: Container,
+  interactionState: MapInteractionState,
+): () => void {
+  let activePointerId: number | null = null;
+  let lastPointerX = 0;
+  let lastPointerY = 0;
+  let totalMovement = 0;
+  let selectionReleaseTimer: number | null = null;
+
+  function handlePointerDown(event: PointerEvent) {
+    const isUnsupportedMouseButton =
+      event.pointerType === "mouse" && event.button !== 0;
+
+    if (
+      !event.isPrimary ||
+      isUnsupportedMouseButton ||
+      activePointerId !== null
+    ) {
+      return;
+    }
+
+    event.preventDefault();
+
+    activePointerId = event.pointerId;
+    lastPointerX = event.clientX;
+    lastPointerY = event.clientY;
+    totalMovement = 0;
+
+    interactionState.suppressSelection = false;
+
+    canvas.setPointerCapture(event.pointerId);
+    canvas.style.cursor = "grabbing";
+  }
+
+  function handlePointerMove(event: PointerEvent) {
+    if (event.pointerId !== activePointerId) {
+      return;
+    }
+
+    event.preventDefault();
+
+    const deltaX = event.clientX - lastPointerX;
+    const deltaY = event.clientY - lastPointerY;
+
+    lastPointerX = event.clientX;
+    lastPointerY = event.clientY;
+
+    cameraLayer.x += deltaX;
+    cameraLayer.y += deltaY;
+
+    totalMovement += Math.hypot(deltaX, deltaY);
+
+    if (totalMovement >= 6) {
+      interactionState.suppressSelection = true;
+    }
+  }
+
+  function handlePointerEnd(event: PointerEvent) {
+    if (event.pointerId !== activePointerId) {
+      return;
+    }
+
+    if (canvas.hasPointerCapture(event.pointerId)) {
+      canvas.releasePointerCapture(event.pointerId);
+    }
+
+    activePointerId = null;
+    canvas.style.cursor = "grab";
+
+    if (!interactionState.suppressSelection) {
+      return;
+    }
+
+    if (selectionReleaseTimer !== null) {
+      window.clearTimeout(selectionReleaseTimer);
+    }
+
+    selectionReleaseTimer = window.setTimeout(() => {
+      interactionState.suppressSelection = false;
+      selectionReleaseTimer = null;
+    }, 0);
+  }
+
+  canvas.style.cursor = "grab";
+  canvas.style.touchAction = "none";
+  canvas.style.userSelect = "none";
+
+  canvas.addEventListener("pointerdown", handlePointerDown);
+  canvas.addEventListener("pointermove", handlePointerMove);
+  canvas.addEventListener("pointerup", handlePointerEnd);
+  canvas.addEventListener("pointercancel", handlePointerEnd);
+  canvas.addEventListener("lostpointercapture", handlePointerEnd);
+
+  return () => {
+    canvas.removeEventListener("pointerdown", handlePointerDown);
+    canvas.removeEventListener("pointermove", handlePointerMove);
+    canvas.removeEventListener("pointerup", handlePointerEnd);
+    canvas.removeEventListener("pointercancel", handlePointerEnd);
+    canvas.removeEventListener(
+      "lostpointercapture",
+      handlePointerEnd,
+    );
+
+    if (selectionReleaseTimer !== null) {
+      window.clearTimeout(selectionReleaseTimer);
+    }
+  };
+}
+
 type DrawStarMapOptions = {
-    app: Application;
     mapLayer: Container;
     map: StarMapState;
     selectedSystemId: StarSystemId | null;
     onSelectSystem: (systemId: StarSystemId) => void;
+    canSelectSystem: () => boolean;
 };
 
 function drawStarMap({
-    app,
     mapLayer,
     map,
     selectedSystemId,
     onSelectSystem,
+    canSelectSystem,
 }: DrawStarMapOptions) {
     mapLayer.removeChildren();
 
-    const centerX = app.screen.width / 2;
-    const centerY = app.screen.height / 2;
     const hexPoints = getHexCornerPoints();
 
     for (const systemId of map.systemIds) {
@@ -149,15 +285,19 @@ function drawStarMap({
 
         const systemContainer = new Container();
 
-        systemContainer.x = centerX + pixel.x;
-        systemContainer.y = centerY + pixel.y;
+        systemContainer.x = pixel.x;
+        systemContainer.y = pixel.y;
         systemContainer.eventMode = "static";
         systemContainer.cursor = "pointer";
         systemContainer.hitArea = new Circle(0, 0, 28);
 
         systemContainer.on("pointertap", () => {
+            if (!canSelectSystem()) {
+                return;
+            }
+
             onSelectSystem(system.id);
-        });
+        })
 
         drawSystemHex(systemContainer, hexPoints, system, selectedSystemId);
         drawSystemStar(systemContainer, system, selectedSystemId);

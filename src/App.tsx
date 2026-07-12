@@ -26,6 +26,7 @@ import { RunStatsPanel } from "./components/RunStatsPanel";
 import { getRunStatsSummary } from "./game/systems/runStatsSystem";
 import { DevAdminPanel } from "./components/DevAdminPanel";
 import { MissionWorkspace } from "./components/ui/MissionWorkspace";
+import { Dock } from "./components/ui/Dock";
 
 const GAME_VERSION_LABEL = "v0.1";
 
@@ -348,7 +349,14 @@ function GameScreen() {
           onResetGame={handleResetGame}
         />
 
-        <MapLegend />
+        <div className="absolute bottom-4 left-4 z-30">
+          <Dock
+            ariaLabel="Map utilities"
+            className="w-56"
+          >
+            <MapLegend />
+          </Dock>
+        </div>
 
         {import.meta.env.DEV && <DevAdminPanel />}
 

@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { GameProvider, useGameDispatch, useGameState } from "./game/GameContext";
 import { SelectedSystemPanel } from "./components/SelectedSystemPanel";
-import { StarMapCanvas } from "./components/StarMapCanvas";
+import {
+  StarMapCanvas,
+  type StarMapCameraHandle,
+} from "./components/StarMapCanvas";
 import { MapLegend } from "./components/MapLegend";
 import type { StarSystemId } from "./game/types";
 import { canBeginSurvey } from "./game/systems/explorationSystem";
@@ -50,6 +53,7 @@ function GameScreen() {
   const runObjectiveProgress = getRunObjectiveProgress(gameState);
   const influenceResetPreview = getInfluenceResetPreview(gameState);
   const runStatsSummary = getRunStatsSummary(gameState);
+  const starMapCameraRef = useRef<StarMapCameraHandle | null>(null);
 
   const [activeWorkspace, setActiveWorkspace] =
     useState<MissionWorkspaceId | null>(null);
@@ -412,16 +416,81 @@ function GameScreen() {
             className="w-56"
           >
             <MapLegend />
+
+            <div
+              className="
+      grid grid-cols-[2.5rem_1fr_2.5rem] gap-2
+      border-t border-ise-border pt-2
+    "
+            >
+              <MapControlButton
+                label="Zoom out"
+                onClick={() => starMapCameraRef.current?.zoomOut()}
+              >
+                −
+              </MapControlButton>
+
+              <MapControlButton
+                label="Center map"
+                onClick={() => starMapCameraRef.current?.center()}
+              >
+                Center
+              </MapControlButton>
+
+              <MapControlButton
+                label="Zoom in"
+                onClick={() => starMapCameraRef.current?.zoomIn()}
+              >
+                +
+              </MapControlButton>
+            </div>
           </Dock>
         </div>
 
         <StarMapCanvas
+          ref={starMapCameraRef}
           map={gameState.map}
           selectedSystemId={gameState.selectedSystemId}
           onSelectSystem={handleSelectSystem}
         />
       </section>
     </main>
+  );
+}
+
+type MapControlButtonProps = {
+  label: string;
+  children: React.ReactNode;
+  onClick: () => void;
+};
+
+function MapControlButton({
+  label,
+  children,
+  onClick,
+}: MapControlButtonProps) {
+  return (
+    <button
+      className="
+        inline-flex min-h-9 items-center justify-center
+        rounded-control border border-ise-border
+        bg-ise-background/65 px-2
+        text-xs font-semibold text-ise-text-muted
+        transition-colors
+        hover:border-ise-border-strong
+        hover:bg-ise-surface-hover
+        hover:text-ise-text
+        focus-visible:outline-2
+        focus-visible:outline-offset-2
+        focus-visible:outline-ise-accent
+      "
+      type="button"
+      aria-label={label}
+      title={label}
+      onClick={onClick}
+    >
+      {children}
+    </button>
   );
 }
 

@@ -1,4 +1,10 @@
-import { useEffect, useRef, useState } from "react";
+import {
+    forwardRef,
+    useEffect,
+    useImperativeHandle,
+    useRef,
+    useState,
+} from "react";
 import { Application, Circle, Container, Graphics } from "pixi.js";
 import type {
     StarMapState,
@@ -9,11 +15,18 @@ import type {
 import { axialToPixel, getHexCornerPoints } from "../game/map/hexLayout";
 import type { PrimaryOutpostId } from "../game/config/outposts";
 
+
 type StarMapCanvasProps = {
     map: StarMapState;
     selectedSystemId: StarSystemId | null;
     onSelectSystem: (systemId: StarSystemId) => void;
 };
+
+export type StarMapCameraHandle = {
+    zoomIn: () => void;
+    zoomOut: () => void;
+    center: () => void;
+}
 
 const STAR_COLORS: Record<StarVisual, number> = {
     yellow: 0xffdf7a,
@@ -34,21 +47,67 @@ const OUTPOST_MARKER_COLORS: Record<PrimaryOutpostId, number> = {
 const MIN_MAP_SCALE = 0.55;
 const MAX_MAP_SCALE = 2.25;
 const MAP_ZOOM_SENSITIVITY = 0.0015;
+const MAP_ZOOM_STEP = 1.2;
 
-export function StarMapCanvas({
-    map,
-    selectedSystemId,
-    onSelectSystem,
-}: StarMapCanvasProps) {
+export const StarMapCanvas = forwardRef<
+    StarMapCameraHandle,
+    StarMapCanvasProps
+>(function StarMapCanvas(
+    {
+        map,
+        selectedSystemId,
+        onSelectSystem,
+    },
+    ref,
+) {
     const hostRef = useRef<HTMLDivElement | null>(null);
     const appRef = useRef<Application | null>(null);
     const mapLayerRef = useRef<Container | null>(null);
+    const cameraLayerRef = useRef<Container | null>(null);
 
     const interactionStateRef = useRef<MapInteractionState>({
         suppressSelection: false,
     });
 
     const [isPixiReady, setIsPixiReady] = useState(false);
+
+    useImperativeHandle(
+        ref,
+        () => ({
+            zoomIn() {
+                zoomFromViewportCenter(
+                    appRef.current,
+                    cameraLayerRef.current,
+                    MAP_ZOOM_STEP,
+                );
+            },
+
+            zoomOut() {
+                zoomFromViewportCenter(
+                    appRef.current,
+                    cameraLayerRef.current,
+                    1 / MAP_ZOOM_STEP,
+                );
+            },
+
+            center() {
+                const app = appRef.current;
+                const cameraLayer = cameraLayerRef.current;
+
+                if (app === null || cameraLayer === null) {
+                    return;
+                }
+
+                cameraLayer.scale.set(1);
+
+                cameraLayer.position.set(
+                    app.screen.width / 2,
+                    app.screen.height / 2,
+                );
+            },
+        }),
+        [],
+    );
 
     useEffect(() => {
         const hostElement = hostRef.current;
@@ -105,6 +164,7 @@ export function StarMapCanvas({
             );
 
             appRef.current = app;
+            cameraLayerRef.current = cameraLayer
             mapLayerRef.current = mapLayer
 
             setIsPixiReady(true);
@@ -133,6 +193,7 @@ export function StarMapCanvas({
             }
 
             mapLayerRef.current = null;
+            cameraLayerRef.current = null;
         };
     }, []);
 
@@ -154,7 +215,7 @@ export function StarMapCanvas({
     }, [isPixiReady, map, selectedSystemId, onSelectSystem]);
 
     return <div ref={hostRef} className="star-map-canvas" />;
-}
+});
 
 type MapInteractionState = {
     suppressSelection: boolean;
@@ -271,6 +332,55 @@ function installMapPanning(
     };
 }
 
+function zoomFromViewportCenter(
+  app: Application | null,
+  cameraLayer: Container | null,
+  zoomFactor: number,
+): void {
+  if (app === null || cameraLayer === null) {
+    return;
+  }
+
+  const nextScale = clamp(
+    cameraLayer.scale.x * zoomFactor,
+    MIN_MAP_SCALE,
+    MAX_MAP_SCALE,
+  );
+
+  zoomCameraAtPoint(
+    cameraLayer,
+    nextScale,
+    app.screen.width / 2,
+    app.screen.height / 2,
+  );
+}
+
+function zoomCameraAtPoint(
+  cameraLayer: Container,
+  nextScale: number,
+  anchorX: number,
+  anchorY: number,
+): void {
+  const currentScale = cameraLayer.scale.x;
+
+  if (nextScale === currentScale) {
+    return;
+  }
+
+  const mapPointX =
+    (anchorX - cameraLayer.x) / currentScale;
+
+  const mapPointY =
+    (anchorY - cameraLayer.y) / currentScale;
+
+  cameraLayer.scale.set(nextScale);
+
+  cameraLayer.position.set(
+    anchorX - mapPointX * nextScale,
+    anchorY - mapPointY * nextScale,
+  );
+}
+
 function installMapZoom(
     app: Application,
     cameraLayer: Container,
@@ -319,19 +429,12 @@ function installMapZoom(
          * changing the scale. After scaling, reposition the camera so the
          * same map coordinate remains beneath the cursor.
          */
-        const mapPointX =
-            (pointerX - cameraLayer.x) / currentScale;
-
-        const mapPointY =
-            (pointerY - cameraLayer.y) / currentScale;
-
-        cameraLayer.scale.set(nextScale);
-
-        cameraLayer.x =
-            pointerX - mapPointX * nextScale;
-
-        cameraLayer.y =
-            pointerY - mapPointY * nextScale;
+        zoomCameraAtPoint(
+            cameraLayer,
+            nextScale,
+            pointerX,
+            pointerY,
+        );
     }
 
     canvas.addEventListener("wheel", handleWheel, {
@@ -361,11 +464,11 @@ function normalizeWheelDelta(
 }
 
 function clamp(
-  value: number,
-  minimum: number,
-  maximum: number,
+    value: number,
+    minimum: number,
+    maximum: number,
 ): number {
-  return Math.min(maximum, Math.max(minimum, value));
+    return Math.min(maximum, Math.max(minimum, value));
 }
 
 type DrawStarMapOptions = {

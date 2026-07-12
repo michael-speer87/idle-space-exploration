@@ -343,12 +343,23 @@ function GameScreen() {
           </div>
         )}
 
-        <SaveControls
-          gameState={gameState}
-          onSave={handleSaveGame}
-          onResetGame={handleResetGame}
-        />
-
+        <div className={`
+          absolute bottom-4 z-30
+          transition-[right] duration-200
+          ${activeWorkspace === null ? "right-4" : "right-[396px]"}
+        `}
+        >
+          <Dock
+            ariaLabel="Session utilities"
+            orientation="horizontal"
+          >
+            <SaveControls 
+              gameState={gameState}
+              onSave={handleSaveGame}
+              onResetGame={handleResetGame}
+            />
+          </Dock>
+        </div>
         <div className="absolute bottom-4 left-4 z-30">
           <Dock
             ariaLabel="Map utilities"

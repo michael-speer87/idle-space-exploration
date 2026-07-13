@@ -116,24 +116,43 @@ export function SelectedSystemPanel({
       }
     >
       <div className="grid gap-4">
-        <Section title="System Details" divider={false}>
-          <div className={`
-            grid gap-2 rounded-control
-            border border-ise-border
-            bg-ise-background/60 p-2
-            ${isSurveyed ? "grid-cols-2" : "grid-cols-1"}
-          `}
-          >
-            <SystemMetric
-              label="Survey Requirement"
-              value={`${surveyRequirement} EP`}
-            />
+        <Section title="System Data" divider={false}>
+          <div className="grid gap-3">
+            <div
+              className={`
+                grid gap-2 rounded-control
+                border border-ise-border
+                bg-ise-background/60 p-2
+                ${isSurveyed ? "grid-cols-2" : "grid-cols-1"}
+              `}
+            >
+              <SystemMetric
+                label="Survey Requirement"
+                value={`${surveyRequirement} EP`}
+              />
+
+              {isSurveyed && (
+                <SystemMetric
+                  label="Support Slots"
+                  value={system.supportSlotCount.toString()}
+                />
+              )}
+            </div>
 
             {isSurveyed && (
-              <SystemMetric
-                label="Support Slots"
-                value={system.supportSlotCount.toString()}
-              />
+              <div className="border-t border-ise-border pt-3">
+                <h3
+                  className="
+                    mt-0 mb-2
+                    text-[0.65rem] font-semibold uppercase
+                    tracking-[0.09em] text-ise-text-subtle
+                  "
+                >
+                  Affinities
+                </h3>
+
+                <AffinityGrid affinities={system.affinities} />
+              </div>
             )}
           </div>
         </Section>
@@ -336,12 +355,6 @@ export function SelectedSystemPanel({
             )}
           </div>
         </Section>
-
-        {isSurveyed && (
-          <Section title="Affinities">
-            <AffinityGrid affinities={system.affinities} />
-          </Section>
-        )}
       </div>
     </Panel>
   );

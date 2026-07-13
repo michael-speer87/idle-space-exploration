@@ -30,6 +30,7 @@ import { getRunStatsSummary } from "./game/systems/runStatsSystem";
 import { DevAdminPanel } from "./components/DevAdminPanel";
 import { MissionWorkspace } from "./components/ui/MissionWorkspace";
 import { Dock } from "./components/ui/Dock";
+import { BuildPanel } from "./components/BuildPanel";
 
 const GAME_VERSION_LABEL = "v0.1";
 
@@ -298,7 +299,7 @@ function GameScreen() {
           absolute top-35 z-30
           grid gap-2
           trasition-[right] duration-200
-          ${activeWorkspace === null ? "right-4" : "right-[396px]"}
+          ${activeWorkspace === null ? "right-4" : "right-99"}
         `}
         >
           <WorkspaceLauncher
@@ -339,9 +340,12 @@ function GameScreen() {
               subtitle={selectedSystem?.name ?? "No system selected"}
               onClose={handleCloseWorkspace}
             >
-              <BuildWorkspacePlaceholder
-                hasSelectedSystem={selectedSystem !== null}
-                selectedSystemName={selectedSystem?.name ?? null}
+              <BuildPanel
+                system={selectedSystem}
+                outpostClaimOptions={outpostClaimOptions}
+                primaryOutpostUpgradeOption={ primaryOutpostUpgradeOption }
+                onClaimOutpost={handleClaimOutpost}
+                onUpgradePrimaryOutpost={handleUpgradePrimaryOutpost}
               />
             </MissionWorkspace>
           </div>
@@ -362,7 +366,7 @@ function GameScreen() {
         <div className={`
           absolute bottom-4 z-30
           transition-[right] duration-200
-          ${activeWorkspace === null ? "right-4" : "right-[396px]"}
+          ${activeWorkspace === null ? "right-4" : "right-99"}
         `}
         >
           <Dock
@@ -539,42 +543,6 @@ function WorkspaceLauncher({
     >
       {label}
     </button>
-  );
-}
-
-type BuildWorkspacePlaceholderProps = {
-  hasSelectedSystem: boolean;
-  selectedSystemName: string | null;
-};
-
-function BuildWorkspacePlaceholder({
-  hasSelectedSystem,
-  selectedSystemName,
-}: BuildWorkspacePlaceholderProps) {
-  return (
-    <div className="grid gap-4">
-      <div
-        className="
-          rounded-panel border border-dashed border-ise-border
-          bg-ise-surface p-5 text-center
-        "
-      >
-        <h3 className="m-0 text-sm font-semibold text-ise-text">
-          Build Workspace
-        </h3>
-
-        <p className="mt-2 mb-0 text-xs leading-relaxed text-ise-text-muted">
-          {hasSelectedSystem
-            ? `Construction controls for ${selectedSystemName} will move here in a future UI milestone.`
-            : "Select a surveyed system to inspect its future construction options."}
-        </p>
-      </div>
-
-      <p className="m-0 text-xs leading-relaxed text-ise-text-subtle">
-        Outpost claim, upgrade, and replacement controls remain in Selected
-        System until the Build workspace migration is complete.
-      </p>
-    </div>
   );
 }
 

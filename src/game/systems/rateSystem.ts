@@ -1,35 +1,36 @@
-import type { GameState, StarSystem } from "../types";
-import { 
+import {
   getOutpostLevelEnergyUseMultiplier,
   getOutpostLevelOutputMultiplier,
-  PRIMARY_OUTPOSTS 
+  PRIMARY_OUTPOSTS,
 } from "../config/outposts";
-import { isResearchCompleted } from "./researchSystem";
+import { SUPPORT_BUILDINGS } from "../config/supportBuildings";
+import type { GameState, StarSystem } from "../types";
 import { getInfluenceOutputMultiplier } from "./influenceSystem";
+import { isResearchCompleted } from "./researchSystem";
 
 export type CalculatedRates = {
-    epPerSecond: number;
-    creditsPerSecond: number;
-    sciencePerSecond: number;
-    researchSpeedPerSecond: number;
-    energyProduced: number;
-    energyUsed: number;
-    energySurplus: number;
-    productionEfficiency: number;
+  epPerSecond: number;
+  creditsPerSecond: number;
+  sciencePerSecond: number;
+  researchSpeedPerSecond: number;
+  energyProduced: number;
+  energyUsed: number;
+  energySurplus: number;
+  productionEfficiency: number;
 };
 
 const AFFINITY_MULTIPLIERS = {
-    low: 0.75,
-    neutral: 1,
-    high: 1.25,
+  low: 0.75,
+  neutral: 1,
+  high: 1.25,
 } as const;
 
 const RESEARCH_EFFECTS = {
-    improvedSurveyArraysMultiplier: 1.25,
-    commerceOptimizationMultiplier: 1.25,
-    appliedScienceMethodsMultiplier: 1.25,
-    powerRelayEfficiencyMultiplier: 1.25,
-    extractionHandlingMultiplier: 1.25,
+  improvedSurveyArraysMultiplier: 1.25,
+  commerceOptimizationMultiplier: 1.25,
+  appliedScienceMethodsMultiplier: 1.25,
+  powerRelayEfficiencyMultiplier: 1.25,
+  extractionHandlingMultiplier: 1.25,
 } as const;
 
 const GRAD_COMMAND_STARTER_ENERGY = 6;
@@ -64,21 +65,24 @@ export function calculateRates(state: GameState): CalculatedRates {
 
     switch (outpost.category) {
       case "survey": {
-        epPerSecond += getSurveyOutput(state, system) * 
+        epPerSecond +=
+          getSurveyOutput(state, system) *
           productionEfficiency *
           influenceOutputMultiplier;
         break;
       }
 
       case "commerce": {
-        creditsPerSecond += getCommerceOutput(state, system) * 
+        creditsPerSecond +=
+          getCommerceOutput(state, system) *
           productionEfficiency *
           influenceOutputMultiplier;
         break;
       }
 
       case "science": {
-        sciencePerSecond += getScienceOutput(state, system) * 
+        sciencePerSecond +=
+          getScienceOutput(state, system) *
           productionEfficiency *
           influenceOutputMultiplier;
         break;
@@ -90,9 +94,10 @@ export function calculateRates(state: GameState): CalculatedRates {
       }
 
       case "extraction": {
-        creditsPerSecond += getExtractionOutput(state, system) * 
+        creditsPerSecond +=
+          getExtractionOutput(state, system) *
           productionEfficiency *
-          influenceOutputMultiplier;;
+          influenceOutputMultiplier;
         break;
       }
     }
@@ -179,6 +184,28 @@ function getGradCommandEnergyProduced(state: GameState): number {
   return hasGradCommand ? GRAD_COMMAND_STARTER_ENERGY : 0;
 }
 
+function getSupportBuildingOutputMultiplier(system: StarSystem): number {
+  if (system.primaryOutpostId === null) {
+    return 1;
+  }
+
+  const totalBonus = system.supportBuildingIds.reduce(
+    (bonus, supportBuildingId) => {
+      const building = SUPPORT_BUILDINGS[supportBuildingId];
+
+      // Ignore incompatible entries if an old or edited save contains one.
+      if (building.requiredPrimaryOutpostId !== system.primaryOutpostId) {
+        return bonus;
+      }
+
+      return bonus + building.outputBonus;
+    },
+    0,
+  );
+
+  return 1 + totalBonus;
+}
+
 function getSurveyOutput(state: GameState, system: StarSystem): number {
   const outpost = PRIMARY_OUTPOSTS.survey_array;
   const levelMultiplier = getOutpostLevelOutputMultiplier(
@@ -186,13 +213,15 @@ function getSurveyOutput(state: GameState, system: StarSystem): number {
   );
 
   let output =
-    outpost.baseOutput * 
-    levelMultiplier * 
+    outpost.baseOutput *
+    levelMultiplier *
     AFFINITY_MULTIPLIERS[system.affinities.survey];
 
   if (isResearchCompleted(state, "improved_survey_arrays")) {
     output *= RESEARCH_EFFECTS.improvedSurveyArraysMultiplier;
   }
+
+  output *= getSupportBuildingOutputMultiplier(system);
 
   return output;
 }
@@ -204,13 +233,15 @@ function getCommerceOutput(state: GameState, system: StarSystem): number {
   );
 
   let output =
-    outpost.baseOutput * 
+    outpost.baseOutput *
     levelMultiplier *
     AFFINITY_MULTIPLIERS[system.affinities.commerce];
 
   if (isResearchCompleted(state, "commerce_optimization")) {
     output *= RESEARCH_EFFECTS.commerceOptimizationMultiplier;
   }
+
+  output *= getSupportBuildingOutputMultiplier(system);
 
   return output;
 }
@@ -222,13 +253,15 @@ function getScienceOutput(state: GameState, system: StarSystem): number {
   );
 
   let output =
-    outpost.baseOutput * 
+    outpost.baseOutput *
     levelMultiplier *
     AFFINITY_MULTIPLIERS[system.affinities.science];
 
   if (isResearchCompleted(state, "applied_science_methods")) {
     output *= RESEARCH_EFFECTS.appliedScienceMethodsMultiplier;
   }
+
+  output *= getSupportBuildingOutputMultiplier(system);
 
   return output;
 }
@@ -240,13 +273,15 @@ function getPowerOutput(state: GameState, system: StarSystem): number {
   );
 
   let output =
-    outpost.baseOutput * 
+    outpost.baseOutput *
     levelMultiplier *
     AFFINITY_MULTIPLIERS[system.affinities.power];
 
   if (isResearchCompleted(state, "power_relay_efficiency")) {
     output *= RESEARCH_EFFECTS.powerRelayEfficiencyMultiplier;
   }
+
+  output *= getSupportBuildingOutputMultiplier(system);
 
   return output;
 }
@@ -258,13 +293,15 @@ function getExtractionOutput(state: GameState, system: StarSystem): number {
   );
 
   let output =
-    outpost.baseOutput * 
+    outpost.baseOutput *
     levelMultiplier *
     AFFINITY_MULTIPLIERS[system.affinities.extraction];
 
   if (isResearchCompleted(state, "extraction_handling")) {
     output *= RESEARCH_EFFECTS.extractionHandlingMultiplier;
   }
+
+  output *= getSupportBuildingOutputMultiplier(system);
 
   return output;
 }

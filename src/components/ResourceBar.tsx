@@ -1,4 +1,9 @@
 import type { CalculatedRates } from "../game/systems/rateSystem";
+import {
+  formatRate,
+  formatResource,
+  formatNumber
+} from "../game/utils/formatNumber";
 
 type ResourceBarProps = {
   credits: number;
@@ -20,29 +25,38 @@ export function ResourceBar({
     >
       <ResourceCard
         label="Credits"
-        value={credits.toFixed(0)}
-        detail={`+${rates.creditsPerSecond.toFixed(2)}/sec`}
+        value={formatResource(credits)}
+        detail={`+${formatRate(rates.creditsPerSecond)}/sec`}
         accentClass="text-ise-credits"
       />
 
       <ResourceCard
         label="Science"
-        value={science.toFixed(0)}
-        detail={`+${rates.sciencePerSecond.toFixed(2)}/sec`}
+        value={formatResource(science)}
+        detail={`+${formatRate(rates.sciencePerSecond)}/sec`}
         accentClass="text-ise-science"
       />
 
       <ResourceCard
         label="Exploration"
-        value={rates.epPerSecond.toFixed(2)}
+        value={formatRate(rates.epPerSecond)}
         detail="EP/sec"
         accentClass="text-ise-exploration"
       />
 
       <ResourceCard
         label="Energy"
-        value={`${rates.energySurplus >= 0 ? "+" : ""}${rates.energySurplus.toFixed(1)}`}
-        detail={`${rates.energyUsed.toFixed(1)} / ${rates.energyProduced.toFixed(1)} used`}
+        value={`${rates.energySurplus >= 0 ? "+" : ""}${formatNumber(
+          rates.energySurplus,
+          {
+            maximumFractionDigits: 1,
+          },
+        )}`}
+        detail={`${formatNumber(rates.energyUsed, {
+          maximumFractionDigits: 1,
+        })} / ${formatNumber(rates.energyProduced, {
+          maximumFractionDigits: 1,
+        })} used`}
         accentClass={
           rates.energySurplus >= 0
             ? "text-ise-energy"

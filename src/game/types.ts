@@ -1,5 +1,6 @@
 import type { PrimaryOutpostId } from "./config/outposts";
 import type { ResearchProjectId } from "./config/research";
+import type { SupportBuildingId } from "./config/supportBuildings";
 
 export type GameVersion = 1;
 
@@ -59,7 +60,7 @@ export type StarSystem = {
 
   primaryOutpostId: PrimaryOutpostId | null;
   primaryOutpostLevel: number;
-  supportBuildingIds: string[];
+  supportBuildingIds: SupportBuildingId[];
 };
 
 export type StarMapState = {

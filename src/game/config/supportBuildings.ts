@@ -69,3 +69,7 @@ export const SUPPORT_BUILDINGS: Record<SupportBuildingId, SupportBuildingDefinit
     description: "Increases this system's Extraction Rig output by 15%.",
   },
 };
+
+export const SUPPORT_BUILDING_IDS = Object.keys(
+  SUPPORT_BUILDINGS,
+) as SupportBuildingId[];

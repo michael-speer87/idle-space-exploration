@@ -7,6 +7,8 @@ import type { ResearchProjectId } from "./config/research";
 import { startResearch } from "./systems/researchSystem";
 import { createNewGame } from "./createNewGame";
 import { performInfluenceReset } from "./systems/influenceSystem";
+import type { SupportBuildingId } from "./config/supportBuildings";
+import { buildSupportBuilding } from "./systems/supportBuildingSystem";
 import {
     devAddResources,
     devClaimWithOutpost,
@@ -31,6 +33,11 @@ export type GameAction =
         type: "claimWithOutpost";
         systemId: StarSystemId;
         outpostId: PrimaryOutpostId;
+    }
+    | {
+        type: "buildSupportBuilding"
+        systemId: StarSystemId;
+        supportBuildingId: SupportBuildingId
     }
     | {
         type: "startResearch";
@@ -64,6 +71,7 @@ export type GameAction =
         systemId: StarSystemId;
         outpostId: PrimaryOutpostId;
     }
+    
 
 export function gameReducer(
     state: GameState,
@@ -93,6 +101,14 @@ export function gameReducer(
 
         case "claimWithOutpost": {
             return claimWithOutpost(state, action.systemId, action.outpostId);
+        }
+
+        case "buildSupportBuilding": {
+            return buildSupportBuilding(
+                state,
+                action.systemId,
+                action.supportBuildingId,
+            );
         }
 
         case "startResearch": {

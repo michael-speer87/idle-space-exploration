@@ -32,7 +32,7 @@ import { MissionWorkspace } from "./components/ui/MissionWorkspace";
 import { Dock } from "./components/ui/Dock";
 import { BuildPanel } from "./components/BuildPanel";
 
-const GAME_VERSION_LABEL = "v0.1";
+const GAME_VERSION_LABEL = "v0.1.1";
 
 type MissionWorkspaceId = "research" | "build" | "dev";
 
@@ -281,7 +281,7 @@ function GameScreen() {
                 text-[0.65rem] font-bold tracking-[0.08em]
                 text-ise-accent-hover
               "
-                title="MVP Candidate v0.1"
+                title="Idle Space Exploration v0.1.1"
               >
                 {GAME_VERSION_LABEL}
               </span>

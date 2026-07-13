@@ -766,6 +766,7 @@ function drawClaimedOutpostMarker(container: Container, system: StarSystem) {
             marker.moveTo(-3, markerY + 2);
             marker.lineTo(0, markerY - 3);
             marker.lineTo(3, markerY + 2);
+            marker.lineTo(-3, markerY + 2);
             marker.stroke({
                 color: markerColor,
                 width: 1.75,

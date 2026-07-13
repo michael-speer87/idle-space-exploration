@@ -688,6 +688,8 @@ function drawSystemStar(
 ) {
     const isSelected = system.id === selectedSystemId;
     const isUnknown = system.explorationState === "unknown";
+    const isSurveyed = system.explorationState === "surveyed";
+
     const starColor = STAR_COLORS[system.starVisual];
 
     if (isSelected) {
@@ -702,6 +704,18 @@ function drawSystemStar(
         container.addChild(selectionRing);
     }
 
+    if (isSurveyed) {
+        const surveyedRing = new Graphics();
+
+        surveyedRing.circle(0, 0, 12).stroke({
+            color:0x9cffb1,
+            width: 2,
+            alpha: 0.9,
+        });
+
+        container.addChild(surveyedRing);
+    }
+
     const star = new Graphics();
 
     star.circle(0, 0, system.isHome ? 8 : 6).fill({
@@ -712,15 +726,6 @@ function drawSystemStar(
     container.addChild(star);
 
     if (system.claimState === "claimed") {
-        const claimedRing = new Graphics();
-
-        claimedRing.circle(0, 0, 12).stroke({
-            color: 0x9cffb1,
-            width: 2,
-            alpha: 0.9,
-        });
-
-        container.addChild(claimedRing);
         drawClaimedOutpostMarker(container, system);
     }
 

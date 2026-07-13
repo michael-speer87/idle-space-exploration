@@ -44,14 +44,14 @@ export function MapLegend() {
                     "
                   />
                 }
-                label="Claimed"
+                label="Surveyed"
               />
 
               <LegendRow
                 marker={
                   <span className="h-3 w-3 rounded-full bg-[#f4f7ff]" />
                 }
-                label="Detected / surveyed"
+                label="Detected"
               />
 
               <LegendRow
@@ -75,7 +75,7 @@ export function MapLegend() {
               />
             </LegendGroup>
 
-            <LegendGroup title="Outposts">
+            <LegendGroup title="Claimed Outposts">
               <LegendRow
                 marker={
                   <OutpostMarker

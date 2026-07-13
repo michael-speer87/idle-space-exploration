@@ -205,6 +205,10 @@ function GameScreen() {
     [],
   )
 
+  const handleShowBuildWorkspace = useCallback(() => {
+    setActiveWorkspace("build");
+  }, []);
+
   const handleCloseWorkspace = useCallback(() => {
     setActiveWorkspace(null);
   }, []);
@@ -237,12 +241,11 @@ function GameScreen() {
           system={selectedSystem}
           activeSurvey={activeSurveyForSelectedSystem}
           canBeginSurvey={canBeginSurveyForSelectedSystem}
-          outpostClaimOptions={outpostClaimOptions}
-          primaryOutpostUpgradeOption={primaryOutpostUpgradeOption}
-          firstFreeSurveyAvailable={gameState.exploration.firstFreeSurveyAvailable}
+          firstFreeSurveyAvailable={
+            gameState.exploration.firstFreeSurveyAvailable
+          }
           onBeginSurvey={handleBeginSurvey}
-          onClaimOutpost={handleClaimOutpost}
-          onUpgradePrimaryOutpost={handleUpgradePrimaryOutpost}
+          onOpenBuild={handleShowBuildWorkspace}
         />
 
         <RunProgressPanel
@@ -343,7 +346,7 @@ function GameScreen() {
               <BuildPanel
                 system={selectedSystem}
                 outpostClaimOptions={outpostClaimOptions}
-                primaryOutpostUpgradeOption={ primaryOutpostUpgradeOption }
+                primaryOutpostUpgradeOption={primaryOutpostUpgradeOption}
                 onClaimOutpost={handleClaimOutpost}
                 onUpgradePrimaryOutpost={handleUpgradePrimaryOutpost}
               />

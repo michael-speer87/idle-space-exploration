@@ -48,6 +48,7 @@ const MIN_MAP_SCALE = 0.55;
 const MAX_MAP_SCALE = 2.25;
 const MAP_ZOOM_SENSITIVITY = 0.0015;
 const MAP_ZOOM_STEP = 1.2;
+const MAP_EDGE_PADDING = 96;
 
 export const StarMapCanvas = forwardRef<
     StarMapCameraHandle,
@@ -78,6 +79,7 @@ export const StarMapCanvas = forwardRef<
                 zoomFromViewportCenter(
                     appRef.current,
                     cameraLayerRef.current,
+                    mapLayerRef.current,
                     MAP_ZOOM_STEP,
                 );
             },
@@ -86,23 +88,16 @@ export const StarMapCanvas = forwardRef<
                 zoomFromViewportCenter(
                     appRef.current,
                     cameraLayerRef.current,
+                    mapLayerRef.current,
                     1 / MAP_ZOOM_STEP,
                 );
             },
 
             center() {
-                const app = appRef.current;
-                const cameraLayer = cameraLayerRef.current;
-
-                if (app === null || cameraLayer === null) {
-                    return;
-                }
-
-                cameraLayer.scale.set(1);
-
-                cameraLayer.position.set(
-                    app.screen.width / 2,
-                    app.screen.height / 2,
+                centerCameraOnMap(
+                    appRef.current,
+                    cameraLayerRef.current,
+                    mapLayerRef.current,
                 );
             },
         }),
@@ -153,14 +148,16 @@ export const StarMapCanvas = forwardRef<
             );
 
             removePanListeners = installMapPanning(
-                app.canvas,
+                app,
                 cameraLayer,
+                mapLayer,
                 interactionStateRef.current,
             );
 
             removeZoomListener = installMapZoom(
                 app,
                 cameraLayer,
+                mapLayer,
             );
 
             appRef.current = app;
@@ -199,9 +196,10 @@ export const StarMapCanvas = forwardRef<
 
     useEffect(() => {
         const app = appRef.current;
+        const cameraLayer = cameraLayerRef.current;
         const mapLayer = mapLayerRef.current;
 
-        if (!isPixiReady || !app || !mapLayer) {
+        if (!isPixiReady || !app || !mapLayer || !cameraLayer) {
             return;
         }
 
@@ -212,6 +210,13 @@ export const StarMapCanvas = forwardRef<
             onSelectSystem,
             canSelectSystem: () => !interactionStateRef.current.suppressSelection,
         });
+
+        clampCameraToMapBounds(
+            app,
+            cameraLayer,
+            mapLayer,
+        );
+
     }, [isPixiReady, map, selectedSystemId, onSelectSystem]);
 
     return <div ref={hostRef} className="star-map-canvas" />;
@@ -222,8 +227,9 @@ type MapInteractionState = {
 };
 
 function installMapPanning(
-    canvas: HTMLCanvasElement,
+    app: Application,
     cameraLayer: Container,
+    mapLayer: Container,
     interactionState: MapInteractionState,
 ): () => void {
     let activePointerId: number | null = null;
@@ -253,8 +259,8 @@ function installMapPanning(
 
         interactionState.suppressSelection = false;
 
-        canvas.setPointerCapture(event.pointerId);
-        canvas.style.cursor = "grabbing";
+        app.canvas.setPointerCapture(event.pointerId);
+        app.canvas.style.cursor = "grabbing";
     }
 
     function handlePointerMove(event: PointerEvent) {
@@ -273,6 +279,12 @@ function installMapPanning(
         cameraLayer.x += deltaX;
         cameraLayer.y += deltaY;
 
+        clampCameraToMapBounds(
+            app,
+            cameraLayer,
+            mapLayer,
+        );
+
         totalMovement += Math.hypot(deltaX, deltaY);
 
         if (totalMovement >= 6) {
@@ -285,12 +297,12 @@ function installMapPanning(
             return;
         }
 
-        if (canvas.hasPointerCapture(event.pointerId)) {
-            canvas.releasePointerCapture(event.pointerId);
+        if (app.canvas.hasPointerCapture(event.pointerId)) {
+            app.canvas.releasePointerCapture(event.pointerId);
         }
 
         activePointerId = null;
-        canvas.style.cursor = "grab";
+        app.canvas.style.cursor = "grab";
 
         if (!interactionState.suppressSelection) {
             return;
@@ -306,22 +318,22 @@ function installMapPanning(
         }, 0);
     }
 
-    canvas.style.cursor = "grab";
-    canvas.style.touchAction = "none";
-    canvas.style.userSelect = "none";
+    app.canvas.style.cursor = "grab";
+    app.canvas.style.touchAction = "none";
+    app.canvas.style.userSelect = "none";
 
-    canvas.addEventListener("pointerdown", handlePointerDown);
-    canvas.addEventListener("pointermove", handlePointerMove);
-    canvas.addEventListener("pointerup", handlePointerEnd);
-    canvas.addEventListener("pointercancel", handlePointerEnd);
-    canvas.addEventListener("lostpointercapture", handlePointerEnd);
+    app.canvas.addEventListener("pointerdown", handlePointerDown);
+    app.canvas.addEventListener("pointermove", handlePointerMove);
+    app.canvas.addEventListener("pointerup", handlePointerEnd);
+    app.canvas.addEventListener("pointercancel", handlePointerEnd);
+    app.canvas.addEventListener("lostpointercapture", handlePointerEnd);
 
     return () => {
-        canvas.removeEventListener("pointerdown", handlePointerDown);
-        canvas.removeEventListener("pointermove", handlePointerMove);
-        canvas.removeEventListener("pointerup", handlePointerEnd);
-        canvas.removeEventListener("pointercancel", handlePointerEnd);
-        canvas.removeEventListener(
+        app.canvas.removeEventListener("pointerdown", handlePointerDown);
+        app.canvas.removeEventListener("pointermove", handlePointerMove);
+        app.canvas.removeEventListener("pointerup", handlePointerEnd);
+        app.canvas.removeEventListener("pointercancel", handlePointerEnd);
+        app.canvas.removeEventListener(
             "lostpointercapture",
             handlePointerEnd,
         );
@@ -335,9 +347,10 @@ function installMapPanning(
 function zoomFromViewportCenter(
   app: Application | null,
   cameraLayer: Container | null,
+  mapLayer: Container | null,
   zoomFactor: number,
 ): void {
-  if (app === null || cameraLayer === null) {
+  if (app === null || cameraLayer === null || mapLayer === null) {
     return;
   }
 
@@ -352,6 +365,128 @@ function zoomFromViewportCenter(
     nextScale,
     app.screen.width / 2,
     app.screen.height / 2,
+  );
+
+  clampCameraToMapBounds(
+    app,
+    cameraLayer,
+    mapLayer,
+  );
+}
+
+function centerCameraOnMap(
+  app: Application | null,
+  cameraLayer: Container | null,
+  mapLayer: Container | null,
+): void {
+  if (
+    app === null ||
+    cameraLayer === null ||
+    mapLayer === null
+  ) {
+    return;
+  }
+
+  const bounds = mapLayer.getLocalBounds();
+
+  cameraLayer.scale.set(1);
+
+  if (bounds.width <= 0 || bounds.height <= 0) {
+    cameraLayer.position.set(
+      app.screen.width / 2,
+      app.screen.height / 2,
+    );
+
+    return;
+  }
+
+  cameraLayer.position.set(
+    app.screen.width / 2 -
+      (bounds.x + bounds.width / 2),
+    app.screen.height / 2 -
+      (bounds.y + bounds.height / 2),
+  );
+
+  clampCameraToMapBounds(
+    app,
+    cameraLayer,
+    mapLayer,
+  );
+}
+
+function clampCameraToMapBounds(
+  app: Application,
+  cameraLayer: Container,
+  mapLayer: Container,
+): void {
+  const bounds = mapLayer.getLocalBounds();
+
+  if (bounds.width <= 0 || bounds.height <= 0) {
+    return;
+  }
+
+  const scale = cameraLayer.scale.x;
+
+  cameraLayer.position.set(
+    clampCameraAxis(
+      cameraLayer.x,
+      app.screen.width,
+      bounds.x,
+      bounds.x + bounds.width,
+      scale,
+    ),
+    clampCameraAxis(
+      cameraLayer.y,
+      app.screen.height,
+      bounds.y,
+      bounds.y + bounds.height,
+      scale,
+    ),
+  );
+}
+
+function clampCameraAxis(
+  currentPosition: number,
+  viewportSize: number,
+  localMinimum: number,
+  localMaximum: number,
+  scale: number,
+): number {
+  const scaledMinimum = localMinimum * scale;
+  const scaledMaximum = localMaximum * scale;
+
+  const padding = Math.min(
+    MAP_EDGE_PADDING,
+    viewportSize * 0.25,
+  );
+
+  const visibleMinimum = padding;
+  const visibleMaximum = viewportSize - padding;
+
+  const contentSize = scaledMaximum - scaledMinimum;
+  const visibleSize = visibleMaximum - visibleMinimum;
+
+  /*
+   * When the map fits inside the viewport, keep it centered instead
+   * of allowing it to drift around inside empty space.
+   */
+  if (contentSize <= visibleSize) {
+    return (
+      viewportSize / 2 -
+      (scaledMinimum + scaledMaximum) / 2
+    );
+  }
+
+  const minimumPosition =
+    visibleMaximum - scaledMaximum;
+
+  const maximumPosition =
+    visibleMinimum - scaledMinimum;
+
+  return clamp(
+    currentPosition,
+    minimumPosition,
+    maximumPosition,
   );
 }
 
@@ -384,6 +519,7 @@ function zoomCameraAtPoint(
 function installMapZoom(
     app: Application,
     cameraLayer: Container,
+    mapLayer: Container,
 ): () => void {
     const canvas = app.canvas;
 
@@ -435,6 +571,12 @@ function installMapZoom(
             pointerX,
             pointerY,
         );
+
+        clampCameraToMapBounds(
+            app,
+            cameraLayer,
+            mapLayer
+        )
     }
 
     canvas.addEventListener("wheel", handleWheel, {

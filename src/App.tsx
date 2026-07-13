@@ -31,8 +31,9 @@ import { DevAdminPanel } from "./components/DevAdminPanel";
 import { MissionWorkspace } from "./components/ui/MissionWorkspace";
 import { Dock } from "./components/ui/Dock";
 import { BuildPanel } from "./components/BuildPanel";
+import packageJson from "../package.json";
 
-const GAME_VERSION_LABEL = "v0.1.1";
+const GAME_VERSION_LABEL = `v${packageJson.version}`;
 
 type MissionWorkspaceId = "research" | "build" | "dev";
 
@@ -281,7 +282,7 @@ function GameScreen() {
                 text-[0.65rem] font-bold tracking-[0.08em]
                 text-ise-accent-hover
               "
-                title="Idle Space Exploration v0.1.1"
+                title={`Idle Space Exploration ${GAME_VERSION_LABEL}`}
               >
                 {GAME_VERSION_LABEL}
               </span>

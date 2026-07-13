@@ -1,24 +1,27 @@
+import { useState } from "react";
 import {
   PRIMARY_OUTPOSTS,
   type PrimaryOutpostDefinition,
   type PrimaryOutpostId,
 } from "../game/config/outposts";
-import type {
-  OutpostClaimOption,
-  PrimaryOutpostUpgradeOption,
-} from "../game/systems/outpostSystem";
-import type {
-  AffinityLevel,
-  StarSystem,
-} from "../game/types";
-import { Section } from "./ui/Section";
 import { RESEARCH_PROJECTS } from "../game/config/research";
 import {
   SUPPORT_BUILDINGS,
   type SupportBuildingDefinition,
   type SupportBuildingId,
-} from "../game/config/supportBuildings"
+} from "../game/config/supportBuildings";
+import type {
+  OutpostClaimOption,
+  PrimaryOutpostUpgradeOption,
+} from "../game/systems/outpostSystem";
 import type { SupportBuildingBuildOption } from "../game/systems/supportBuildingSystem";
+import type {
+  AffinityLevel,
+  StarSystem,
+} from "../game/types";
+import { Section } from "./ui/Section";
+
+type BuildTab = "primary" | "support";
 
 type BuildPanelProps = {
   system: StarSystem | null;
@@ -27,7 +30,9 @@ type BuildPanelProps = {
   supportBuildingBuildOptions: SupportBuildingBuildOption[];
   onClaimOutpost: (outpostId: PrimaryOutpostId) => void;
   onUpgradePrimaryOutpost: () => void;
-  onBuildSupportBuilding: (supportBuildingId: SupportBuildingId) => void;
+  onBuildSupportBuilding: (
+    supportBuildingId: SupportBuildingId,
+  ) => void;
 };
 
 export function BuildPanel({
@@ -39,6 +44,9 @@ export function BuildPanel({
   onUpgradePrimaryOutpost,
   onBuildSupportBuilding,
 }: BuildPanelProps) {
+  const [activeTab, setActiveTab] =
+    useState<BuildTab>("primary");
+
   if (system === null) {
     return (
       <BuildEmptyState
@@ -88,6 +96,14 @@ export function BuildPanel({
       ? PRIMARY_OUTPOSTS[system.primaryOutpostId]
       : null;
 
+  const occupiedSupportSlots =
+    system.supportBuildingIds.length;
+
+  const availableSupportSlots = Math.max(
+    0,
+    system.supportSlotCount - occupiedSupportSlots,
+  );
+
   return (
     <div className="grid gap-4">
       <BuildStatusSummary
@@ -100,134 +116,247 @@ export function BuildPanel({
         supportSlots={system.supportSlotCount}
       />
 
-      {system.claimState === "unclaimed" && (
-        <Section
-          title="Available Primary Outposts"
-          divider={false}
-        >
-          <div className="grid gap-3">
-            <p className="m-0 text-xs leading-relaxed text-ise-text-muted">
-              Select a specialization to claim this system. The chosen
-              Primary Outpost defines the system’s main role.
-            </p>
+      <BuildTabs
+        activeTab={activeTab}
+        onChange={setActiveTab}
+      />
 
-            {outpostClaimOptions.map((option) => {
-              const outpost = PRIMARY_OUTPOSTS[option.outpostId];
-              const affinity = system.affinities[outpost.category];
+      <div
+        id="build-primary-panel"
+        role="tabpanel"
+        aria-labelledby="build-primary-tab"
+        className="grid gap-4"
+        hidden={activeTab !== "primary"}
+      >
+        {system.claimState === "unclaimed" && (
+          <Section
+            title="Available Primary Outposts"
+            divider={false}
+          >
+            <div className="grid gap-3">
+              <p className="m-0 text-xs leading-relaxed text-ise-text-muted">
+                Select a specialization to claim this system. The chosen
+                Primary Outpost defines the system’s main role.
+              </p>
 
-              return (
-                <BuildOutpostCard
-                  key={option.outpostId}
-                  outpost={outpost}
-                  affinity={affinity}
-                  costLabel={
-                    option.creditCost === 0
-                      ? "Free"
-                      : `${option.creditCost.toFixed(0)} Credits`
-                  }
-                  actionLabel={`Establish ${outpost.name}`}
-                  disabled={!option.canClaim}
-                  blockedReason={option.blockedReason}
-                  onAction={() => onClaimOutpost(option.outpostId)}
-                />
-              );
-            })}
-          </div>
-        </Section>
-      )}
+              {outpostClaimOptions.map((option) => {
+                const outpost =
+                  PRIMARY_OUTPOSTS[option.outpostId];
+                const affinity =
+                  system.affinities[outpost.category];
 
-      {currentOutpost !== null && (
-        <Section
-          title="Current Primary Outpost"
-          divider={false}
-        >
-          <CurrentOutpostCard
-            outpost={currentOutpost}
-            affinity={system.affinities[currentOutpost.category]}
-            currentLevel={system.primaryOutpostLevel}
-            upgradeOption={primaryOutpostUpgradeOption}
-            onUpgrade={onUpgradePrimaryOutpost}
-          />
-        </Section>
-      )}
+                return (
+                  <BuildOutpostCard
+                    key={option.outpostId}
+                    outpost={outpost}
+                    affinity={affinity}
+                    costLabel={
+                      option.creditCost === 0
+                        ? "Free"
+                        : `${option.creditCost.toFixed(0)} Credits`
+                    }
+                    actionLabel={`Establish ${outpost.name}`}
+                    disabled={!option.canClaim}
+                    blockedReason={option.blockedReason}
+                    onAction={() =>
+                      onClaimOutpost(option.outpostId)
+                    }
+                  />
+                );
+              })}
+            </div>
+          </Section>
+        )}
 
-      {currentOutpost !== null && system.claimState === "claimed" && (
-        <Section
-          title="Support Buildings"
-          divider={false}
-        >
-          <div className="grid gap-3">
-            <p className="m-0 text-xs leading-relaxed text-ise-text-muted">
-              Install local infrastructure to strengthen this system’s
-              Primary Outpost. Each installation occupies one support slot.
-            </p>
-
-            <SupportSlotGrid
-              supportBuildingIds={system.supportBuildingIds}
-              supportSlotCount={system.supportSlotCount}
+        {currentOutpost !== null && (
+          <Section
+            title="Current Primary Outpost"
+            divider={false}
+          >
+            <CurrentOutpostCard
+              outpost={currentOutpost}
+              affinity={
+                system.affinities[currentOutpost.category]
+              }
+              currentLevel={system.primaryOutpostLevel}
+              upgradeOption={primaryOutpostUpgradeOption}
+              onUpgrade={onUpgradePrimaryOutpost}
             />
+          </Section>
+        )}
+      </div>
 
-            {supportBuildingBuildOptions.map((option) => {
-              const building =
-                SUPPORT_BUILDINGS[option.supportBuildingId];
+      <div
+        id="build-support-panel"
+        role="tabpanel"
+        aria-labelledby="build-support-tab"
+        className="grid gap-4"
+        hidden={activeTab !== "support"}
+      >
+        {currentOutpost === null ||
+        system.claimState !== "claimed" ? (
+          <BuildEmptyState
+            title="Support Buildings Locked"
+            description="Claim this system and establish a Primary Outpost before installing Support Buildings."
+          />
+        ) : (
+          <Section
+            title="Support Buildings"
+            divider={false}
+          >
+            <div className="grid gap-3">
+              <p className="m-0 text-xs leading-relaxed text-ise-text-muted">
+                Install local infrastructure to strengthen this
+                system’s Primary Outpost. Each installation occupies
+                one support slot.
+              </p>
 
-              return (
-                <SupportBuildingCard
-                  key={option.supportBuildingId}
-                  building={building}
-                  installedCount={system.supportBuildingIds.filter(
-                    (buildingId) => buildingId === building.id,
-                  ).length}
-                  option={option}
-                  onBuild={() =>
-                    onBuildSupportBuilding(building.id)
-                  }
+              <div
+                className="
+                  grid grid-cols-2 gap-2
+                  rounded-control border border-ise-border
+                  bg-ise-background/60 p-2
+                "
+              >
+                <BuildMetric
+                  label="Slots Occupied"
+                  value={`${occupiedSupportSlots} / ${system.supportSlotCount}`}
                 />
-              );
-            })}
-          </div>
-        </Section>
-      )}
 
-      <Section title="System Capacity">
-        <div
-          className="
-            grid grid-cols-2 gap-2
-            rounded-control border border-ise-border
-            bg-ise-background/60 p-2
-          "
-        >
-          <BuildMetric
-            label="Support Slots"
-            value={`${system.supportBuildingIds.length} / ${system.supportSlotCount}`}
-          />
+                <BuildMetric
+                  label="Slots Available"
+                  value={availableSupportSlots.toString()}
+                />
+              </div>
 
-          <BuildMetric
-            label="Slots Available"
-            value={Math.max(
-              0,
-              system.supportSlotCount -
-              system.supportBuildingIds.length,
-            ).toString()}
-          />
+              <SupportSlotGrid
+                supportBuildingIds={
+                  system.supportBuildingIds
+                }
+                supportSlotCount={system.supportSlotCount}
+              />
 
-          <BuildMetric
-            label="Primary Outpost"
-            value={currentOutpost?.name ?? "None"}
-          />
+              {supportBuildingBuildOptions.map((option) => {
+                const building =
+                  SUPPORT_BUILDINGS[
+                    option.supportBuildingId
+                  ];
 
-          <BuildMetric
-            label="Outpost Level"
-            value={
-              currentOutpost === null
-                ? "0"
-                : system.primaryOutpostLevel.toString()
-            }
-          />
-        </div>
+                const installedCount =
+                  system.supportBuildingIds.filter(
+                    (buildingId) =>
+                      buildingId === building.id,
+                  ).length;
 
-      </Section>
+                return (
+                  <SupportBuildingCard
+                    key={option.supportBuildingId}
+                    building={building}
+                    installedCount={installedCount}
+                    option={option}
+                    onBuild={() =>
+                      onBuildSupportBuilding(building.id)
+                    }
+                  />
+                );
+              })}
+            </div>
+          </Section>
+        )}
+      </div>
     </div>
+  );
+}
+
+type BuildTabsProps = {
+  activeTab: BuildTab;
+  onChange: (tab: BuildTab) => void;
+};
+
+function BuildTabs({
+  activeTab,
+  onChange,
+}: BuildTabsProps) {
+  return (
+    <div
+      className="
+        grid grid-cols-2 gap-1
+        rounded-panel border border-ise-border
+        bg-ise-background/70 p-1
+      "
+      role="tablist"
+      aria-label="Build workspace sections"
+    >
+      <BuildTabButton
+        id="build-primary-tab"
+        controls="build-primary-panel"
+        label="Primary Outpost"
+        active={activeTab === "primary"}
+        onClick={() => onChange("primary")}
+      />
+
+      <BuildTabButton
+        id="build-support-tab"
+        controls="build-support-panel"
+        label="Support Buildings"
+        active={activeTab === "support"}
+        onClick={() => onChange("support")}
+      />
+    </div>
+  );
+}
+
+type BuildTabButtonProps = {
+  id: string;
+  controls: string;
+  label: string;
+  active: boolean;
+  onClick: () => void;
+};
+
+function BuildTabButton({
+  id,
+  controls,
+  label,
+  active,
+  onClick,
+}: BuildTabButtonProps) {
+  return (
+    <button
+      id={id}
+      className={`
+        rounded-control border px-3 py-2
+        text-xs font-semibold
+        transition-colors
+        focus-visible:outline-2
+        focus-visible:outline-offset-2
+        focus-visible:outline-ise-accent
+        ${
+          active
+            ? `
+                border-ise-accent/50
+                bg-ise-accent-muted
+                text-ise-accent-hover
+              `
+            : `
+                border-transparent
+                bg-transparent
+                text-ise-text-muted
+                hover:border-ise-border
+                hover:bg-ise-surface
+                hover:text-ise-text
+              `
+        }
+      `}
+      type="button"
+      role="tab"
+      aria-selected={active}
+      aria-controls={controls}
+      tabIndex={active ? 0 : -1}
+      onClick={onClick}
+    >
+      {label}
+    </button>
   );
 }
 
@@ -518,57 +647,60 @@ function SupportSlotGrid({
 }: SupportSlotGridProps) {
   return (
     <div className="grid grid-cols-2 gap-2">
-      {Array.from({ length: supportSlotCount }, (_, index) => {
-        const supportBuildingId =
-          supportBuildingIds[index];
+      {Array.from(
+        { length: supportSlotCount },
+        (_, index) => {
+          const supportBuildingId =
+            supportBuildingIds[index];
 
-        const building =
-          supportBuildingId !== undefined
-            ? SUPPORT_BUILDINGS[supportBuildingId]
-            : null;
+          const building =
+            supportBuildingId !== undefined
+              ? SUPPORT_BUILDINGS[supportBuildingId]
+              : null;
 
-        return (
-          <div
-            className={`
-              min-h-16 rounded-control border p-2.5
-              ${
-                building === null
-                  ? `
-                      border-dashed border-ise-border
-                      bg-ise-background/40
-                    `
-                  : `
-                      border-ise-success/30
-                      bg-ise-success/10
-                    `
-              }
-            `}
-            key={`support-slot-${index}`}
-          >
-            <span
-              className="
-                block text-[0.6rem] font-semibold uppercase
-                tracking-[0.08em] text-ise-text-subtle
-              "
-            >
-              Slot {index + 1}
-            </span>
-
-            <strong
+          return (
+            <div
               className={`
-                mt-1 block text-xs font-semibold
+                min-h-16 rounded-control border p-2.5
                 ${
                   building === null
-                    ? "text-ise-text-subtle"
-                    : "text-ise-success"
+                    ? `
+                        border-dashed border-ise-border
+                        bg-ise-background/40
+                      `
+                    : `
+                        border-ise-success/30
+                        bg-ise-success/10
+                      `
                 }
               `}
+              key={`support-slot-${index}`}
             >
-              {building?.name ?? "Empty"}
-            </strong>
-          </div>
-        );
-      })}
+              <span
+                className="
+                  block text-[0.6rem] font-semibold uppercase
+                  tracking-[0.08em] text-ise-text-subtle
+                "
+              >
+                Slot {index + 1}
+              </span>
+
+              <strong
+                className={`
+                  mt-1 block text-xs font-semibold
+                  ${
+                    building === null
+                      ? "text-ise-text-subtle"
+                      : "text-ise-success"
+                  }
+                `}
+              >
+                {building?.name ?? "Empty"}
+              </strong>
+            </div>
+          );
+        },
+      )}
     </div>
   );
 }
@@ -771,12 +903,13 @@ function BuildEmptyState({
     <div
       className={`
         rounded-panel border border-dashed p-5 text-center
-        ${tone === "success"
-          ? `
+        ${
+          tone === "success"
+            ? `
                 border-ise-success/35
                 bg-ise-success/10
               `
-          : `
+            : `
                 border-ise-border
                 bg-ise-background/45
               `

@@ -265,9 +265,11 @@ function GameScreen() {
           rounded-panel border border-ise-border
           bg-ise-void/90 p-3 shadow-panel
           backdrop-blur-md
+          max-[1100px]:flex-col
+          max-[1100px]:gap-3
         "
         >
-          <div className="min-w-0 shrink-0">
+          <div className="min-w-0 shrink-0 max-[1100px]:w-full">
             <div className="flex items-center gap-2">
               <h1 className="m-0 text-base font-semibold tracking-wide text-ise-text">
                 Idle Space Exploration
@@ -302,6 +304,7 @@ function GameScreen() {
           absolute top-35 z-30
           grid gap-2
           trasition-[right] duration-200
+          max-[1100px]:top-47
           ${activeWorkspace === null ? "right-4" : "right-99"}
         `}
         >

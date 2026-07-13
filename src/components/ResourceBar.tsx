@@ -21,6 +21,7 @@ export function ResourceBar({
       className="
         grid min-w-0 flex-1
         grid-cols-5 gap-2
+        max-[1100px]:w-full
       "
     >
       <ResourceCard

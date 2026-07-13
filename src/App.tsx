@@ -32,6 +32,8 @@ import { MissionWorkspace } from "./components/ui/MissionWorkspace";
 import { Dock } from "./components/ui/Dock";
 import { BuildPanel } from "./components/BuildPanel";
 import packageJson from "../package.json";
+import type { SupportBuildingId } from "./game/config/supportBuildings";
+import { getSupportBuildingBuildOptions } from "./game/systems/supportBuildingSystem";
 
 const GAME_VERSION_LABEL = `v${packageJson.version}`;
 
@@ -83,6 +85,11 @@ function GameScreen() {
       ? getOutpostClaimOptions(gameState, selectedSystem.id)
       : [];
 
+  const supportBuildingBuildOptions =
+    selectedSystem !== null
+      ? getSupportBuildingBuildOptions(gameState, selectedSystem.id)
+      : [];
+
   const activeSurveyForSelectedSystem =
     selectedSystem !== null &&
       gameState.exploration.activeSurvey?.systemId === selectedSystem.id
@@ -129,6 +136,21 @@ function GameScreen() {
     },
     [dispatch, selectedSystem]
   )
+
+  const handleBuildSupportBuilding = useCallback(
+    (supportBuildingId: SupportBuildingId) => {
+      if (selectedSystem === null) {
+        return;
+      }
+
+      dispatch({
+        type: "buildSupportBuilding",
+        systemId: selectedSystem.id,
+        supportBuildingId,
+      });
+    },
+    [dispatch, selectedSystem]
+  );
 
   const handleStartResearch = useCallback(
     (projectId: ResearchProjectId) => {
@@ -351,8 +373,10 @@ function GameScreen() {
                 system={selectedSystem}
                 outpostClaimOptions={outpostClaimOptions}
                 primaryOutpostUpgradeOption={primaryOutpostUpgradeOption}
+                supportBuildingBuildOptions={supportBuildingBuildOptions}
                 onClaimOutpost={handleClaimOutpost}
                 onUpgradePrimaryOutpost={handleUpgradePrimaryOutpost}
+                onBuildSupportBuilding={handleBuildSupportBuilding}
               />
             </MissionWorkspace>
           </div>

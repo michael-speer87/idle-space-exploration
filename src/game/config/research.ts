@@ -13,6 +13,12 @@ export type ResearchProjectId =
   | "localized_power_infrastructure"
   | "industrial_refining_methods"
 
+  | "deep_range_telemetry"
+  | "interstellar_market_forecasting"
+  | "parallel_analysis_protocols"
+  | "adaptive_grid_balancing"
+  | "advanced_material_processing"
+
   | "outpost_tier_ii"
   | "basic_influence_calibration";
 
@@ -159,6 +165,85 @@ export const RESEARCH_PROJECTS: Record<
     description:
       "Unlocks Refinery construction for Extraction Rig systems.",
     effects: [],
+  },
+
+  deep_range_telemetry: {
+    id: "deep_range_telemetry",
+    name: "Deep Range Telemetry",
+    scienceCost: 7_500,
+    prerequisiteIds: ["improved_survey_arrays"],
+    description: "Increases Survey Array EP/sec output by an additional 20%.",
+    effects: [
+      {
+        type: "primary_outpost_output_bonus",
+        outpostId: "survey_array",
+        amount: 0.2,
+      }
+    ]
+  },
+
+  interstellar_market_forecasting: {
+    id: "interstellar_market_forecasting",
+    name: "Interstellar Market Forecasting",
+    scienceCost: 7_500,
+    prerequisiteIds: ["commerce_optimization"],
+    description:
+      "Increases Commerce Hub Credit output by an additional 20%.",
+    effects: [
+      {
+        type: "primary_outpost_output_bonus",
+        outpostId: "commerce_hub",
+        amount: 0.2,
+      },
+    ],
+  },
+
+  parallel_analysis_protocols: {
+    id: "parallel_analysis_protocols",
+    name: "Parallel Analysis Protocols",
+    scienceCost: 9_000,
+    prerequisiteIds: ["applied_science_methods"],
+    description:
+      "Increases Science Station output by an additional 20%.",
+    effects: [
+      {
+        type: "primary_outpost_output_bonus",
+        outpostId: "science_station",
+        amount: 0.2,
+      },
+    ],
+  },
+
+  adaptive_grid_balancing: {
+    id: "adaptive_grid_balancing",
+    name: "Adaptive Grid Balancing",
+    scienceCost: 8_500,
+    prerequisiteIds: ["power_relay_efficiency"],
+    description:
+      "Increases Power Relay Energy output by an additional 20%.",
+    effects: [
+      {
+        type: "primary_outpost_output_bonus",
+        outpostId: "power_relay",
+        amount: 0.2,
+      },
+    ],
+  },
+
+  advanced_material_processing: {
+    id: "advanced_material_processing",
+    name: "Advanced Material Processing",
+    scienceCost: 8_000,
+    prerequisiteIds: ["extraction_handling"],
+    description:
+      "Increases Extraction Rig Credit output by an additional 20%.",
+    effects: [
+      {
+        type: "primary_outpost_output_bonus",
+        outpostId: "extraction_rig",
+        amount: 0.2,
+      },
+    ],
   },
 
   outpost_tier_ii: {

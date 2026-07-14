@@ -16,7 +16,10 @@ import { formatDuration } from "../game/utils/formatDuration";
 import { Panel } from "./ui/Panel";
 import { Section } from "./ui/Section";
 import { ProgressBar } from "./ui/ProgressBar";
-import { getSystemSurveyReport } from "../game/content/systemSurveyReports";
+import { 
+  getSystemSurveyReport, 
+  type SystemSurveyReport, 
+} from "../game/content/systemSurveyReports";
 
 type SelectedSystemPanelProps = {
   gameState: GameState;
@@ -123,6 +126,14 @@ export function SelectedSystemPanel({
       subtitle={system.isHome ? "Home System" : "Star System"}
       rightSlot={
         <div className="flex flex-wrap items-center justify-end gap-1.5">
+          {surveyReport !== null && (
+            <SurveyReportPopover
+              key={system.id}
+              systemName={system.name}
+              report={surveyReport}
+            />
+          )}
+          
           {isRarityKnown && (
             <SystemRarityBadge rarity={systemRarityId} />
           )}
@@ -201,70 +212,6 @@ export function SelectedSystemPanel({
             )}
           </div>
         </Section>
-
-        {surveyReport !== null && (
-          <Section title="GRaD Survey Report">
-            <article
-              className="
-        rounded-control border border-ise-border
-        bg-ise-background/60 p-3
-      "
-            >
-              <p
-                className="
-          mt-0 mb-3 text-xs
-          leading-relaxed text-ise-text-muted
-        "
-              >
-                {surveyReport.overview}
-              </p>
-
-              <p
-                className="
-          mt-0 mb-3 text-xs
-          leading-relaxed text-ise-text-muted
-        "
-              >
-                {surveyReport.infrastructure}
-              </p>
-
-              <div
-                className="
-          rounded-control border border-ise-accent/25
-          bg-ise-accent-muted p-3
-        "
-              >
-                <span
-                  className="
-            block text-[0.6rem] font-semibold
-            uppercase tracking-[0.08em]
-            text-ise-text-subtle
-          "
-                >
-                  Recommended Development
-                </span>
-
-                <strong
-                  className="
-            mt-1 block text-sm
-            font-semibold text-ise-accent-hover
-          "
-                >
-                  {surveyReport.recommendationTitle}
-                </strong>
-
-                <p
-                  className="
-            mt-1.5 mb-0 text-xs
-            leading-relaxed text-ise-text-muted
-          "
-                >
-                  {surveyReport.recommendationDetail}
-                </p>
-              </div>
-            </article>
-          </Section>
-        )}
 
         <Section title="Survey">
           <div className="grid gap-3">
@@ -469,6 +416,115 @@ export function SelectedSystemPanel({
   );
 }
 
+type SurveyReportPopoverProps = {
+  systemName: string;
+  report: SystemSurveyReport;
+};
+
+function SurveyReportPopover({
+  systemName,
+  report,
+}: SurveyReportPopoverProps) {
+  return (
+    <details className="group relative">
+      <summary
+        className="
+          flex h-6 w-6 cursor-pointer
+          list-none items-center justify-center
+          rounded-full border border-ise-info/40
+          bg-ise-info/10
+          text-xs font-bold text-ise-info
+          transition-colors
+          hover:bg-ise-info/20
+          focus-visible:outline-2
+          focus-visible:outline-offset-2
+          focus-visible:outline-ise-info
+          [&::-webkit-details-marker]:hidden
+        "
+        title="Open GRaD survey report"
+        aria-label={`Open survey report for ${systemName}`}
+      >
+        i
+      </summary>
+
+      <article
+        className="
+          absolute top-full left-0 z-40 mt-2
+          w-52 max-w-[calc(100vw-2rem)]
+          max-h-[clac(100vh-6rem)] overflow-y-auto
+          rounded-panel border border-ise-border-strong
+          bg-ise-surface p-3
+          shadow-xl
+        "
+      >
+        <div className="mb-3 border-b border-ise-border pb-2">
+          <span 
+            className="
+              block text-[0.6rem] font-semibold uppercase
+              tracking-[0.09em] text-ise-info
+            "
+          >
+            GRaD Survey Report
+        </span>
+
+        <strong className="mt-1 block text-sm text-ise-text">
+          {systemName}
+        </strong>
+        </div>
+
+        <p className="
+            mt-0 mb-2 text-xs
+            leading-relaxed text-ise-text-muted
+          " 
+        >
+          {report.overview}
+        </p>
+
+        <p className="
+          mt-0 mb-3 text-xs
+          leading-relaxed text-ise-text-muted
+          "
+        >
+          {report.infrastructure}
+        </p>
+
+        <div
+          className="
+            rounded-control border border-ise-accent/25
+            bg-ise-accent-muted p-2.5
+          "
+        >
+          <span
+            className="
+              block text-[0.6rem] font-semibold uppercase
+              tracking-[0.08em] text-ise-text-subtle
+            "
+          >
+            Recommended Development
+          </span>
+
+          <strong
+            className="
+              mt-1 block text-xs
+              font-semibold text-ise-accent-hover
+            "
+          >
+            {report.recommendationTitle}
+          </strong>
+
+          <p
+            className="
+              mt-1 mb-0 text-xs
+              leading-relaxed text-ise-text-muted
+            "
+          >
+            {report.recommendationDetail}
+          </p>
+        </div>
+      </article>
+    </details>
+  );
+}
 
 type SystemRarityBadgeProps = {
   rarity: SystemRarity;

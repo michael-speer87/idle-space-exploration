@@ -4,23 +4,15 @@ import type {
   HexCoord,
   StarMapState,
   StarSystem,
-  StarVisual,
 } from "../types";
 import { getHexCoordsInRadius, getHexDistance, getHexId } from "./hexCoords";
+import { getStarVisualForSystem } from "../config/systemRarity";
 import { createSeededRandom, pickOne } from "./seededRandom";
 
 type GenerateHexMapOptions = {
   seed: number;
   radius: number;
 };
-
-const STAR_VISUALS: readonly StarVisual[] = [
-  "yellow",
-  "red",
-  "blue",
-  "white",
-  "orange",
-];
 
 const NAME_PREFIXES = [
   "Aster",
@@ -60,7 +52,7 @@ const AFFINITY_KEYS = [
   "extraction",
 ] as const satisfies readonly (keyof AffinityProfile)[];
 
-const HIGH_AFFINITY_CHANCE = 0.67;
+const HIGH_AFFINITY_CHANCE = 0.35;
 
 const NON_HIGH_AFFINITY_LEVELS: readonly AffinityLevel[] = [
   "low",
@@ -125,15 +117,21 @@ function createStarSystem(
   const id = getHexId(coord);
   const distanceFromHome = getHexDistance(coord);
 
+  const affinities = createAffinityProfile(random);
+  const supportSlotCount = createSupportSlotCount(random);
+
   return {
     id,
     name: createSystemName(random),
     coord,
 
-    starVisual: pickOne(random, STAR_VISUALS),
-    affinities: createAffinityProfile(random),
+    starVisual: getStarVisualForSystem(
+      affinities,
+      supportSlotCount,
+    ),
+    affinities,
 
-    supportSlotCount: createSupportSlotCount(random),
+    supportSlotCount,
 
     explorationState: distanceFromHome <= 1 ? "detected" : "unknown",
     claimState: "unclaimed",
@@ -184,8 +182,9 @@ function createAffinityProfile(random: () => number): AffinityProfile {
 function createSupportSlotCount(random: () => number): number {
   const roll = random();
 
-  if (roll < 0.6) return 1;
-  if (roll < 0.9) return 2;
+  if (roll < 0.5) return 1;
+  if (roll < 0.8) return 2;
+  if (roll < 0.95) return 3;
 
-  return 3;
+  return 4;
 }

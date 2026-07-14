@@ -8,41 +8,12 @@ import type {
 import { getHexCoordsInRadius, getHexDistance, getHexId } from "./hexCoords";
 import { getStarVisualForSystem } from "../config/systemRarity";
 import { createSeededRandom, pickOne } from "./seededRandom";
+import { createUniqueSystemName } from "../config/systemNames";
 
 type GenerateHexMapOptions = {
   seed: number;
   radius: number;
 };
-
-const NAME_PREFIXES = [
-  "Aster",
-  "Nova",
-  "Kepler",
-  "Orion",
-  "Vega",
-  "Lyra",
-  "Drift",
-  "Cinder",
-  "Halo",
-  "Eos",
-  "Mira",
-  "Solace",
-] as const;
-
-const NAME_SUFFIXES = [
-  "Reach",
-  "Prime",
-  "Haven",
-  "Gate",
-  "Spire",
-  "Belt",
-  "Field",
-  "Crown",
-  "Rest",
-  "Harbor",
-  "Well",
-  "Point",
-] as const;
 
 const AFFINITY_KEYS = [
   "survey",
@@ -68,8 +39,12 @@ export function generateHexMap(options: GenerateHexMapOptions): StarMapState {
   const systemsById: StarMapState["systemsById"] = {};
   const systemIds: string[] = [];
 
+  const usedSystemNames = new Set<string>([
+    "Solace Prime",
+  ]);
+
   for (const coord of coords) {
-    const system = createStarSystem(coord, random);
+    const system = createStarSystem(coord, random, usedSystemNames);
 
     systemsById[system.id] = system;
     systemIds.push(system.id);
@@ -113,6 +88,7 @@ export function generateHexMap(options: GenerateHexMapOptions): StarMapState {
 function createStarSystem(
   coord: HexCoord,
   random: () => number,
+  usedSystemNames: Set<string>,
 ): StarSystem {
   const id = getHexId(coord);
   const distanceFromHome = getHexDistance(coord);
@@ -122,7 +98,10 @@ function createStarSystem(
 
   return {
     id,
-    name: createSystemName(random),
+    name: 
+      distanceFromHome === 0
+        ? "Solace Prime"
+        : createUniqueSystemName(random, usedSystemNames), 
     coord,
 
     starVisual: getStarVisualForSystem(
@@ -148,13 +127,6 @@ function createStarSystem(
     primaryOutpostLevel: 0,
     supportBuildingIds: [],
   };
-}
-
-function createSystemName(random: () => number): string {
-  const prefix = pickOne(random, NAME_PREFIXES);
-  const suffix = pickOne(random, NAME_SUFFIXES);
-
-  return `${prefix} ${suffix}`;
 }
 
 function createAffinityProfile(random: () => number): AffinityProfile {

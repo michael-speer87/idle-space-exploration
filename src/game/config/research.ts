@@ -1,30 +1,37 @@
 export type ResearchProjectId =
-    | "improved_survey_arrays"
-    | "commerce_optimization"
-    | "applied_science_methods"
-    | "power_relay_efficiency"
-    | "extraction_handling"
-    | "outpost_tier_ii"
-    | "basic_influence_calibration";
+  | "improved_survey_arrays"
+  | "commerce_optimization"
+  | "applied_science_methods"
+  | "power_relay_efficiency"
+  | "extraction_handling"
+
+  | "auxiliary_survey_instrumentation"
+  | "regional_trade_networks"
+  | "distributed_research_facilities"
+  | "localized_power_infrastructure"
+  | "industrial_refining_methods"
+
+  | "outpost_tier_ii"
+  | "basic_influence_calibration";
 
 export type ResearchProjectDefinition = {
-    id: ResearchProjectId;
-    name: string;
-    scienceCost: number;
-    prerequisiteIds: ResearchProjectId[];
-    description: string;
+  id: ResearchProjectId;
+  name: string;
+  scienceCost: number;
+  prerequisiteIds: ResearchProjectId[];
+  description: string;
 };
 
 export const RESEARCH_PROJECTS: Record<
-    ResearchProjectId,
-    ResearchProjectDefinition
+  ResearchProjectId,
+  ResearchProjectDefinition
 > = {
   improved_survey_arrays: {
     id: "improved_survey_arrays",
     name: "Improved Survey Arrays",
     scienceCost: 1_500,
     prerequisiteIds: [],
-    description: "Increses Survey Array EP/sec output by 25%.",
+    description: "Increases Survey Array EP/sec output by 25%.",
   },
 
   commerce_optimization: {
@@ -59,6 +66,51 @@ export const RESEARCH_PROJECTS: Record<
     description: "Increases Extraction Rig Credits/sec output by 25%.",
   },
 
+  auxiliary_survey_instrumentation: {
+    id: "auxiliary_survey_instrumentation",
+    name: "Auxiliary Survey Instrumentation",
+    scienceCost: 3_000,
+    prerequisiteIds: ["improved_survey_arrays"],
+    description:
+      "Unlocks Survey Booster construction for Survey Array systems.",
+  },
+
+  regional_trade_networks: {
+    id: "regional_trade_networks",
+    name: "Regional Trade Networks",
+    scienceCost: 3_000,
+    prerequisiteIds: ["commerce_optimization"],
+    description:
+      "Unlocks Local Market construction for Commerce Hub systems.",
+  },
+
+  distributed_research_facilities: {
+    id: "distributed_research_facilities",
+    name: "Distributed Research Facilities",
+    scienceCost: 4_000,
+    prerequisiteIds: ["applied_science_methods"],
+    description:
+      "Unlocks Research Annex construction for Science Station systems.",
+  },
+
+  localized_power_infrastructure: {
+    id: "localized_power_infrastructure",
+    name: "Localized Power Infrastructure",
+    scienceCost: 4_500,
+    prerequisiteIds: ["power_relay_efficiency"],
+    description:
+      "Unlocks Solar Grid construction for Power Relay systems.",
+  },
+
+  industrial_refining_methods: {
+    id: "industrial_refining_methods",
+    name: "Industrial Refining Methods",
+    scienceCost: 4_000,
+    prerequisiteIds: ["extraction_handling"],
+    description:
+      "Unlocks Refinery construction for Extraction Rig systems.",
+  },
+
   outpost_tier_ii: {
     id: "outpost_tier_ii",
     name: "Outpost Tier II",
@@ -81,5 +133,5 @@ export const RESEARCH_PROJECTS: Record<
 }
 
 export const RESEARCH_PROJECT_IDS = Object.keys(
-    RESEARCH_PROJECTS,
+  RESEARCH_PROJECTS,
 ) as ResearchProjectId[];

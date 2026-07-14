@@ -16,9 +16,9 @@ import { formatDuration } from "../game/utils/formatDuration";
 import { Panel } from "./ui/Panel";
 import { Section } from "./ui/Section";
 import { ProgressBar } from "./ui/ProgressBar";
-import { 
-  getSystemSurveyReport, 
-  type SystemSurveyReport, 
+import {
+  getSystemSurveyReport,
+  type SystemSurveyReport,
 } from "../game/content/systemSurveyReports";
 
 type SelectedSystemPanelProps = {
@@ -133,7 +133,7 @@ export function SelectedSystemPanel({
               report={surveyReport}
             />
           )}
-          
+
           {isRarityKnown && (
             <SystemRarityBadge rarity={systemRarityId} />
           )}
@@ -458,24 +458,24 @@ function SurveyReportPopover({
         "
       >
         <div className="mb-3 border-b border-ise-border pb-2">
-          <span 
+          <span
             className="
               block text-[0.6rem] font-semibold uppercase
               tracking-[0.09em] text-ise-info
             "
           >
             GRaD Survey Report
-        </span>
+          </span>
 
-        <strong className="mt-1 block text-sm text-ise-text">
-          {systemName}
-        </strong>
+          <strong className="mt-1 block text-sm text-ise-text">
+            {systemName}
+          </strong>
         </div>
 
         <p className="
             mt-0 mb-2 text-xs
             leading-relaxed text-ise-text-muted
-          " 
+          "
         >
           {report.overview}
         </p>

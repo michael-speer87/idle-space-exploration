@@ -1,21 +1,22 @@
 import type { GameState } from "../types";
 import { getSurveyRequirementForSystem } from "../systems/explorationSystem";
+import { ensureResearchProjectStates } from "../systems/researchSystem";
 
 const SAVE_KEY = "idle-space-exploration.save.v1";
 const CORRUPTED_SAVE_KEY_PREFIX = "idle-space-exploration.corrupted-save";
 
 export type LoadGameResult =
   | {
-      status: "loaded";
-      gameState: GameState;
-    }
+    status: "loaded";
+    gameState: GameState;
+  }
   | {
-      status: "missing";
-    }
+    status: "missing";
+  }
   | {
-      status: "corrupted";
-      backupKey: string;
-    };
+    status: "corrupted";
+    backupKey: string;
+  };
 
 export function saveGame(state: GameState): void {
   const serializedState = JSON.stringify(state);
@@ -47,9 +48,17 @@ export function loadGame(): LoadGameResult {
       };
     }
 
+    const normalizedGameState: GameState = {
+      ...migratedSave,
+
+      research: ensureResearchProjectStates(
+        migratedSave.research,
+      ),
+    };
+
     return {
       status: "loaded",
-      gameState: migratedSave,
+      gameState: normalizedGameState,
     };
   } catch {
     const backupKey = preserveCorruptedSave(rawSave);
@@ -91,39 +100,39 @@ function migrateGameState(value: unknown): unknown {
       totalResets: 0,
     };
 
-    const migratedValue = {
-      ...value,
-      influence,
+  const migratedValue = {
+    ...value,
+    influence,
+  };
+
+  if (!isValidGameStateShapeForMigration(migratedValue)) {
+    return migratedValue;
+  }
+
+  const activeSurvey = migratedValue.exploration.activeSurvey;
+  const migratedSystemsById = migrateStarSystemsPrimaryOutpostLevel(
+    migratedValue.map.systemsById,
+  );
+
+  if (migratedSystemsById !== migratedValue.map.systemsById) {
+    return {
+      ...migratedValue,
+      map: {
+        ...migratedValue.map,
+        systemsById: migratedSystemsById,
+      },
     };
+  }
 
-    if (!isValidGameStateShapeForMigration(migratedValue)) {
-      return migratedValue;
-    }
-
-    const activeSurvey =  migratedValue.exploration.activeSurvey;
-    const migratedSystemsById = migrateStarSystemsPrimaryOutpostLevel(
-      migratedValue.map.systemsById,
-    );
-
-    if (migratedSystemsById !== migratedValue.map.systemsById) {
-      return {
-        ...migratedValue,
-        map: {
-          ...migratedValue.map,
-          systemsById: migratedSystemsById,
-        },
-      };
-    }
-
-    if (
-      isRecord(activeSurvey) &&
-      typeof activeSurvey.systemId === "string" &&
-      typeof activeSurvey.progress === "number" &&
-      typeof activeSurvey.speedPerSecond === "number" &&
-      typeof activeSurvey.isFirstFreeSurvey === "boolean" &&
-      typeof activeSurvey.requiredProgress !== "number"
-    ) {
-      return {
+  if (
+    isRecord(activeSurvey) &&
+    typeof activeSurvey.systemId === "string" &&
+    typeof activeSurvey.progress === "number" &&
+    typeof activeSurvey.speedPerSecond === "number" &&
+    typeof activeSurvey.isFirstFreeSurvey === "boolean" &&
+    typeof activeSurvey.requiredProgress !== "number"
+  ) {
+    return {
       ...migratedValue,
       exploration: {
         ...migratedValue.exploration,

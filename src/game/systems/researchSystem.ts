@@ -25,6 +25,50 @@ export function createInitialResearchState(): ResearchState {
     };
 }
 
+export function ensureResearchProjectStates(
+  research: ResearchState,
+): ResearchState {
+  let hasChanges = false;
+
+  const projectsById = {
+    ...research.projectsById,
+  };
+
+  for (const projectId of RESEARCH_PROJECT_IDS) {
+    if (projectsById[projectId] !== undefined) {
+      continue;
+    }
+
+    hasChanges = true;
+
+    projectsById[projectId] = {
+      id: projectId,
+      progress: 0,
+      isCompleted: false,
+    };
+  }
+
+  const activeProjectId =
+    research.activeProjectId !== null &&
+    RESEARCH_PROJECTS[research.activeProjectId] !== undefined
+      ? research.activeProjectId
+      : null;
+
+  if (activeProjectId !== research.activeProjectId) {
+    hasChanges = true;
+  }
+
+  if (!hasChanges) {
+    return research;
+  }
+
+  return {
+    ...research,
+    activeProjectId,
+    projectsById,
+  };
+}
+
 export function canStartResearch(
     state: GameState,
     projectId: ResearchProjectId,

@@ -3,6 +3,10 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import {
+  SYSTEM_RARITIES,
+  type SystemRarity,
+} from "../game/config/systemRarity";
 
 export function MapLegend() {
   const [isOpen, setIsOpen] = useState(false);
@@ -73,6 +77,25 @@ export function MapLegend() {
                 }
                 label="GRaD Command"
               />
+            </LegendGroup>
+
+
+            <LegendGroup title="System Rarity">
+              <p className="m-0 mb-2 text-[0.65rem] leading-relaxed text-ise-text-subtle">
+                Star color reflects generated development potential.
+              </p>
+
+              {RARITY_ORDER.map((rarity) => (
+                <LegendRow
+                  key={rarity}
+                  marker={
+                    <span
+                      className={`h-3 w-3 rounded-full ${RARITY_MARKER_CLASSES[rarity]}`}
+                    />
+                  }
+                  label={SYSTEM_RARITIES[rarity].name}
+                />
+              ))}
             </LegendGroup>
 
             <LegendGroup title="Claimed Outposts">
@@ -159,6 +182,23 @@ export function MapLegend() {
     </div>
   );
 }
+
+
+const RARITY_ORDER: readonly SystemRarity[] = [
+  "common",
+  "uncommon",
+  "rare",
+  "very_rare",
+  "ultra_rare",
+];
+
+const RARITY_MARKER_CLASSES: Record<SystemRarity, string> = {
+  common: "bg-[#ffdf7a]",
+  uncommon: "bg-[#ffa24c]",
+  rare: "bg-[#f4f7ff]",
+  very_rare: "bg-[#7ab7ff]",
+  ultra_rare: "bg-[#ff6b6b]",
+};
 
 type LegendGroupProps = {
   title: string;

@@ -5,6 +5,12 @@ import type {
   StarSystem
 } from "../game/types";
 import { PRIMARY_OUTPOSTS } from "../game/config/outposts"
+import {
+  SYSTEM_RARITIES,
+  getSystemQualityScore,
+  getSystemRarityFromStarVisual,
+  type SystemRarity,
+} from "../game/config/systemRarity";
 import { getSurveyRequirementForSystem } from "../game/systems/explorationSystem";
 import { formatDuration } from "../game/utils/formatDuration";
 import { Panel } from "./ui/Panel";
@@ -74,6 +80,18 @@ export function SelectedSystemPanel({
       : "Not surveying"
 
   const isSurveyed = system.explorationState === "surveyed";
+  const isRarityKnown = system.explorationState !== "unknown";
+
+  const systemRarityId = getSystemRarityFromStarVisual(
+    system.starVisual,
+  );
+
+  const systemRarity = SYSTEM_RARITIES[systemRarityId];
+
+  const systemQualityScore = getSystemQualityScore(
+    system.affinities,
+    system.supportSlotCount,
+  );
 
   const currentOutpost =
     system.primaryOutpostId !== null
@@ -99,43 +117,66 @@ export function SelectedSystemPanel({
       title={system.name}
       subtitle={system.isHome ? "Home System" : "Star System"}
       rightSlot={
-        <span
-          className={`
-          rounded-full border px-2 py-0.5
-          text-[0.65rem] font-semibold uppercase tracking-[0.08em]
-          ${system.explorationState === "surveyed"
-              ? "border-ise-success/35 bg-ise-success/10 text-ise-success"
-              : system.explorationState === "surveying"
-                ? "border-ise-info/35 bg-ise-info/10 text-ise-info"
-                : "border-ise-border bg-ise-background/60 text-ise-text-muted"
-            }
-        `}
-        >
-          {system.explorationState}
-        </span>
+        <div className="flex flex-wrap items-center justify-end gap-1.5">
+          {isRarityKnown && (
+            <SystemRarityBadge rarity={systemRarityId} />
+          )}
+
+          <span
+            className={`
+              rounded-full border px-2 py-0.5
+              text-[0.65rem] font-semibold uppercase
+              tracking-[0.08em]
+              ${
+                system.explorationState === "surveyed"
+                  ? "border-ise-success/35 bg-ise-success/10 text-ise-success"
+                  : system.explorationState === "surveying"
+                    ? "border-ise-info/35 bg-ise-info/10 text-ise-info"
+                    : "border-ise-border bg-ise-background/60 text-ise-text-muted"
+              }
+            `}
+          >
+            {system.explorationState}
+          </span>
+        </div>
       }
     >
       <div className="grid gap-4">
         <Section title="System Data" divider={false}>
           <div className="grid gap-3">
             <div
-              className={`
-                grid gap-2 rounded-control
+              className="
+                grid grid-cols-2 gap-2 rounded-control
                 border border-ise-border
                 bg-ise-background/60 p-2
-                ${isSurveyed ? "grid-cols-2" : "grid-cols-1"}
-              `}
+              "
             >
               <SystemMetric
                 label="Survey Requirement"
                 value={`${surveyRequirement} EP`}
               />
 
+              <SystemMetric
+                label="System Rarity"
+                value={
+                  isRarityKnown
+                    ? systemRarity.name
+                    : "Undetermined"
+                }
+              />
+
               {isSurveyed && (
-                <SystemMetric
-                  label="Support Slots"
-                  value={system.supportSlotCount.toString()}
-                />
+                <>
+                  <SystemMetric
+                    label="Quality Score"
+                    value={systemQualityScore.toString()}
+                  />
+
+                  <SystemMetric
+                    label="Support Slots"
+                    value={system.supportSlotCount.toString()}
+                  />
+                </>
               )}
             </div>
 
@@ -358,6 +399,52 @@ export function SelectedSystemPanel({
       </div>
     </Panel>
   );
+}
+
+
+type SystemRarityBadgeProps = {
+  rarity: SystemRarity;
+};
+
+function SystemRarityBadge({
+  rarity,
+}: SystemRarityBadgeProps) {
+  const definition = SYSTEM_RARITIES[rarity];
+
+  return (
+    <span
+      className={`
+        rounded-full border px-2 py-0.5
+        text-[0.65rem] font-semibold uppercase
+        tracking-[0.08em]
+        ${getSystemRarityClasses(rarity)}
+      `}
+    >
+      {definition.name}
+    </span>
+  );
+}
+
+function getSystemRarityClasses(
+  rarity: SystemRarity,
+): string {
+  switch (rarity) {
+    case "ultra_rare":
+      return "border-[#ff6b6b]/40 bg-[#ff6b6b]/10 text-[#ff8d8d]";
+
+    case "very_rare":
+      return "border-[#7ab7ff]/40 bg-[#7ab7ff]/10 text-[#9bcbff]";
+
+    case "rare":
+      return "border-[#f4f7ff]/35 bg-[#f4f7ff]/10 text-[#f4f7ff]";
+
+    case "uncommon":
+      return "border-[#ffa24c]/40 bg-[#ffa24c]/10 text-[#ffb873]";
+
+    case "common":
+    default:
+      return "border-[#ffdf7a]/40 bg-[#ffdf7a]/10 text-[#ffe69e]";
+  }
 }
 
 type SystemMetricProps = {

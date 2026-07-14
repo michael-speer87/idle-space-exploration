@@ -19,13 +19,14 @@ export function MapLegend() {
           id={legendContentId}
           className="
             absolute bottom-[calc(100%+0.5rem)] left-0 z-50
-            w-full rounded-panel
-            border border-ise-border
+            w-120 max-w-[calc(100vw-2rem)]
+            max-h-[calc(100vh-8rem)] overflow-y-auto
+            rounded-panel border border-ise-border
             bg-ise-void/95 p-3
             shadow-panel backdrop-blur-md
           "
         >
-          <div className="grid gap-3">
+          <div className="grid grid-cols-2 gap-3">
             <LegendGroup title="Systems">
               <LegendRow
                 marker={
@@ -79,25 +80,6 @@ export function MapLegend() {
               />
             </LegendGroup>
 
-
-            <LegendGroup title="System Rarity">
-              <p className="m-0 mb-2 text-[0.65rem] leading-relaxed text-ise-text-subtle">
-                Star color reflects generated development potential.
-              </p>
-
-              {RARITY_ORDER.map((rarity) => (
-                <LegendRow
-                  key={rarity}
-                  marker={
-                    <span
-                      className={`h-3 w-3 rounded-full ${RARITY_MARKER_CLASSES[rarity]}`}
-                    />
-                  }
-                  label={SYSTEM_RARITIES[rarity].name}
-                />
-              ))}
-            </LegendGroup>
-
             <LegendGroup title="Claimed Outposts">
               <LegendRow
                 marker={
@@ -149,6 +131,35 @@ export function MapLegend() {
                 label="Extraction Rig"
               />
             </LegendGroup>
+
+            <LegendGroup 
+              title="System Rarity"
+              className="col-span-2"
+              contentClassName="grid-cols-2 sm:grid-cols-3"
+            >
+              <p className="
+                  col-span-full m-0 mb-1
+                  text-[0.65rem] leading-relaxed
+                  text-ise-text-subtle
+                "
+              >
+                Star color reflects generated development potential.
+              </p>
+
+              {RARITY_ORDER.map((rarity) => (
+                <LegendRow
+                  key={rarity}
+                  marker={
+                    <span
+                      className={`h-3 w-3 rounded-full ${RARITY_MARKER_CLASSES[rarity]}`}
+                    />
+                  }
+                  label={SYSTEM_RARITIES[rarity].name}
+                />
+              ))}
+            </LegendGroup>
+
+            
           </div>
         </div>
       )}
@@ -203,11 +214,13 @@ const RARITY_MARKER_CLASSES: Record<SystemRarity, string> = {
 type LegendGroupProps = {
   title: string;
   children: ReactNode;
+  className?: string;
+  contentClassName?: string;
 };
 
-function LegendGroup({ title, children }: LegendGroupProps) {
+function LegendGroup({ title, children, className = "", contentClassName = "" }: LegendGroupProps) {
   return (
-    <section>
+    <section className={className}>
       <h3
         className="
           m-0 mb-2
@@ -218,7 +231,7 @@ function LegendGroup({ title, children }: LegendGroupProps) {
         {title}
       </h3>
 
-      <div className="grid gap-1.5">{children}</div>
+      <div className={`grid gap-1.5 ${contentClassName}`}>{children}</div>
     </section>
   );
 }
@@ -232,9 +245,9 @@ function LegendRow({ marker, label }: LegendRowProps) {
   return (
     <div
       className="
-        flex items-center gap-2
-        rounded-control px-1.5 py-1
-        text-xs text-ise-text-muted
+        flex min-w-0 items-center gap-1.5
+        rounded-control px-1.5 py-0.5
+        text-[0.7rem] text-ise-text-muted
         hover:bg-ise-surface-hover/50
       "
     >
@@ -248,7 +261,7 @@ function LegendRow({ marker, label }: LegendRowProps) {
         {marker}
       </span>
 
-      <span>{label}</span>
+      <span className="min-w-0 leading-tight">{label}</span>
     </div>
   );
 }

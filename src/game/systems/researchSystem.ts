@@ -4,6 +4,7 @@ import {
     RESEARCH_PROJECT_IDS,
     type ResearchProjectId,
 } from "../config/research"
+import type { PrimaryOutpostId } from "../config/outposts";
 
 const DEFAULT_RESEARCH_SPEED_PER_SECOND = 1;
 
@@ -218,6 +219,32 @@ export function isResearchCompleted(
     projectId: ResearchProjectId,
 ): boolean {
     return state.research.projectsById[projectId]?.isCompleted === true;
+}
+
+export function getResearchOutpostOutputMultiplier(
+    state: GameState,
+    outpostId: PrimaryOutpostId
+): number {
+    let totalBonus = 0;
+
+    for (const projectId of RESEARCH_PROJECT_IDS) {
+        if (!isResearchCompleted(state, projectId)) {
+            continue;
+        }
+
+        const project = RESEARCH_PROJECTS[projectId];
+
+        for (const effect of project.effects) {
+            if (
+                effect.type === "primary_outpost_output_bonus" &&
+                effect.outpostId === outpostId
+            ) {
+                totalBonus += effect.amount;
+            }
+        }
+    }
+
+    return 1 + totalBonus;
 }
 
 function completeResearchProject(

@@ -6,7 +6,7 @@ import {
 import { SUPPORT_BUILDINGS } from "../config/supportBuildings";
 import type { GameState, StarSystem } from "../types";
 import { getInfluenceOutputMultiplier } from "./influenceSystem";
-import { isResearchCompleted } from "./researchSystem";
+import { getResearchOutpostOutputMultiplier } from "./researchSystem";
 
 export type CalculatedRates = {
   epPerSecond: number;
@@ -23,14 +23,6 @@ const AFFINITY_MULTIPLIERS = {
   low: 0.75,
   neutral: 1,
   high: 1.25,
-} as const;
-
-const RESEARCH_EFFECTS = {
-  improvedSurveyArraysMultiplier: 1.25,
-  commerceOptimizationMultiplier: 1.25,
-  appliedScienceMethodsMultiplier: 1.25,
-  powerRelayEfficiencyMultiplier: 1.25,
-  extractionHandlingMultiplier: 1.25,
 } as const;
 
 const GRAD_COMMAND_STARTER_ENERGY = 6;
@@ -217,10 +209,8 @@ function getSurveyOutput(state: GameState, system: StarSystem): number {
     levelMultiplier *
     AFFINITY_MULTIPLIERS[system.affinities.survey];
 
-  if (isResearchCompleted(state, "improved_survey_arrays")) {
-    output *= RESEARCH_EFFECTS.improvedSurveyArraysMultiplier;
-  }
-
+  output *= getResearchOutpostOutputMultiplier(state, outpost.id,);
+  
   output *= getSupportBuildingOutputMultiplier(system);
 
   return output;
@@ -237,9 +227,7 @@ function getCommerceOutput(state: GameState, system: StarSystem): number {
     levelMultiplier *
     AFFINITY_MULTIPLIERS[system.affinities.commerce];
 
-  if (isResearchCompleted(state, "commerce_optimization")) {
-    output *= RESEARCH_EFFECTS.commerceOptimizationMultiplier;
-  }
+  output *= getResearchOutpostOutputMultiplier(state, outpost.id,);
 
   output *= getSupportBuildingOutputMultiplier(system);
 
@@ -257,9 +245,7 @@ function getScienceOutput(state: GameState, system: StarSystem): number {
     levelMultiplier *
     AFFINITY_MULTIPLIERS[system.affinities.science];
 
-  if (isResearchCompleted(state, "applied_science_methods")) {
-    output *= RESEARCH_EFFECTS.appliedScienceMethodsMultiplier;
-  }
+  output *= getResearchOutpostOutputMultiplier(state, outpost.id,);
 
   output *= getSupportBuildingOutputMultiplier(system);
 
@@ -277,9 +263,7 @@ function getPowerOutput(state: GameState, system: StarSystem): number {
     levelMultiplier *
     AFFINITY_MULTIPLIERS[system.affinities.power];
 
-  if (isResearchCompleted(state, "power_relay_efficiency")) {
-    output *= RESEARCH_EFFECTS.powerRelayEfficiencyMultiplier;
-  }
+  output *= getResearchOutpostOutputMultiplier(state, outpost.id,);
 
   output *= getSupportBuildingOutputMultiplier(system);
 
@@ -297,9 +281,7 @@ function getExtractionOutput(state: GameState, system: StarSystem): number {
     levelMultiplier *
     AFFINITY_MULTIPLIERS[system.affinities.extraction];
 
-  if (isResearchCompleted(state, "extraction_handling")) {
-    output *= RESEARCH_EFFECTS.extractionHandlingMultiplier;
-  }
+  output *= getResearchOutpostOutputMultiplier(state, outpost.id,);
 
   output *= getSupportBuildingOutputMultiplier(system);
 

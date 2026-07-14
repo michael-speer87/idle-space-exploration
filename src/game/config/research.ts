@@ -1,3 +1,5 @@
+import type { PrimaryOutpostId } from "./outposts";
+
 export type ResearchProjectId =
   | "improved_survey_arrays"
   | "commerce_optimization"
@@ -14,12 +16,20 @@ export type ResearchProjectId =
   | "outpost_tier_ii"
   | "basic_influence_calibration";
 
+
+export type ResearchEffect = {
+  type: "primary_outpost_output_bonus"
+  outpostId: PrimaryOutpostId;
+  amount: number;
+}
+
 export type ResearchProjectDefinition = {
   id: ResearchProjectId;
   name: string;
   scienceCost: number;
   prerequisiteIds: ResearchProjectId[];
   description: string;
+  effects: ResearchEffect[];
 };
 
 export const RESEARCH_PROJECTS: Record<
@@ -32,6 +42,13 @@ export const RESEARCH_PROJECTS: Record<
     scienceCost: 1_500,
     prerequisiteIds: [],
     description: "Increases Survey Array EP/sec output by 25%.",
+    effects: [
+      {
+        type: "primary_outpost_output_bonus",
+        outpostId: "survey_array",
+        amount: 0.25,
+      }
+    ]
   },
 
   commerce_optimization: {
@@ -40,6 +57,13 @@ export const RESEARCH_PROJECTS: Record<
     scienceCost: 1_500,
     prerequisiteIds: [],
     description: "Increases Commerce Hub Credits/sec output by 25%.",
+    effects: [
+      {
+        type: "primary_outpost_output_bonus",
+        outpostId: "commerce_hub",
+        amount: 0.25,
+      }
+    ]
   },
 
   applied_science_methods: {
@@ -48,6 +72,13 @@ export const RESEARCH_PROJECTS: Record<
     scienceCost: 2_000,
     prerequisiteIds: [],
     description: "Increases Science Station Science/sec output by 25%.",
+    effects: [
+      {
+        type: "primary_outpost_output_bonus",
+        outpostId: "science_station",
+        amount: 0.25,
+      }
+    ]
   },
 
   power_relay_efficiency: {
@@ -56,6 +87,13 @@ export const RESEARCH_PROJECTS: Record<
     scienceCost: 2_500,
     prerequisiteIds: [],
     description: "Increases Power Relay Energy output by 25%.",
+    effects: [
+      {
+        type: "primary_outpost_output_bonus",
+        outpostId: "power_relay",
+        amount: 0.25,
+      }
+    ]
   },
 
   extraction_handling: {
@@ -64,6 +102,13 @@ export const RESEARCH_PROJECTS: Record<
     scienceCost: 2_000,
     prerequisiteIds: [],
     description: "Increases Extraction Rig Credits/sec output by 25%.",
+    effects: [
+      {
+        type: "primary_outpost_output_bonus",
+        outpostId: "extraction_rig",
+        amount: 0.25,
+      }
+    ]
   },
 
   auxiliary_survey_instrumentation: {
@@ -73,6 +118,7 @@ export const RESEARCH_PROJECTS: Record<
     prerequisiteIds: ["improved_survey_arrays"],
     description:
       "Unlocks Survey Booster construction for Survey Array systems.",
+    effects: [],
   },
 
   regional_trade_networks: {
@@ -82,6 +128,7 @@ export const RESEARCH_PROJECTS: Record<
     prerequisiteIds: ["commerce_optimization"],
     description:
       "Unlocks Local Market construction for Commerce Hub systems.",
+    effects: [],
   },
 
   distributed_research_facilities: {
@@ -91,6 +138,7 @@ export const RESEARCH_PROJECTS: Record<
     prerequisiteIds: ["applied_science_methods"],
     description:
       "Unlocks Research Annex construction for Science Station systems.",
+    effects: [],
   },
 
   localized_power_infrastructure: {
@@ -100,6 +148,7 @@ export const RESEARCH_PROJECTS: Record<
     prerequisiteIds: ["power_relay_efficiency"],
     description:
       "Unlocks Solar Grid construction for Power Relay systems.",
+    effects: [],
   },
 
   industrial_refining_methods: {
@@ -109,6 +158,7 @@ export const RESEARCH_PROJECTS: Record<
     prerequisiteIds: ["extraction_handling"],
     description:
       "Unlocks Refinery construction for Extraction Rig systems.",
+    effects: [],
   },
 
   outpost_tier_ii: {
@@ -121,6 +171,7 @@ export const RESEARCH_PROJECTS: Record<
       "applied_science_methods",
     ],
     description: "Future effect: unlock Tier II Outpost upgrades.",
+    effects: [],
   },
 
   basic_influence_calibration: {
@@ -129,6 +180,7 @@ export const RESEARCH_PROJECTS: Record<
     scienceCost: 5_000,
     prerequisiteIds: ["outpost_tier_ii"],
     description: "Future effect: prepare the first Influence reset.",
+    effects: [],
   },
 }
 

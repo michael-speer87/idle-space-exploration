@@ -5,7 +5,7 @@ import {
     useRef,
     useState,
 } from "react";
-import { Application, Circle, Container, Graphics } from "pixi.js";
+import { Application, Circle, Container, Graphics, Text } from "pixi.js";
 import type {
     StarMapState,
     StarSystem,
@@ -839,4 +839,86 @@ function drawClaimedOutpostMarker(container: Container, system: StarSystem) {
     }
 
     container.addChild(marker);
+
+    drawOutpostLevelIndicator(
+        container,
+        system,
+        markerColor,
+        markerY,
+    );
+}
+
+function drawOutpostLevelIndicator(
+  container: Container,
+  system: StarSystem,
+  markerColor: number,
+  markerY: number,
+): void {
+  if (system.primaryOutpostLevel <= 0) {
+    return;
+  }
+
+  const label = `L${system.primaryOutpostLevel}`;
+
+  const tagHeight = 12;
+  const tagWidth = Math.max(
+    22,
+    10 + label.length * 5,
+  );
+
+  const tagX = 9;
+  const tagY = markerY - tagHeight / 2;
+
+  const tag = new Graphics();
+
+  tag
+    .moveTo(6, markerY)
+    .lineTo(tagX, markerY)
+    .stroke({
+      color: markerColor,
+      width: 1.5,
+      alpha: 0.9,
+    });
+
+  tag
+    .roundRect(
+      tagX,
+      tagY,
+      tagWidth,
+      tagHeight,
+      3,
+    )
+    .fill({
+      color: 0x07111f,
+      alpha: 0.94,
+    })
+    .stroke({
+      color: markerColor,
+      width: 1.25,
+      alpha: 0.95,
+    });
+
+  const levelText = new Text({
+    text: label,
+
+    style: {
+      fontFamily:
+        "Inter, ui-sans-serif, system-ui, sans-serif",
+
+      fontSize: 8,
+      fontWeight: "700",
+      fill: markerColor,
+      letterSpacing: 0.4,
+    },
+  });
+
+  levelText.anchor.set(0.5);
+
+  levelText.position.set(
+    tagX + tagWidth / 2,
+    markerY,
+  );
+
+  container.addChild(tag);
+  container.addChild(levelText);
 }

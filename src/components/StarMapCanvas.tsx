@@ -345,175 +345,185 @@ function installMapPanning(
 }
 
 function zoomFromViewportCenter(
-  app: Application | null,
-  cameraLayer: Container | null,
-  mapLayer: Container | null,
-  zoomFactor: number,
+    app: Application | null,
+    cameraLayer: Container | null,
+    mapLayer: Container | null,
+    zoomFactor: number,
 ): void {
-  if (app === null || cameraLayer === null || mapLayer === null) {
-    return;
-  }
+    if (app === null || cameraLayer === null || mapLayer === null) {
+        return;
+    }
 
-  const nextScale = clamp(
-    cameraLayer.scale.x * zoomFactor,
-    MIN_MAP_SCALE,
-    MAX_MAP_SCALE,
-  );
+    const nextScale = clamp(
+        cameraLayer.scale.x * zoomFactor,
+        MIN_MAP_SCALE,
+        MAX_MAP_SCALE,
+    );
 
-  zoomCameraAtPoint(
-    cameraLayer,
-    nextScale,
-    app.screen.width / 2,
-    app.screen.height / 2,
-  );
+    zoomCameraAtPoint(
+        cameraLayer,
+        nextScale,
+        app.screen.width / 2,
+        app.screen.height / 2,
+    );
 
-  clampCameraToMapBounds(
-    app,
-    cameraLayer,
-    mapLayer,
-  );
+    clampCameraToMapBounds(
+        app,
+        cameraLayer,
+        mapLayer,
+    );
 }
 
 function centerCameraOnMap(
-  app: Application | null,
-  cameraLayer: Container | null,
-  mapLayer: Container | null,
+    app: Application | null,
+    cameraLayer: Container | null,
+    mapLayer: Container | null,
 ): void {
-  if (
-    app === null ||
-    cameraLayer === null ||
-    mapLayer === null
-  ) {
-    return;
-  }
+    if (
+        app === null ||
+        cameraLayer === null ||
+        mapLayer === null
+    ) {
+        return;
+    }
 
-  const bounds = mapLayer.getLocalBounds();
+    const bounds = mapLayer.getLocalBounds();
 
-  cameraLayer.scale.set(1);
+    cameraLayer.scale.set(1);
 
-  if (bounds.width <= 0 || bounds.height <= 0) {
+    if (bounds.width <= 0 || bounds.height <= 0) {
+        cameraLayer.position.set(
+            app.screen.width / 2,
+            app.screen.height / 2,
+        );
+
+        return;
+    }
+
     cameraLayer.position.set(
-      app.screen.width / 2,
-      app.screen.height / 2,
+        app.screen.width / 2 -
+        (bounds.x + bounds.width / 2),
+        app.screen.height / 2 -
+        (bounds.y + bounds.height / 2),
     );
 
-    return;
-  }
-
-  cameraLayer.position.set(
-    app.screen.width / 2 -
-      (bounds.x + bounds.width / 2),
-    app.screen.height / 2 -
-      (bounds.y + bounds.height / 2),
-  );
-
-  clampCameraToMapBounds(
-    app,
-    cameraLayer,
-    mapLayer,
-  );
+    clampCameraToMapBounds(
+        app,
+        cameraLayer,
+        mapLayer,
+    );
 }
 
 function clampCameraToMapBounds(
-  app: Application,
-  cameraLayer: Container,
-  mapLayer: Container,
+    app: Application,
+    cameraLayer: Container,
+    mapLayer: Container,
 ): void {
-  const bounds = mapLayer.getLocalBounds();
+    const bounds = mapLayer.getLocalBounds();
 
-  if (bounds.width <= 0 || bounds.height <= 0) {
-    return;
-  }
+    if (bounds.width <= 0 || bounds.height <= 0) {
+        return;
+    }
 
-  const scale = cameraLayer.scale.x;
+    const scale = cameraLayer.scale.x;
 
-  cameraLayer.position.set(
-    clampCameraAxis(
-      cameraLayer.x,
-      app.screen.width,
-      bounds.x,
-      bounds.x + bounds.width,
-      scale,
-    ),
-    clampCameraAxis(
-      cameraLayer.y,
-      app.screen.height,
-      bounds.y,
-      bounds.y + bounds.height,
-      scale,
-    ),
-  );
+    cameraLayer.position.set(
+        clampCameraAxis(
+            cameraLayer.x,
+            app.screen.width,
+            bounds.x,
+            bounds.x + bounds.width,
+            scale,
+        ),
+        clampCameraAxis(
+            cameraLayer.y,
+            app.screen.height,
+            bounds.y,
+            bounds.y + bounds.height,
+            scale,
+        ),
+    );
 }
 
 function clampCameraAxis(
-  currentPosition: number,
-  viewportSize: number,
-  localMinimum: number,
-  localMaximum: number,
-  scale: number,
+    currentPosition: number,
+    viewportSize: number,
+    localMinimum: number,
+    localMaximum: number,
+    scale: number,
 ): number {
-  const scaledMinimum = localMinimum * scale;
-  const scaledMaximum = localMaximum * scale;
+    const scaledMinimum = localMinimum * scale;
+    const scaledMaximum = localMaximum * scale;
 
-  const padding = Math.min(
-    MAP_EDGE_PADDING,
-    viewportSize * 0.25,
-  );
-
-  const visibleMinimum = padding;
-  const visibleMaximum = viewportSize - padding;
-
-  const contentSize = scaledMaximum - scaledMinimum;
-  const visibleSize = visibleMaximum - visibleMinimum;
-
-  /*
-   * When the map fits inside the viewport, keep it centered instead
-   * of allowing it to drift around inside empty space.
-   */
-  if (contentSize <= visibleSize) {
-    return (
-      viewportSize / 2 -
-      (scaledMinimum + scaledMaximum) / 2
+    const padding = Math.min(
+        MAP_EDGE_PADDING,
+        viewportSize * 0.25,
     );
-  }
 
-  const minimumPosition =
-    visibleMaximum - scaledMaximum;
+    const visibleMinimum = padding;
+    const visibleMaximum = viewportSize - padding;
 
-  const maximumPosition =
-    visibleMinimum - scaledMinimum;
+    const contentSize = scaledMaximum - scaledMinimum;
+    const visibleSize = visibleMaximum - visibleMinimum;
 
-  return clamp(
-    currentPosition,
-    minimumPosition,
-    maximumPosition,
-  );
+    /*
+   * When the map fits inside the viewport, allow it to move within
+   * the visible area instead of forcing it back to the center.
+   *
+   * This lets players reposition the map when a workspace obscures
+   * part of the canvas.
+   */
+    if (contentSize <= visibleSize) {
+        const minimumPosition =
+            visibleMinimum - scaledMinimum;
+
+        const maximumPosition =
+            visibleMaximum - scaledMaximum;
+
+        return clamp(
+            currentPosition,
+            minimumPosition,
+            maximumPosition,
+        );
+    }
+
+    const minimumPosition =
+        visibleMaximum - scaledMaximum;
+
+    const maximumPosition =
+        visibleMinimum - scaledMinimum;
+
+    return clamp(
+        currentPosition,
+        minimumPosition,
+        maximumPosition,
+    );
 }
 
 function zoomCameraAtPoint(
-  cameraLayer: Container,
-  nextScale: number,
-  anchorX: number,
-  anchorY: number,
+    cameraLayer: Container,
+    nextScale: number,
+    anchorX: number,
+    anchorY: number,
 ): void {
-  const currentScale = cameraLayer.scale.x;
+    const currentScale = cameraLayer.scale.x;
 
-  if (nextScale === currentScale) {
-    return;
-  }
+    if (nextScale === currentScale) {
+        return;
+    }
 
-  const mapPointX =
-    (anchorX - cameraLayer.x) / currentScale;
+    const mapPointX =
+        (anchorX - cameraLayer.x) / currentScale;
 
-  const mapPointY =
-    (anchorY - cameraLayer.y) / currentScale;
+    const mapPointY =
+        (anchorY - cameraLayer.y) / currentScale;
 
-  cameraLayer.scale.set(nextScale);
+    cameraLayer.scale.set(nextScale);
 
-  cameraLayer.position.set(
-    anchorX - mapPointX * nextScale,
-    anchorY - mapPointY * nextScale,
-  );
+    cameraLayer.position.set(
+        anchorX - mapPointX * nextScale,
+        anchorY - mapPointY * nextScale,
+    );
 }
 
 function installMapZoom(
@@ -708,7 +718,7 @@ function drawSystemStar(
         const surveyedRing = new Graphics();
 
         surveyedRing.circle(0, 0, 12).stroke({
-            color:0x9cffb1,
+            color: 0x9cffb1,
             width: 2,
             alpha: 0.9,
         });

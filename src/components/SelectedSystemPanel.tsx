@@ -16,6 +16,7 @@ import { formatDuration } from "../game/utils/formatDuration";
 import { Panel } from "./ui/Panel";
 import { Section } from "./ui/Section";
 import { ProgressBar } from "./ui/ProgressBar";
+import { getSystemSurveyReport } from "../game/content/systemSurveyReports";
 
 type SelectedSystemPanelProps = {
   gameState: GameState;
@@ -93,6 +94,10 @@ export function SelectedSystemPanel({
     system.supportSlotCount,
   );
 
+  const surveyReport = isSurveyed
+    ? getSystemSurveyReport(system)
+    : null;
+
   const currentOutpost =
     system.primaryOutpostId !== null
       ? PRIMARY_OUTPOSTS[system.primaryOutpostId]
@@ -127,12 +132,11 @@ export function SelectedSystemPanel({
               rounded-full border px-2 py-0.5
               text-[0.65rem] font-semibold uppercase
               tracking-[0.08em]
-              ${
-                system.explorationState === "surveyed"
-                  ? "border-ise-success/35 bg-ise-success/10 text-ise-success"
-                  : system.explorationState === "surveying"
-                    ? "border-ise-info/35 bg-ise-info/10 text-ise-info"
-                    : "border-ise-border bg-ise-background/60 text-ise-text-muted"
+              ${system.explorationState === "surveyed"
+                ? "border-ise-success/35 bg-ise-success/10 text-ise-success"
+                : system.explorationState === "surveying"
+                  ? "border-ise-info/35 bg-ise-info/10 text-ise-info"
+                  : "border-ise-border bg-ise-background/60 text-ise-text-muted"
               }
             `}
           >
@@ -197,6 +201,70 @@ export function SelectedSystemPanel({
             )}
           </div>
         </Section>
+
+        {surveyReport !== null && (
+          <Section title="GRaD Survey Report">
+            <article
+              className="
+        rounded-control border border-ise-border
+        bg-ise-background/60 p-3
+      "
+            >
+              <p
+                className="
+          mt-0 mb-3 text-xs
+          leading-relaxed text-ise-text-muted
+        "
+              >
+                {surveyReport.overview}
+              </p>
+
+              <p
+                className="
+          mt-0 mb-3 text-xs
+          leading-relaxed text-ise-text-muted
+        "
+              >
+                {surveyReport.infrastructure}
+              </p>
+
+              <div
+                className="
+          rounded-control border border-ise-accent/25
+          bg-ise-accent-muted p-3
+        "
+              >
+                <span
+                  className="
+            block text-[0.6rem] font-semibold
+            uppercase tracking-[0.08em]
+            text-ise-text-subtle
+          "
+                >
+                  Recommended Development
+                </span>
+
+                <strong
+                  className="
+            mt-1 block text-sm
+            font-semibold text-ise-accent-hover
+          "
+                >
+                  {surveyReport.recommendationTitle}
+                </strong>
+
+                <p
+                  className="
+            mt-1.5 mb-0 text-xs
+            leading-relaxed text-ise-text-muted
+          "
+                >
+                  {surveyReport.recommendationDetail}
+                </p>
+              </div>
+            </article>
+          </Section>
+        )}
 
         <Section title="Survey">
           <div className="grid gap-3">

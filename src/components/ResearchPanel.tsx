@@ -7,6 +7,7 @@ import type { ResearchState } from "../game/types";
 import { formatDuration } from "../game/utils/formatDuration";
 import { ProgressBar } from "./ui/ProgressBar";
 import { Section } from "./ui/Section";
+import { ResearchWeb } from "./research/ResearchWeb";
 
 type ResearchPanelProps = {
   research: ResearchState;
@@ -161,41 +162,55 @@ export function ResearchPanel({
       <Section title="Research Viewport">
         <div
           className="
-            min-h-[320px] rounded-panel
+            min-h-80 rounded-panel
             border border-ise-border
             bg-ise-background/45 p-3
           "
           aria-label="Research project viewport"
         >
-          <div className="grid gap-3">
-            {RESEARCH_PROJECT_IDS.map((projectId) => {
-              const project = RESEARCH_PROJECTS[projectId];
-              const projectState = research.projectsById[projectId];
+          <ResearchWeb
+            research={research}
+            startableProjectIds={startableProjectIds}
+          />
+          <div className="mt-4 border-t border-ise-border pt-4">  
+            <p className="
+              mt-0 mb-3 text-[0.65rem]
+              font-semibold uppercase
+              text-ise-text-subtle
+            "
+            >
+              Temporary Project Controls
+            </p>
+            <div className="grid gap-3">
+              {RESEARCH_PROJECT_IDS.map((projectId) => {
+                const project = RESEARCH_PROJECTS[projectId];
+                const projectState = research.projectsById[projectId];
 
-              const progressPercent = calculateProgressPercent(
-                projectState.progress,
-                project.scienceCost,
-              );
+                const progressPercent = calculateProgressPercent(
+                  projectState.progress,
+                  project.scienceCost,
+                );
 
-              const isActive = research.activeProjectId === projectId;
-              const canStart = startableProjectIds.includes(projectId);
+                const isActive = research.activeProjectId === projectId;
+                const canStart = startableProjectIds.includes(projectId);
 
-              return (
-                <ResearchProjectCard
-                  key={projectId}
-                  projectId={projectId}
-                  name={project.name}
-                  description={project.description}
-                  scienceCost={project.scienceCost}
-                  prerequisiteIds={project.prerequisiteIds}
-                  progressPercent={progressPercent}
-                  isCompleted={projectState.isCompleted}
-                  isActive={isActive}
-                  canStart={canStart}
-                  onStartResearch={onStartResearch}
-                />
-              );
-            })}
+                return (
+                  <ResearchProjectCard
+                    key={projectId}
+                    projectId={projectId}
+                    name={project.name}
+                    description={project.description}
+                    scienceCost={project.scienceCost}
+                    prerequisiteIds={project.prerequisiteIds}
+                    progressPercent={progressPercent}
+                    isCompleted={projectState.isCompleted}
+                    isActive={isActive}
+                    canStart={canStart}
+                    onStartResearch={onStartResearch}
+                  />
+                );
+              })}
+            </div>
           </div>
         </div>
       </Section>

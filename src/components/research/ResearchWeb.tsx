@@ -1,179 +1,179 @@
 import {
-    RESEARCH_PROJECTS,
-    type ResearchProjectId,
+  RESEARCH_PROJECTS,
+  type ResearchProjectId,
 } from "../../game/config/research";
 import type { ResearchState } from "../../game/types";
 import {
-    RESEARCH_WEB_CENTER,
-    RESEARCH_WEB_CONNECTIONS,
-    RESEARCH_WEB_LAYOUT,
-    RESEARCH_WEB_PROJECT_IDS,
-    type ResearchDiscipline,
-    type ResearchNodeKind,
-    type ResearchWebNodeLayout,
-    type ResearchWebPointId,
+  RESEARCH_WEB_CENTER,
+  RESEARCH_WEB_CONNECTIONS,
+  RESEARCH_WEB_LAYOUT,
+  RESEARCH_WEB_PROJECT_IDS,
+  type ResearchDiscipline,
+  type ResearchNodeKind,
+  type ResearchWebNodeLayout,
+  type ResearchWebPointId,
 } from "./researchWebLayout";
 import { ResearchNodeIcon } from "./ResearchNodeIcon";
 
 type ResearchWebProps = {
-    research: ResearchState;
-    startableProjectIds: ResearchProjectId[];
-    selectedProjectId: ResearchProjectId | null;
-    onSelectProject: (projectId: ResearchProjectId) => void;
+  research: ResearchState;
+  startableProjectIds: ResearchProjectId[];
+  selectedProjectId: ResearchProjectId | null;
+  onSelectProject: (projectId: ResearchProjectId) => void;
 };
 
 export function ResearchWeb({
-    research,
-    startableProjectIds,
-    selectedProjectId,
-    onSelectProject,
+  research,
+  startableProjectIds,
+  selectedProjectId,
+  onSelectProject,
 }: ResearchWebProps) {
-    const startableProjectIdSet = new Set(startableProjectIds);
+  const startableProjectIdSet = new Set(startableProjectIds);
 
-    return (
-        <div className="overflow-x-auto pb-2">
-            <div
-                className="
+  return (
+    <div className="overflow-x-auto pb-2">
+      <div
+        className="
           relative mx-auto
           min-h-130 min-w-105
           overflow-hidden rounded-panel
           border border-ise-border
           bg-ise-void/55
         "
-                role="group"
-                aria-label="Research technology web"
-            >
-                <ResearchConnectionLayer
-                    research={research}
-                    startableProjectIdSet={startableProjectIdSet}
-                />
+        role="group"
+        aria-label="Research technology web"
+      >
+        <ResearchConnectionLayer
+          research={research}
+          startableProjectIdSet={startableProjectIdSet}
+        />
 
-                <ResearchCore />
+        <ResearchCore />
 
-                {RESEARCH_WEB_PROJECT_IDS.map((projectId) => {
-                    const layout = getNodeLayout(projectId);
-                    const project = RESEARCH_PROJECTS[projectId];
-                    const projectState = research.projectsById[projectId];
+        {RESEARCH_WEB_PROJECT_IDS.map((projectId) => {
+          const layout = getNodeLayout(projectId);
+          const project = RESEARCH_PROJECTS[projectId];
+          const projectState = research.projectsById[projectId];
 
-                    if (layout === null || projectState === undefined) {
-                        return null;
-                    }
+          if (layout === null || projectState === undefined) {
+            return null;
+          }
 
-                    const progressPercent = calculateProgressPercent(
-                        projectState.progress,
-                        project.scienceCost,
-                    );
+          const progressPercent = calculateProgressPercent(
+            projectState.progress,
+            project.scienceCost,
+          );
 
-                    return (
-                        <ResearchNodeButton
-                            key={projectId}
-                            projectId={projectId}
-                            discipline={layout.discipline}
-                            kind={layout.kind}
-                            x={layout.x}
-                            y={layout.y}
-                            name={project.name}
-                            description={project.description}
-                            scienceCost={project.scienceCost}
-                            prerequisiteIds={project.prerequisiteIds}
-                            progressPercent={progressPercent}
-                            isCompleted={projectState.isCompleted}
-                            isActive={research.activeProjectId === projectId}
-                            canStart={startableProjectIdSet.has(projectId)}
-                            isSelected={selectedProjectId === projectId}
-                            onSelect={onSelectProject}
-                        />
-                    )
-                })}
-            </div>
-        </div>
-    );
+          return (
+            <ResearchNodeButton
+              key={projectId}
+              projectId={projectId}
+              discipline={layout.discipline}
+              kind={layout.kind}
+              x={layout.x}
+              y={layout.y}
+              name={project.name}
+              description={project.description}
+              scienceCost={project.scienceCost}
+              prerequisiteIds={project.prerequisiteIds}
+              progressPercent={progressPercent}
+              isCompleted={projectState.isCompleted}
+              isActive={research.activeProjectId === projectId}
+              canStart={startableProjectIdSet.has(projectId)}
+              isSelected={selectedProjectId === projectId}
+              onSelect={onSelectProject}
+            />
+          )
+        })}
+      </div>
+    </div>
+  );
 }
 
 type ResearchConnectionLayerProps = {
-    research: ResearchState;
-    startableProjectIdSet: Set<ResearchProjectId>;
+  research: ResearchState;
+  startableProjectIdSet: Set<ResearchProjectId>;
 };
 
 function ResearchConnectionLayer({
-    research,
-    startableProjectIdSet,
+  research,
+  startableProjectIdSet,
 }: ResearchConnectionLayerProps) {
-    return (
-        <svg
-            className="pointer-events-none absolute inset-0 h-full w-full"
-            viewBox="0 0 100 100"
-            preserveAspectRatio="none"
-            aria-hidden="true"
-        >
-            {RESEARCH_WEB_CONNECTIONS.map((connection) => {
-                const from = getWebPoint(connection.from);
-                const to = getWebPoint(connection.to);
+  return (
+    <svg
+      className="pointer-events-none absolute inset-0 h-full w-full"
+      viewBox="0 0 100 100"
+      preserveAspectRatio="none"
+      aria-hidden="true"
+    >
+      {RESEARCH_WEB_CONNECTIONS.map((connection) => {
+        const from = getWebPoint(connection.from);
+        const to = getWebPoint(connection.to);
 
-                if (from === null || to === null) {
-                    return null;
-                }
+        if (from === null || to === null) {
+          return null;
+        }
 
-                const targetState = research.projectsById[connection.to];
-                const isCompleted = targetState?.isCompleted === true;
-                const isActive = research.activeProjectId === connection.to;
-                const canStart = startableProjectIdSet.has(connection.to);
+        const targetState = research.projectsById[connection.to];
+        const isCompleted = targetState?.isCompleted === true;
+        const isActive = research.activeProjectId === connection.to;
+        const canStart = startableProjectIdSet.has(connection.to);
 
-                const lineClassName = isCompleted
-                    ? "text-ise-success"
-                    : isActive
-                        ? "text-ise-accent"
-                        : canStart
-                            ? "text-ise-info"
-                            : "text-ise-border";
+        const lineClassName = isCompleted
+          ? "text-ise-success"
+          : isActive
+            ? "text-ise-accent"
+            : canStart
+              ? "text-ise-info"
+              : "text-ise-border";
 
-                return (
-                    <line
-                        key={`${connection.from}-${connection.to}`}
-                        x1={from.x}
-                        y1={from.y}
-                        x2={to.x}
-                        y2={to.y}
-                        stroke="currentColor"
-                        strokeWidth={isActive ? 2 : 1.25}
-                        strokeDasharray={
-                            isCompleted || isActive || canStart
-                                ? undefined
-                                : "3 3"
-                        }
-                        vectorEffect="non-scaling-stroke"
-                        className={lineClassName}
-                    />
-                );
-            })}
-        </svg>
-    );
+        return (
+          <line
+            key={`${connection.from}-${connection.to}`}
+            x1={from.x}
+            y1={from.y}
+            x2={to.x}
+            y2={to.y}
+            stroke="currentColor"
+            strokeWidth={isActive ? 2 : 1.25}
+            strokeDasharray={
+              isCompleted || isActive || canStart
+                ? undefined
+                : "3 3"
+            }
+            vectorEffect="non-scaling-stroke"
+            className={lineClassName}
+          />
+        );
+      })}
+    </svg>
+  );
 }
 
 function getNodeLayout(
-    projectId: ResearchProjectId,
+  projectId: ResearchProjectId,
 ): ResearchWebNodeLayout | null {
-    const layoutByProjectId = RESEARCH_WEB_LAYOUT as Partial<
-        Record<ResearchProjectId, ResearchWebNodeLayout>
-    >;
+  const layoutByProjectId = RESEARCH_WEB_LAYOUT as Partial<
+    Record<ResearchProjectId, ResearchWebNodeLayout>
+  >;
 
-    return layoutByProjectId[projectId] ?? null;
+  return layoutByProjectId[projectId] ?? null;
 }
 
 function getWebPoint(
-    pointId: ResearchWebPointId,
+  pointId: ResearchWebPointId,
 ): { x: number; y: number } | null {
-    if (pointId === "research_core") {
-        return RESEARCH_WEB_CENTER;
-    }
+  if (pointId === "research_core") {
+    return RESEARCH_WEB_CENTER;
+  }
 
-    return getNodeLayout(pointId);
+  return getNodeLayout(pointId);
 }
 
 function ResearchCore() {
-    return (
-        <div
-            className="
+  return (
+    <div
+      className="
         absolute z-10
         flex h-20 w-20
         -translate-x-1/2 -translate-y-1/2
@@ -184,27 +184,27 @@ function ResearchCore() {
         text-center
         shadow-[0_0_24px_rgba(56,189,248,0.15)]
       "
-            style={{
-                left: `${RESEARCH_WEB_CENTER.x}%`,
-                top: `${RESEARCH_WEB_CENTER.y}%`,
-            }}
-        >
-            <strong className="text-xs font-bold tracking-wide text-ise-accent-hover">
-                GRaD
-            </strong>
+      style={{
+        left: `${RESEARCH_WEB_CENTER.x}%`,
+        top: `${RESEARCH_WEB_CENTER.y}%`,
+      }}
+    >
+      <strong className="text-xs font-bold tracking-wide text-ise-accent-hover">
+        GRaD
+      </strong>
 
-            <span
-                className="
+      <span
+        className="
           mt-0.5 text-[0.55rem]
           font-semibold uppercase
           tracking-[0.08em]
           text-ise-text-muted
         "
-            >
-                Research Core
-            </span>
-        </div>
-    );
+      >
+        Research Core
+      </span>
+    </div>
+  );
 }
 
 type ResearchNodeButtonProps = {
@@ -327,7 +327,11 @@ function ResearchNodeButton({
           ${selectedClassName}
         `}
         type="button"
-        aria-label={`${name}: ${stateLabel}`}
+        aria-label={
+          isActive
+            ? `${name}: ${stateLabel}, ${progressPercent}% complete`
+            : `${name}: ${stateLabel}`
+        }
         aria-pressed={isSelected}
         onClick={() => onSelect(projectId)}
       >
@@ -336,17 +340,11 @@ function ResearchNodeButton({
           kind={kind}
         />
 
-        {isActive && (
-          <span
-            className="
-              absolute -inset-1.25
-              rounded-full border
-              border-ise-accent/50
-            "
-            aria-hidden="true"
+        {isActive && !isCompleted && (
+          <ActiveResearchProgressRing
+            progressPercent={progressPercent}
           />
         )}
-
         {isCompleted && (
           <span
             className="
@@ -374,6 +372,66 @@ function ResearchNodeButton({
         horizontalClassName={tooltipHorizontalClassName}
       />
     </div>
+  );
+}
+
+type ActiveResearchProgressRingProps = {
+  progressPercent: number;
+};
+
+function ActiveResearchProgressRing({
+  progressPercent,
+}: ActiveResearchProgressRingProps) {
+  const clampedProgress = Math.max(
+    0,
+    Math.min(100, progressPercent),
+  );
+
+  const radius = 45;
+  const circumference = 2 * Math.PI * radius;
+
+  const dashOffset =
+    circumference *
+    (1 - clampedProgress / 100);
+
+  return (
+    <svg
+      className="
+        pointer-events-none
+        absolute inset-[-6px]
+        h-[calc(100%+12px)]
+        w-[calc(100%+12px)]
+        -rotate-90
+      "
+      viewBox="0 0 100 100"
+      aria-hidden="true"
+    >
+      <circle
+        cx="50"
+        cy="50"
+        r={radius}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="5"
+        className="text-ise-accent/20"
+      />
+
+      <circle
+        cx="50"
+        cy="50"
+        r={radius}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="5"
+        strokeLinecap="round"
+        strokeDasharray={circumference}
+        strokeDashoffset={dashOffset}
+        className="
+          text-ise-accent
+          transition-all duration-300
+        "
+      />
+    </svg>
   );
 }
 

@@ -104,7 +104,7 @@ export function ResearchPanel({
       <Section title="Research Viewport">
         <div
           className="
-            min-h-80 rounded-panel
+            min-h-0 rounded-panel
             border border-ise-border
             bg-ise-background/45 p-3
           "

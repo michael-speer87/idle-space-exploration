@@ -120,7 +120,7 @@ export function ResearchWeb({
   return (
     <div
       ref={webRootRef}
-      className="overflow-x-auto pb-2"
+      className="pb-2"
       onPointerDown={(event) => {
         const target = event.target;
 
@@ -137,8 +137,9 @@ export function ResearchWeb({
       <div
         className="
           relative mx-auto
-          min-h-130 min-w-105
-          overflow-hidden rounded-panel
+          h-[clamp(32rem,68vh,44rem)]
+          w-full
+          overflow-visible rounded-panel
           border border-ise-border
           bg-ise-void/55
         "
@@ -516,10 +517,11 @@ function ResearchNodeButton({
   return (
     <div
       data-research-node
-      className="
-        group absolute z-20
+      className={`
+        group absolute
         -translate-x-1/2 -translate-y-1/2
-      "
+        ${isSelected ? "z-50" : "z-20"}
+      `}
       style={{
         left: `${x}%`,
         top: `${y}%`,
@@ -527,7 +529,8 @@ function ResearchNodeButton({
     >
       <button
         className={`
-          relative flex items-center justify-center
+          relative z-10
+          flex items-center justify-center
           rounded-full border-2
           text-[0.65rem] font-bold
           tracking-wide
@@ -718,7 +721,7 @@ function ResearchNodeTooltip({
   return (
     <div
       className={`
-        pointer-events-auto absolute z-50
+        pointer-events-auto absolute z-40
         w-56 rounded-control
         border border-ise-border-strong
         bg-ise-surface p-3

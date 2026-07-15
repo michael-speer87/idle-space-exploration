@@ -350,6 +350,7 @@ function GameScreen() {
               title="Research"
               subtitle="GRaD Scientific Directorate"
               onClose={handleCloseWorkspace}
+              className={`w-[min(52rem,calc(100vw-2rem))]`}
             >
               <ResearchPanel
                 research={gameState.research}
@@ -368,6 +369,7 @@ function GameScreen() {
               title="Build"
               subtitle={selectedSystem?.name ?? "No system selected"}
               onClose={handleCloseWorkspace}
+              className={`w-[min(24rem,calc(100vw-2rem))]`}
             >
               <BuildPanel
                 system={selectedSystem}

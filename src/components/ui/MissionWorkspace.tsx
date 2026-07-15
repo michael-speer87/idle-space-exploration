@@ -15,10 +15,11 @@ export function MissionWorkspace({
   onClose,
   className = "",
 }: MissionWorkspaceProps) {
+
   return (
     <aside
       className={`
-        flex h-full min-h-0 w-[380px] flex-col
+        flex h-full min-h-0 w-95 flex-col
         border-l border-ise-border
         bg-ise-void/95
         shadow-panel

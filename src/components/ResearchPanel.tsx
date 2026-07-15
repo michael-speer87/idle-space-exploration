@@ -8,6 +8,7 @@ import { formatDuration } from "../game/utils/formatDuration";
 import { ProgressBar } from "./ui/ProgressBar";
 import { Section } from "./ui/Section";
 import { ResearchWeb } from "./research/ResearchWeb";
+import { useState } from "react";
 
 type ResearchPanelProps = {
   research: ResearchState;
@@ -24,6 +25,12 @@ export function ResearchPanel({
   researchSpeedPerSecond,
   onStartResearch,
 }: ResearchPanelProps) {
+
+  const [
+    selectedProjectId,
+    setSelectedProjectId,
+  ] = useState<ResearchProjectId | null>(research.activeProjectId)
+
   const activeProject =
     research.activeProjectId !== null
       ? RESEARCH_PROJECTS[research.activeProjectId]
@@ -37,20 +44,20 @@ export function ResearchPanel({
   const activeProgressPercent =
     activeProject !== null && activeProjectState !== null
       ? calculateProgressPercent(
-          activeProjectState.progress,
-          activeProject.scienceCost,
-        )
+        activeProjectState.progress,
+        activeProject.scienceCost,
+      )
       : 0;
 
   const activeResearchSecondsRemaining =
     activeProject !== null &&
-    activeProjectState !== null &&
-    researchSpeedPerSecond > 0
+      activeProjectState !== null &&
+      researchSpeedPerSecond > 0
       ? Math.max(
-          0,
-          (activeProject.scienceCost - activeProjectState.progress) /
-            researchSpeedPerSecond,
-        )
+        0,
+        (activeProject.scienceCost - activeProjectState.progress) /
+        researchSpeedPerSecond,
+      )
       : null;
 
   const activeResearchEtaLabel =
@@ -171,8 +178,10 @@ export function ResearchPanel({
           <ResearchWeb
             research={research}
             startableProjectIds={startableProjectIds}
+            selectedProjectId={selectedProjectId}
+            onSelectProject={setSelectedProjectId}
           />
-          <div className="mt-4 border-t border-ise-border pt-4">  
+          <div className="mt-4 border-t border-ise-border pt-4">
             <p className="
               mt-0 mb-3 text-[0.65rem]
               font-semibold uppercase
@@ -340,25 +349,24 @@ function ResearchProjectCard({
       className={`
         rounded-control border p-3
         transition-colors
-        ${
-          isCompleted
-            ? `
+        ${isCompleted
+          ? `
                 border-ise-success/30
                 bg-ise-success/8
               `
-            : isActive
-              ? `
+          : isActive
+            ? `
                   border-ise-accent/45
                   bg-ise-accent-muted/55
                 `
-              : canStart
-                ? `
+            : canStart
+              ? `
                     border-ise-border
                     bg-ise-surface
                     hover:border-ise-border-strong
                     hover:bg-ise-surface-hover/50
                   `
-                : `
+              : `
                     border-ise-border
                     bg-ise-void/55
                     opacity-75
@@ -424,15 +432,14 @@ function ResearchProjectCard({
           focus-visible:outline-2
           focus-visible:outline-offset-2
           focus-visible:outline-ise-accent
-          ${
-            isCompleted || isActive || !canStart
-              ? `
+          ${isCompleted || isActive || !canStart
+            ? `
                   cursor-not-allowed
                   border-ise-border
                   bg-ise-void/60
                   text-ise-text-subtle
                 `
-              : `
+            : `
                   border-ise-accent/40
                   bg-ise-accent-muted
                   text-ise-accent-hover

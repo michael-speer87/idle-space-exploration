@@ -1,6 +1,5 @@
 import {
   RESEARCH_PROJECTS,
-  RESEARCH_PROJECT_IDS,
   type ResearchProjectId,
 } from "../game/config/research";
 import type { ResearchState } from "../game/types";
@@ -9,6 +8,7 @@ import { ProgressBar } from "./ui/ProgressBar";
 import { Section } from "./ui/Section";
 import { ResearchWeb } from "./research/ResearchWeb";
 import { useState } from "react";
+import { RESEARCH_WEB_PROJECT_IDS } from "./research/researchWebLayout";
 
 type ResearchPanelProps = {
   research: ResearchState;
@@ -27,9 +27,13 @@ export function ResearchPanel({
 }: ResearchPanelProps) {
 
   const [
-    selectedProjectId,
-    setSelectedProjectId,
-  ] = useState<ResearchProjectId | null>(research.activeProjectId)
+  selectedProjectId,
+  setSelectedProjectId,
+] = useState<ResearchProjectId | null>(
+  research.activeProjectId ??
+    startableProjectIds[0] ??
+    null,
+);
 
   const selectedProjectCanStart =
     selectedProjectId !== null &&
@@ -71,8 +75,10 @@ export function ResearchPanel({
         ? "Research paused"
         : "No active research";
 
-  const completedProjectCount = RESEARCH_PROJECT_IDS.filter(
-    (projectId) => research.projectsById[projectId].isCompleted,
+  const completedProjectCount =
+  RESEARCH_WEB_PROJECT_IDS.filter(
+    (projectId) =>
+      research.projectsById[projectId]?.isCompleted === true,
   ).length;
 
   return (
@@ -81,7 +87,7 @@ export function ResearchPanel({
         science={science}
         researchSpeedPerSecond={researchSpeedPerSecond}
         completedProjectCount={completedProjectCount}
-        totalProjectCount={RESEARCH_PROJECT_IDS.length}
+        totalProjectCount={RESEARCH_WEB_PROJECT_IDS.length}
       />
 
       <Section title="Active Research" divider={false}>
@@ -191,48 +197,11 @@ export function ResearchPanel({
             canStart={selectedProjectCanStart}
             science={science}
             researchSpeedPerSecond={researchSpeedPerSecond}
-            onStartResearch={onStartResearch}
+            onStartResearch={(projectId) => {
+              setSelectedProjectId(projectId);
+              onStartResearch(projectId);
+            }}
           />
-          <div className="mt-4 border-t border-ise-border pt-4">
-            <p className="
-              mt-0 mb-3 text-[0.65rem]
-              font-semibold uppercase
-              text-ise-text-subtle
-            "
-            >
-              Temporary Project Controls
-            </p>
-            <div className="grid gap-3">
-              {RESEARCH_PROJECT_IDS.map((projectId) => {
-                const project = RESEARCH_PROJECTS[projectId];
-                const projectState = research.projectsById[projectId];
-
-                const progressPercent = calculateProgressPercent(
-                  projectState.progress,
-                  project.scienceCost,
-                );
-
-                const isActive = research.activeProjectId === projectId;
-                const canStart = startableProjectIds.includes(projectId);
-
-                return (
-                  <ResearchProjectCard
-                    key={projectId}
-                    projectId={projectId}
-                    name={project.name}
-                    description={project.description}
-                    scienceCost={project.scienceCost}
-                    prerequisiteIds={project.prerequisiteIds}
-                    progressPercent={progressPercent}
-                    isCompleted={projectState.isCompleted}
-                    isActive={isActive}
-                    canStart={canStart}
-                    onStartResearch={onStartResearch}
-                  />
-                );
-              })}
-            </div>
-          </div>
         </div>
       </Section>
     </div>
@@ -611,158 +580,6 @@ function ResearchMetric({
         {value}
       </strong>
     </div>
-  );
-}
-
-type ResearchProjectCardProps = {
-  projectId: ResearchProjectId;
-  name: string;
-  description: string;
-  scienceCost: number;
-  prerequisiteIds: ResearchProjectId[];
-  progressPercent: number;
-  isCompleted: boolean;
-  isActive: boolean;
-  canStart: boolean;
-  onStartResearch: (projectId: ResearchProjectId) => void;
-};
-
-function ResearchProjectCard({
-  projectId,
-  name,
-  description,
-  scienceCost,
-  prerequisiteIds,
-  progressPercent,
-  isCompleted,
-  isActive,
-  canStart,
-  onStartResearch,
-}: ResearchProjectCardProps) {
-  const stateLabel = isCompleted
-    ? "Completed"
-    : isActive
-      ? "Active"
-      : canStart
-        ? "Available"
-        : "Locked";
-
-  return (
-    <article
-      className={`
-        rounded-control border p-3
-        transition-colors
-        ${isCompleted
-          ? `
-                border-ise-success/30
-                bg-ise-success/8
-              `
-          : isActive
-            ? `
-                  border-ise-accent/45
-                  bg-ise-accent-muted/55
-                `
-            : canStart
-              ? `
-                    border-ise-border
-                    bg-ise-surface
-                    hover:border-ise-border-strong
-                    hover:bg-ise-surface-hover/50
-                  `
-              : `
-                    border-ise-border
-                    bg-ise-void/55
-                    opacity-75
-                  `
-        }
-      `}
-    >
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h3 className="m-0 text-sm font-semibold text-ise-text">
-            {name}
-          </h3>
-
-          <p className="mt-1 mb-0 text-xs leading-relaxed text-ise-text-muted">
-            {description}
-          </p>
-        </div>
-
-        <ResearchStateBadge
-          label={stateLabel}
-          isCompleted={isCompleted}
-          isActive={isActive}
-          canStart={canStart}
-        />
-      </div>
-
-      <div className="mt-3 grid gap-2">
-        <div className="flex items-center justify-between gap-3 text-xs">
-          <span className="text-ise-text-muted">Science Cost</span>
-
-          <strong className="tabular-nums text-ise-science">
-            {scienceCost.toFixed(0)}
-          </strong>
-        </div>
-
-        {prerequisiteIds.length > 0 && (
-          <div className="text-xs leading-relaxed">
-            <span className="text-ise-text-muted">Requires: </span>
-
-            <span className="text-ise-text">
-              {formatPrerequisites(prerequisiteIds)}
-            </span>
-          </div>
-        )}
-
-        {(progressPercent > 0 || isActive || isCompleted) && (
-          <ProgressBar
-            value={progressPercent}
-            height="sm"
-            ariaLabel={`Research progress for ${name}`}
-            colorClassName={
-              isCompleted ? "bg-ise-success" : "bg-ise-accent"
-            }
-          />
-        )}
-      </div>
-
-      <button
-        className={`
-          mt-3 w-full rounded-control border
-          px-3 py-2 text-xs font-semibold
-          transition-colors
-          focus-visible:outline-2
-          focus-visible:outline-offset-2
-          focus-visible:outline-ise-accent
-          ${isCompleted || isActive || !canStart
-            ? `
-                  cursor-not-allowed
-                  border-ise-border
-                  bg-ise-void/60
-                  text-ise-text-subtle
-                `
-            : `
-                  border-ise-accent/40
-                  bg-ise-accent-muted
-                  text-ise-accent-hover
-                  hover:bg-ise-accent/25
-                `
-          }
-        `}
-        type="button"
-        disabled={isCompleted || !canStart || isActive}
-        onClick={() => onStartResearch(projectId)}
-      >
-        {isCompleted
-          ? "Completed"
-          : isActive
-            ? "Researching"
-            : canStart
-              ? "Start Research"
-              : "Locked"}
-      </button>
-    </article>
   );
 }
 

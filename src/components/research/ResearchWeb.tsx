@@ -335,7 +335,7 @@ function ResearchNodeButton({
         {isActive && (
           <span
             className="
-              absolute inset-[-5px]
+              absolute -inset-1.25
               rounded-full border
               border-ise-accent/50
             "

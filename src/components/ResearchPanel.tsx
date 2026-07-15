@@ -31,6 +31,10 @@ export function ResearchPanel({
     setSelectedProjectId,
   ] = useState<ResearchProjectId | null>(research.activeProjectId)
 
+  const selectedProjectCanStart =
+    selectedProjectId !== null &&
+    startableProjectIds.includes(selectedProjectId);
+
   const activeProject =
     research.activeProjectId !== null
       ? RESEARCH_PROJECTS[research.activeProjectId]
@@ -181,6 +185,14 @@ export function ResearchPanel({
             selectedProjectId={selectedProjectId}
             onSelectProject={setSelectedProjectId}
           />
+          <ResearchProjectDetailCard
+            projectId={selectedProjectId}
+            research={research}
+            canStart={selectedProjectCanStart}
+            science={science}
+            researchSpeedPerSecond={researchSpeedPerSecond}
+            onStartResearch={onStartResearch}
+          />
           <div className="mt-4 border-t border-ise-border pt-4">
             <p className="
               mt-0 mb-3 text-[0.65rem]
@@ -224,6 +236,297 @@ export function ResearchPanel({
         </div>
       </Section>
     </div>
+  );
+}
+
+type ResearchProjectDetailCardProps = {
+  projectId: ResearchProjectId | null;
+  research: ResearchState;
+  canStart: boolean;
+  science: number;
+  researchSpeedPerSecond: number;
+  onStartResearch: (
+    projectId: ResearchProjectId,
+  ) => void;
+};
+
+function ResearchProjectDetailCard({
+  projectId,
+  research,
+  canStart,
+  science,
+  researchSpeedPerSecond,
+  onStartResearch,
+}: ResearchProjectDetailCardProps) {
+  if (projectId === null) {
+    return (
+      <div
+        className="
+          mt-4 rounded-panel
+          border border-dashed border-ise-border
+          bg-ise-background/45
+          px-4 py-6 text-center
+        "
+      >
+        <p className="m-0 text-sm font-medium text-ise-text-muted">
+          Select a Research node
+        </p>
+
+        <p
+          className="
+            mt-2 mb-0 text-xs
+            leading-relaxed text-ise-text-subtle
+          "
+        >
+          Choose a node in the Research Web to inspect its
+          requirements, effects, and current progress.
+        </p>
+      </div>
+    );
+  }
+
+  const project = RESEARCH_PROJECTS[projectId];
+  const projectState =
+    research.projectsById[projectId];
+
+  if (!project || !projectState) {
+    return null;
+  }
+
+  const isCompleted = projectState.isCompleted;
+  const isActive =
+    research.activeProjectId === projectId;
+
+  const progressPercent = calculateProgressPercent(
+    projectState.progress,
+    project.scienceCost,
+  );
+
+  const remainingScience = Math.max(
+    0,
+    project.scienceCost - projectState.progress,
+  );
+
+  const estimatedSeconds =
+    remainingScience > 0 &&
+    researchSpeedPerSecond > 0
+      ? remainingScience / researchSpeedPerSecond
+      : null;
+
+  const estimatedTimeLabel = isCompleted
+    ? "Complete"
+    : estimatedSeconds !== null
+      ? formatDuration(estimatedSeconds)
+      : "Research paused";
+
+  const stateLabel = isCompleted
+    ? "Completed"
+    : isActive
+      ? "Active"
+      : canStart
+        ? "Available"
+        : "Locked";
+
+  const actionLabel = isCompleted
+    ? "Completed"
+    : isActive
+      ? "Researching"
+      : canStart
+        ? research.activeProjectId !== null
+          ? "Switch Research"
+          : "Start Research"
+        : "Locked";
+
+  return (
+    <article
+      className={`
+        mt-4 rounded-panel border p-4
+        ${
+          isCompleted
+            ? `
+                border-ise-success/35
+                bg-ise-success/10
+              `
+            : isActive
+              ? `
+                  border-ise-accent/45
+                  bg-ise-accent-muted/50
+                `
+              : canStart
+                ? `
+                    border-ise-info/35
+                    bg-ise-surface
+                  `
+                : `
+                    border-ise-border
+                    bg-ise-background/60
+                  `
+        }
+      `}
+    >
+      <div
+        className="
+          flex items-start
+          justify-between gap-3
+        "
+      >
+        <div className="min-w-0">
+          <span
+            className="
+              text-[0.6rem] font-semibold
+              uppercase tracking-[0.09em]
+              text-ise-text-subtle
+            "
+          >
+            Selected Research
+          </span>
+
+          <h3
+            className="
+              mt-1 mb-0 text-base
+              font-semibold text-ise-text
+            "
+          >
+            {project.name}
+          </h3>
+        </div>
+
+        <ResearchStateBadge
+          label={stateLabel}
+          isCompleted={isCompleted}
+          isActive={isActive}
+          canStart={canStart}
+        />
+      </div>
+
+      <p
+        className="
+          mt-3 mb-0 text-xs
+          leading-relaxed text-ise-text-muted
+        "
+      >
+        {project.description}
+      </p>
+
+      {project.prerequisiteIds.length > 0 && (
+        <div
+          className="
+            mt-3 rounded-control
+            border border-ise-border
+            bg-ise-background/60 p-2.5
+            text-xs leading-relaxed
+          "
+        >
+          <span className="text-ise-text-subtle">
+            Prerequisite:{" "}
+          </span>
+
+          <span className="font-medium text-ise-text">
+            {formatPrerequisites(
+              project.prerequisiteIds,
+            )}
+          </span>
+        </div>
+      )}
+
+      <div className="mt-4">
+        <ProgressBar
+          value={progressPercent}
+          ariaLabel={`Research progress for ${project.name}`}
+          colorClassName={
+            isCompleted
+              ? "bg-ise-success"
+              : "bg-ise-accent"
+          }
+          label={
+            <>
+              <span className="text-ise-text-muted">
+                Progress
+              </span>
+
+              <strong
+                className="
+                  tabular-nums text-ise-text
+                "
+              >
+                {projectState.progress.toFixed(1)} /{" "}
+                {project.scienceCost.toFixed(0)}
+              </strong>
+            </>
+          }
+        />
+      </div>
+
+      <div
+        className="
+          mt-4 grid grid-cols-2 gap-2
+          rounded-control border border-ise-border
+          bg-ise-background/55 p-2
+        "
+      >
+        <ResearchMetric
+          label="Science Cost"
+          value={project.scienceCost.toFixed(0)}
+          valueClassName="text-ise-science"
+        />
+
+        <ResearchMetric
+          label="Remaining"
+          value={remainingScience.toFixed(1)}
+          valueClassName="text-ise-science"
+        />
+
+        <ResearchMetric
+          label="Stored Science"
+          value={science.toFixed(1)}
+          valueClassName="text-ise-science"
+        />
+
+        <ResearchMetric
+          label="Estimated Time"
+          value={estimatedTimeLabel}
+          valueClassName="text-ise-accent-hover"
+        />
+      </div>
+
+      <button
+        className={`
+          mt-4 w-full rounded-control
+          border px-3 py-2.5
+          text-xs font-semibold
+          transition-colors
+          focus-visible:outline-2
+          focus-visible:outline-offset-2
+          focus-visible:outline-ise-accent
+          ${
+            isCompleted || isActive || !canStart
+              ? `
+                  cursor-not-allowed
+                  border-ise-border
+                  bg-ise-void/60
+                  text-ise-text-subtle
+                `
+              : `
+                  border-ise-accent/40
+                  bg-ise-accent-muted
+                  text-ise-accent-hover
+                  hover:bg-ise-accent/25
+                `
+          }
+        `}
+        type="button"
+        disabled={
+          isCompleted ||
+          isActive ||
+          !canStart
+        }
+        onClick={() =>
+          onStartResearch(projectId)
+        }
+      >
+        {actionLabel}
+      </button>
+    </article>
   );
 }
 

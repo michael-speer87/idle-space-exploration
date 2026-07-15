@@ -13,6 +13,7 @@ import {
     type ResearchWebNodeLayout,
     type ResearchWebPointId,
 } from "./researchWebLayout";
+import { ResearchNodeIcon } from "./ResearchNodeIcon";
 
 type ResearchWebProps = {
     research: ResearchState;
@@ -330,7 +331,10 @@ function ResearchNodeButton({
         aria-pressed={isSelected}
         onClick={() => onSelect(projectId)}
       >
-        {getDisciplineCode(discipline)}
+        <ResearchNodeIcon
+          discipline={discipline}
+          kind={kind}
+        />
 
         {isActive && (
           <span
@@ -346,7 +350,7 @@ function ResearchNodeButton({
         {isCompleted && (
           <span
             className="
-              absolute -right-1 -bottom-1
+              absolute -right-1 -top-1
               flex h-4 w-4 items-center justify-center
               rounded-full border border-ise-success
               bg-ise-void text-[0.55rem]
@@ -549,25 +553,4 @@ function formatPrerequisiteNames(
         RESEARCH_PROJECTS[projectId].name,
     )
     .join(", ");
-}
-
-function getDisciplineCode(
-    discipline: ResearchDiscipline,
-): string {
-    switch (discipline) {
-        case "survey":
-            return "SV";
-
-        case "commerce":
-            return "CO";
-
-        case "science":
-            return "SC";
-
-        case "power":
-            return "PW";
-
-        case "extraction":
-            return "EX";
-    }
 }

@@ -37,9 +37,9 @@ const STAR_COLORS: Record<StarVisual, number> = {
 };
 
 const OUTPOST_MARKER_COLORS: Record<PrimaryOutpostId, number> = {
-    survey_array: 0x72e0ff,
+    survey_array: 0xb48cff,
     commerce_hub: 0xffd36e,
-    science_station: 0xb48cff,
+    science_station: 0x72e0ff,
     power_relay: 0x9cffb1,
     extraction_rig: 0xff9f6e,
 };

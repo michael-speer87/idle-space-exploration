@@ -85,7 +85,7 @@ export function MapLegend() {
                 marker={
                   <OutpostMarker
                     symbol="△"
-                    className="text-[#72e0ff]"
+                    className="text-[#b48cff]"
                   />
                 }
                 label="Survey Array"
@@ -105,7 +105,7 @@ export function MapLegend() {
                 marker={
                   <OutpostMarker
                     symbol="▲"
-                    className="text-[#b48cff]"
+                    className="text-[#72e0ff]"
                   />
                 }
                 label="Science Station"

@@ -15,6 +15,38 @@ import {
 } from "./researchWebLayout";
 import { ResearchNodeIcon } from "./ResearchNodeIcon";
 
+const RESEARCH_DISCIPLINE_LABELS: Array<{
+  discipline: ResearchDiscipline;
+  x: number;
+  y: number;
+}> = [
+    {
+      discipline: "survey",
+      x: 50,
+      y: 29,
+    },
+    {
+      discipline: "commerce",
+      x: 72,
+      y: 25,
+    },
+    {
+      discipline: "science",
+      x: 74,
+      y: 63,
+    },
+    {
+      discipline: "extraction",
+      x: 26,
+      y: 63,
+    },
+    {
+      discipline: "power",
+      x: 28,
+      y: 25,
+    },
+  ];
+
 type ResearchWebProps = {
   research: ResearchState;
   startableProjectIds: ResearchProjectId[];
@@ -49,6 +81,17 @@ export function ResearchWeb({
         />
 
         <ResearchCore />
+
+        {RESEARCH_DISCIPLINE_LABELS.map(
+          ({ discipline, x, y }) => (
+            <ResearchDisciplineLabel
+              key={discipline}
+              discipline={discipline}
+              x={x}
+              y={y}
+            />
+          ),
+        )}
 
         {RESEARCH_WEB_PROJECT_IDS.map((projectId) => {
           const layout = getNodeLayout(projectId);
@@ -86,6 +129,8 @@ export function ResearchWeb({
           )
         })}
       </div>
+
+      <ResearchWebKey />
     </div>
   );
 }
@@ -204,6 +249,95 @@ function ResearchCore() {
         Research Core
       </span>
     </div>
+  );
+}
+
+type ResearchDisciplineLabelProps = {
+  discipline: ResearchDiscipline;
+  x: number;
+  y: number;
+};
+
+function ResearchDisciplineLabel({
+  discipline,
+  x,
+  y,
+}: ResearchDisciplineLabelProps) {
+  return (
+    <span
+      className="
+        pointer-events-none absolute z-10
+        -translate-x-1/2 -translate-y-1/2
+        rounded-full border border-ise-border
+        bg-ise-void/85 px-2 py-0.5
+        text-[0.55rem] font-semibold uppercase
+        tracking-[0.09em] text-ise-text-muted
+        backdrop-blur-sm
+      "
+      style={{
+        left: `${x}%`,
+        top: `${y}%`,
+      }}
+      aria-hidden="true"
+    >
+      {formatDisciplineName(discipline)}
+    </span>
+  );
+}
+
+function ResearchWebKey() {
+  return (
+    <div
+      className="
+        mt-2 flex flex-wrap items-center
+        justify-center gap-x-4 gap-y-1
+        rounded-control border border-ise-border
+        bg-ise-background/45 px-3 py-2
+        text-[0.6rem] text-ise-text-muted
+      "
+      aria-label="Research node type key"
+    >
+      <ResearchWebKeyItem
+        symbol="◆"
+        label="Foundation"
+      />
+
+      <ResearchWebKeyItem
+        symbol="▦"
+        label="Infrastructure"
+      />
+
+      <ResearchWebKeyItem
+        symbol="↗"
+        label="Performance"
+      />
+    </div>
+  );
+}
+
+type ResearchWebKeyItemProps = {
+  symbol: string;
+  label: string;
+};
+
+function ResearchWebKeyItem({
+  symbol,
+  label,
+}: ResearchWebKeyItemProps) {
+  return (
+    <span className="flex items-center gap-1.5">
+      <strong
+        className="
+          text-xs font-bold
+          text-ise-accent-hover
+        "
+        aria-hidden="true"
+      >
+        {symbol}
+      </strong>
+
+      <span>{label}</span>
+    </span>
   );
 }
 
@@ -368,6 +502,8 @@ function ResearchNodeButton({
         prerequisiteIds={prerequisiteIds}
         progressPercent={progressPercent}
         stateLabel={stateLabel}
+        discipline={discipline}
+        kind={kind}
         verticalClassName={tooltipVerticalClassName}
         horizontalClassName={tooltipHorizontalClassName}
       />
@@ -442,6 +578,8 @@ type ResearchNodeTooltipProps = {
   prerequisiteIds: ResearchProjectId[];
   progressPercent: number;
   stateLabel: string;
+  discipline: ResearchDiscipline;
+  kind: ResearchNodeKind;
   verticalClassName: string;
   horizontalClassName: string;
 };
@@ -453,6 +591,8 @@ function ResearchNodeTooltip({
   prerequisiteIds,
   progressPercent,
   stateLabel,
+  discipline,
+  kind,
   verticalClassName,
   horizontalClassName,
 }: ResearchNodeTooltipProps) {
@@ -508,6 +648,30 @@ function ResearchNodeTooltip({
         </span>
       </div>
 
+      <div className="mb-2 flex flex-wrap gap-1">
+        <span
+          className="
+      rounded-full border border-ise-border
+      bg-ise-background/70 px-1.5 py-0.5
+      text-[0.55rem] font-semibold uppercase
+      tracking-[0.06em] text-ise-text-muted
+    "
+        >
+          {formatDisciplineName(discipline)}
+        </span>
+
+        <span
+          className="
+      rounded-full border border-ise-border
+      bg-ise-background/70 px-1.5 py-0.5
+      text-[0.55rem] font-semibold uppercase
+      tracking-[0.06em] text-ise-text-muted
+    "
+        >
+          {formatNodeKindName(kind)}
+        </span>
+      </div>
+
       <p
         className="
           mt-0 mb-2 text-[0.65rem]
@@ -552,6 +716,21 @@ function ResearchNodeTooltip({
       </div>
     </div>
   );
+}
+
+function formatNodeKindName(
+  kind: ResearchNodeKind,
+): string {
+  switch (kind) {
+    case "foundation":
+      return "Foundation";
+
+    case "infrastructure":
+      return "Infrastructure";
+
+    case "performance":
+      return "Performance";
+  }
 }
 
 type TooltipMetricProps = {
@@ -611,4 +790,25 @@ function formatPrerequisiteNames(
         RESEARCH_PROJECTS[projectId].name,
     )
     .join(", ");
+}
+
+function formatDisciplineName(
+  discipline: ResearchDiscipline,
+): string {
+  switch (discipline) {
+    case "survey":
+      return "Survey";
+
+    case "commerce":
+      return "Commerce";
+
+    case "science":
+      return "Science";
+
+    case "power":
+      return "Power";
+
+    case "extraction":
+      return "Extraction";
+  }
 }

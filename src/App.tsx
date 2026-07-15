@@ -62,6 +62,16 @@ function GameScreen() {
   const [activeWorkspace, setActiveWorkspace] =
     useState<MissionWorkspaceId | null>(null);
 
+  const isWorkspaceOpen = activeWorkspace !== null;
+
+  const sessionDockRight =
+    activeWorkspace === "research"
+      ? "calc(min(52rem, calc(100vw-2rem)) + 1rem)"
+      : activeWorkspace === "build" ||
+        activeWorkspace === "dev"
+        ? "calc(min(24rem, calc(100vw-2rem)) + 1rem)"
+        : "1rem";
+
   const selectedSystem = gameState.selectedSystemId
     ? gameState.map.systemsById[gameState.selectedSystemId]
     : null;
@@ -300,7 +310,7 @@ function GameScreen() {
 
               <span className="
                 rounded-full border border-ise-accent/35
-                b-ise-accent-muted px-2 py-0.5
+                bg-ise-accent-muted px-2 py-0.5
                 text-[0.65rem] font-bold tracking-[0.08em]
                 text-ise-accent-hover
               "
@@ -324,11 +334,24 @@ function GameScreen() {
         </header>
 
         <nav className={`
-          absolute top-35 z-30
+          absolute top-35 right-4 z-30
           grid gap-2
-          trasition-[right] duration-200
-          max-[1100px]:top-47
-          ${activeWorkspace === null ? "right-4" : "right-99"}
+
+          transition-all duration-200 ease-out
+
+          ${
+            isWorkspaceOpen
+              ? `
+                pointer-events-none
+                translate-x-[calc(100%+2rem)]
+                opacity-0
+              `
+              : `
+                pointer-events-auto
+                translate-x-0
+                opacity-100
+              `
+          }
         `}
         >
           <WorkspaceLauncher
@@ -345,7 +368,7 @@ function GameScreen() {
         </nav>
 
         {activeWorkspace === "research" && (
-          <div className="absolute inset-y-0 right-0 z-20">
+          <div className="absolute inset-y-0 right-0 z-40">
             <MissionWorkspace
               title="Research"
               subtitle="GRaD Scientific Directorate"
@@ -364,7 +387,7 @@ function GameScreen() {
         )}
 
         {activeWorkspace === "build" && (
-          <div className="absolute inset-y-0 right-0 z-20">
+          <div className="absolute inset-y-0 right-0 z-40">
             <MissionWorkspace
               title="Build"
               subtitle={selectedSystem?.name ?? "No system selected"}
@@ -385,11 +408,12 @@ function GameScreen() {
         )}
 
         {import.meta.env.DEV && activeWorkspace === "dev" && (
-          <div className="absolute inset-y-0 right-0 z-20">
+          <div className="absolute inset-y-0 right-0 z-40">
             <MissionWorkspace
               title="Developer Console"
               subtitle="Local Development tools only"
               onClose={handleCloseWorkspace}
+              className="w-[min(24rem,calc(100vw-2rem))]"
             >
               <DevAdminPanel />
             </MissionWorkspace>
@@ -399,8 +423,8 @@ function GameScreen() {
         <div className={`
           absolute bottom-4 z-30
           transition-[right] duration-200
-          ${activeWorkspace === null ? "right-4" : "right-99"}
         `}
+          style={{ right: sessionDockRight }}
         >
           <Dock
             ariaLabel="Session utilities"

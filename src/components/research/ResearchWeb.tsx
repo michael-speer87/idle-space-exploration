@@ -14,6 +14,7 @@ import {
   type ResearchWebPointId,
 } from "./researchWebLayout";
 import { ResearchNodeIcon } from "./ResearchNodeIcon";
+import { useEffect, useRef } from "react";
 
 const RESEARCH_DISCIPLINE_LABELS: Array<{
   discipline: ResearchDiscipline;
@@ -52,6 +53,8 @@ type ResearchWebProps = {
   startableProjectIds: ResearchProjectId[];
   selectedProjectId: ResearchProjectId | null;
   onSelectProject: (projectId: ResearchProjectId) => void;
+  onDismissProject: () => void;
+  onStartResearch: (projectId: ResearchProjectId) => void;
 };
 
 export function ResearchWeb({
@@ -59,11 +62,78 @@ export function ResearchWeb({
   startableProjectIds,
   selectedProjectId,
   onSelectProject,
+  onDismissProject,
+  onStartResearch,
 }: ResearchWebProps) {
   const startableProjectIdSet = new Set(startableProjectIds);
 
+  const webRootRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleDocumentPointerDown(
+      event: PointerEvent,
+    ) {
+      const target = event.target;
+
+      if (!(target instanceof Node)) {
+        return;
+      }
+
+      if (webRootRef.current?.contains(target)) {
+        return;
+      }
+
+      onDismissProject();
+    }
+
+    function handleDocumentKeyDown(
+      event: KeyboardEvent,
+    ) {
+      if (event.key === "Escape") {
+        onDismissProject();
+      }
+    }
+
+    document.addEventListener(
+      "pointerdown",
+      handleDocumentPointerDown,
+    );
+
+    document.addEventListener(
+      "keydown",
+      handleDocumentKeyDown,
+    );
+
+    return () => {
+      document.removeEventListener(
+        "pointerdown",
+        handleDocumentPointerDown,
+      );
+
+      document.removeEventListener(
+        "keydown",
+        handleDocumentKeyDown,
+      );
+    };
+  }, [onDismissProject]);
+
   return (
-    <div className="overflow-x-auto pb-2">
+    <div
+      ref={webRootRef}
+      className="overflow-x-auto pb-2"
+      onPointerDown={(event) => {
+        const target = event.target;
+
+        if (
+          target instanceof Element &&
+          target.closest("[data-research-node]")
+        ) {
+          return;
+        }
+
+        onDismissProject();
+      }}
+    >
       <div
         className="
           relative mx-auto
@@ -124,7 +194,10 @@ export function ResearchWeb({
               isActive={research.activeProjectId === projectId}
               canStart={startableProjectIdSet.has(projectId)}
               isSelected={selectedProjectId === projectId}
+              hasActiveResearch={research.activeProjectId !== null}
               onSelect={onSelectProject}
+              onStartResearch={onStartResearch}
+              onDismiss={onDismissProject}
             />
           )
         })}
@@ -356,7 +429,10 @@ type ResearchNodeButtonProps = {
   isActive: boolean;
   canStart: boolean;
   isSelected: boolean;
+  hasActiveResearch: boolean;
   onSelect: (projectId: ResearchProjectId) => void;
+  onStartResearch: (projectId: ResearchProjectId) => void;
+  onDismiss: () => void;
 };
 
 function ResearchNodeButton({
@@ -374,7 +450,10 @@ function ResearchNodeButton({
   isActive,
   canStart,
   isSelected,
+  hasActiveResearch,
   onSelect,
+  onStartResearch,
+  onDismiss
 }: ResearchNodeButtonProps) {
   const stateLabel = isCompleted
     ? "Completed"
@@ -436,6 +515,7 @@ function ResearchNodeButton({
 
   return (
     <div
+      data-research-node
       className="
         group absolute z-20
         -translate-x-1/2 -translate-y-1/2
@@ -467,7 +547,14 @@ function ResearchNodeButton({
             : `${name}: ${stateLabel}`
         }
         aria-pressed={isSelected}
-        onClick={() => onSelect(projectId)}
+        onClick={() => {
+          if (isSelected) {
+            onDismiss();
+            return;
+          }
+
+          onSelect(projectId);
+        }}
       >
         <ResearchNodeIcon
           discipline={discipline}
@@ -496,6 +583,7 @@ function ResearchNodeButton({
       </button>
 
       <ResearchNodeTooltip
+        projectId={projectId}
         name={name}
         description={description}
         scienceCost={scienceCost}
@@ -504,8 +592,14 @@ function ResearchNodeButton({
         stateLabel={stateLabel}
         discipline={discipline}
         kind={kind}
+        canStart={canStart}
+        isActive={isActive}
+        isComplete={isCompleted}
+        isSelected={isSelected}
+        hasActiveResearch={hasActiveResearch}
         verticalClassName={tooltipVerticalClassName}
         horizontalClassName={tooltipHorizontalClassName}
+        onStartResearch={onStartResearch}
       />
     </div>
   );
@@ -534,7 +628,7 @@ function ActiveResearchProgressRing({
     <svg
       className="
         pointer-events-none
-        absolute inset-[-6px]
+        absolute -inset-1.5
         h-[calc(100%+12px)]
         w-[calc(100%+12px)]
         -rotate-90
@@ -572,6 +666,7 @@ function ActiveResearchProgressRing({
 }
 
 type ResearchNodeTooltipProps = {
+  projectId: ResearchProjectId;
   name: string;
   description: string;
   scienceCost: number;
@@ -580,11 +675,18 @@ type ResearchNodeTooltipProps = {
   stateLabel: string;
   discipline: ResearchDiscipline;
   kind: ResearchNodeKind;
+  canStart: boolean;
+  isActive: boolean;
+  isComplete: boolean;
+  isSelected: boolean;
+  hasActiveResearch: boolean;
   verticalClassName: string;
   horizontalClassName: string;
+  onStartResearch: (projectId: ResearchProjectId) => void;
 };
 
 function ResearchNodeTooltip({
+  projectId,
   name,
   description,
   scienceCost,
@@ -593,25 +695,42 @@ function ResearchNodeTooltip({
   stateLabel,
   discipline,
   kind,
+  canStart,
+  isActive,
+  isComplete,
+  isSelected,
+  hasActiveResearch,
   verticalClassName,
   horizontalClassName,
+  onStartResearch,
 }: ResearchNodeTooltipProps) {
+
+  const actionLabel = isComplete
+    ? "Research Completed"
+    : isActive
+      ? "Currently Researching"
+      : !canStart
+        ? "Research Locked"
+        : hasActiveResearch
+          ? "Switch Research"
+          : "Start Research"
+
   return (
     <div
       className={`
-        pointer-events-none absolute z-50
+        pointer-events-auto absolute z-50
         w-56 rounded-control
         border border-ise-border-strong
         bg-ise-surface p-3
         text-left shadow-xl
 
-        invisible opacity-0
-        transition-opacity duration-150
+        transition-opacity duraction-150
 
-        group-hover:visible
-        group-hover:opacity-100
-        group-focus-within:visible
-        group-focus-within:opacity-100
+        ${
+          isSelected
+            ? "visible opacity-100"
+            : "invisible opacity-0"
+        }
 
         ${verticalClassName}
         ${horizontalClassName}
@@ -714,6 +833,44 @@ function ResearchNodeTooltip({
           </div>
         )}
       </div>
+      <button
+        className={`
+          mt-3 w-full rounded-control
+          border px-3 py-2
+          text-[0.65rem] font-semibold
+          transition-colors
+          focus-visible:outline-2
+          focus-visible:outline-offset-2
+          focus-visible:outline-ise-accent
+
+          ${isComplete || isActive || !canStart
+            ? `
+                  cursor-not-allowed
+                  border-ise-border
+                  bg-ise-void/60
+                  text-ise-text-subtle
+                `
+            : `
+                  border-ise-accent/40
+                  bg-ise-accent-muted
+                  text-ise-accent-hover
+                  hover:bg-ise-accent/25
+                `
+          }
+        `}
+        type="button"
+        disabled={
+          isComplete ||
+          isActive ||
+          !canStart
+        }
+        onClick={(event) => {
+          event.stopPropagation();
+          onStartResearch(projectId);
+        }}
+      >
+        {actionLabel}
+      </button>
     </div>
   );
 }

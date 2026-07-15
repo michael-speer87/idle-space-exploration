@@ -7,7 +7,7 @@ import { formatDuration } from "../game/utils/formatDuration";
 import { ProgressBar } from "./ui/ProgressBar";
 import { Section } from "./ui/Section";
 import { ResearchWeb } from "./research/ResearchWeb";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { RESEARCH_WEB_PROJECT_IDS } from "./research/researchWebLayout";
 
 type ResearchPanelProps = {
@@ -27,13 +27,21 @@ export function ResearchPanel({
 }: ResearchPanelProps) {
 
   const [
-  selectedProjectId,
-  setSelectedProjectId,
-] = useState<ResearchProjectId | null>(
-  research.activeProjectId ??
+    selectedProjectId,
+    setSelectedProjectId,
+  ] = useState<ResearchProjectId | null>(
+    research.activeProjectId ??
     startableProjectIds[0] ??
     null,
-);
+  );
+
+  useEffect(() => {
+    if (research.activeProjectId === null) {
+      return;
+    }
+
+    setSelectedProjectId(research.activeProjectId);
+  }, [research.activeProjectId]);
 
   const selectedProjectCanStart =
     selectedProjectId !== null &&
@@ -76,10 +84,10 @@ export function ResearchPanel({
         : "No active research";
 
   const completedProjectCount =
-  RESEARCH_WEB_PROJECT_IDS.filter(
-    (projectId) =>
-      research.projectsById[projectId]?.isCompleted === true,
-  ).length;
+    RESEARCH_WEB_PROJECT_IDS.filter(
+      (projectId) =>
+        research.projectsById[projectId]?.isCompleted === true,
+    ).length;
 
   return (
     <div className="grid gap-4">
@@ -90,91 +98,15 @@ export function ResearchPanel({
         totalProjectCount={RESEARCH_WEB_PROJECT_IDS.length}
       />
 
-      <Section title="Active Research" divider={false}>
-        {activeProject === null || activeProjectState === null ? (
-          <div
-            className="
-              rounded-control border border-dashed border-ise-border
-              bg-ise-background/45 px-4 py-6 text-center
-            "
-          >
-            <p className="m-0 text-sm font-medium text-ise-text-muted">
-              No active research
-            </p>
-
-            <p className="mt-2 mb-0 text-xs leading-relaxed text-ise-text-subtle">
-              Select an available project from the research viewport.
-            </p>
-          </div>
-        ) : (
-          <article
-            className="
-              rounded-panel border border-ise-accent/35
-              bg-ise-accent-muted/45 p-4
-            "
-          >
-            <div className="mb-3 flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <span
-                  className="
-                    text-[0.65rem] font-semibold uppercase
-                    tracking-[0.09em] text-ise-accent-hover
-                  "
-                >
-                  Currently Researching
-                </span>
-
-                <h3 className="mt-1 mb-0 text-sm font-semibold text-ise-text">
-                  {activeProject.name}
-                </h3>
-              </div>
-
-              <span
-                className="
-                  shrink-0 rounded-full border border-ise-accent/35
-                  bg-ise-accent/10 px-2 py-0.5
-                  text-[0.65rem] font-semibold tabular-nums
-                  text-ise-accent-hover
-                "
-              >
-                {activeProgressPercent}%
-              </span>
-            </div>
-
-            <p className="mt-0 mb-4 text-xs leading-relaxed text-ise-text-muted">
-              {activeProject.description}
-            </p>
-
-            <ProgressBar
-              value={activeProgressPercent}
-              ariaLabel={`Research progress for ${activeProject.name}`}
-              label={
-                <>
-                  <span className="text-ise-text-muted">Progress</span>
-
-                  <strong className="tabular-nums text-ise-text">
-                    {activeProjectState.progress.toFixed(1)} /{" "}
-                    {activeProject.scienceCost.toFixed(0)}
-                  </strong>
-                </>
-              }
-            />
-
-            <div
-              className="
-                mt-3 flex items-center justify-between gap-3
-                text-xs
-              "
-            >
-              <span className="text-ise-text-muted">Estimated Time</span>
-
-              <strong className="tabular-nums text-ise-text">
-                {activeResearchEtaLabel}
-              </strong>
-            </div>
-          </article>
-        )}
-      </Section>
+      <ActiveResearchStrip
+        projectId={research.activeProjectId}
+        projectName={activeProject?.name ?? null}
+        progressPercent={activeProgressPercent}
+        etaLabel={activeResearchEtaLabel}
+        onSelect={(projectId) => {
+          setSelectedProjectId(projectId);
+        }}
+      />
 
       <Section title="Research Viewport">
         <div
@@ -278,7 +210,7 @@ function ResearchProjectDetailCard({
 
   const estimatedSeconds =
     remainingScience > 0 &&
-    researchSpeedPerSecond > 0
+      researchSpeedPerSecond > 0
       ? remainingScience / researchSpeedPerSecond
       : null;
 
@@ -310,23 +242,22 @@ function ResearchProjectDetailCard({
     <article
       className={`
         mt-4 rounded-panel border p-4
-        ${
-          isCompleted
-            ? `
+        ${isCompleted
+          ? `
                 border-ise-success/35
                 bg-ise-success/10
               `
-            : isActive
-              ? `
+          : isActive
+            ? `
                   border-ise-accent/45
                   bg-ise-accent-muted/50
                 `
-              : canStart
-                ? `
+            : canStart
+              ? `
                     border-ise-info/35
                     bg-ise-surface
                   `
-                : `
+              : `
                     border-ise-border
                     bg-ise-background/60
                   `
@@ -467,15 +398,14 @@ function ResearchProjectDetailCard({
           focus-visible:outline-2
           focus-visible:outline-offset-2
           focus-visible:outline-ise-accent
-          ${
-            isCompleted || isActive || !canStart
-              ? `
+          ${isCompleted || isActive || !canStart
+            ? `
                   cursor-not-allowed
                   border-ise-border
                   bg-ise-void/60
                   text-ise-text-subtle
                 `
-              : `
+            : `
                   border-ise-accent/40
                   bg-ise-accent-muted
                   text-ise-accent-hover
@@ -538,6 +468,149 @@ function ResearchStatusSummary({
         valueClassName="text-ise-success"
       />
     </div>
+  );
+}
+
+type ActiveResearchStripProps = {
+  projectId: ResearchProjectId | null;
+  projectName: string | null;
+  progressPercent: number;
+  etaLabel: string;
+  onSelect: (projectId: ResearchProjectId) => void;
+};
+
+function ActiveResearchStrip({
+  projectId,
+  projectName,
+  progressPercent,
+  etaLabel,
+  onSelect,
+}: ActiveResearchStripProps) {
+  if (projectId === null || projectName === null) {
+    return (
+      <div
+        className="
+          flex items-center justify-between gap-3
+          rounded-panel border border-dashed border-ise-border
+          bg-ise-background/45 px-3 py-2.5
+        "
+      >
+        <div className="min-w-0">
+          <span
+            className="
+              block text-[0.6rem] font-semibold uppercase
+              tracking-[0.08em] text-ise-text-subtle
+            "
+          >
+            Active Research
+          </span>
+
+          <strong
+            className="
+              mt-0.5 block text-xs font-semibold
+              text-ise-text-muted
+            "
+          >
+            No active project
+          </strong>
+        </div>
+
+        <span
+          className="
+            shrink-0 text-[0.65rem]
+            text-ise-text-subtle
+          "
+        >
+          Select a node
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <button
+      className="
+        w-full rounded-panel
+        border border-ise-accent/35
+        bg-ise-accent-muted/35
+        px-3 py-2.5 text-left
+        transition-colors
+        hover:border-ise-accent/55
+        hover:bg-ise-accent-muted/55
+        focus-visible:outline-2
+        focus-visible:outline-offset-2
+        focus-visible:outline-ise-accent
+      "
+      type="button"
+      onClick={() => onSelect(projectId)}
+      aria-label={`View active Research: ${projectName}`}
+    >
+      <div
+        className="
+          mb-2 flex items-center
+          justify-between gap-3
+        "
+      >
+        <div className="min-w-0">
+          <span
+            className="
+              block text-[0.6rem] font-semibold uppercase
+              tracking-[0.08em] text-ise-accent-hover
+            "
+          >
+            Active Research
+          </span>
+
+          <strong
+            className="
+              mt-0.5 block truncate
+              text-xs font-semibold text-ise-text
+            "
+            title={projectName}
+          >
+            {projectName}
+          </strong>
+        </div>
+
+        <div
+          className="
+            flex shrink-0 items-center gap-2
+            text-[0.65rem]
+          "
+        >
+          <span className="tabular-nums text-ise-text-muted">
+            {etaLabel}
+          </span>
+
+          <span
+            className="
+              rounded-full border border-ise-accent/35
+              bg-ise-accent/10 px-2 py-0.5
+              font-semibold tabular-nums
+              text-ise-accent-hover
+            "
+          >
+            {progressPercent}%
+          </span>
+        </div>
+      </div>
+
+      <ProgressBar
+        value={progressPercent}
+        height="sm"
+        ariaLabel={`Research progress for ${projectName}`}
+      />
+
+      <span
+        className="
+          mt-1.5 block text-right
+          text-[0.6rem] font-medium
+          text-ise-text-subtle
+        "
+      >
+        Click to view details
+      </span>
+    </button>
   );
 }
 

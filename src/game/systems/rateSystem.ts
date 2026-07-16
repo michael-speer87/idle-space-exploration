@@ -1,4 +1,5 @@
 import {
+  getExtractionStorageCapacity,
   getOutpostLevelEnergyUseMultiplier,
   getOutpostLevelOutputMultiplier,
   PRIMARY_OUTPOSTS,
@@ -7,11 +8,23 @@ import { SUPPORT_BUILDINGS } from "../config/supportBuildings";
 import type { GameState, StarSystem } from "../types";
 import { getInfluenceOutputMultiplier } from "./influenceSystem";
 import { getResearchOutpostOutputMultiplier } from "./researchSystem";
+import { BASE_CREDITS_PER_MATERIAL, GRAD_COMMAND_STARTER_ENERGY } from "../config/economy";
+import { calculateMaterialFlow } from "./materialEconomySystem";
 
 export type CalculatedRates = {
   epPerSecond: number;
   creditsPerSecond: number;
   sciencePerSecond: number;
+
+  materialProductionPerSecond: number;
+  potentialMaterialProductionPerSecond: number;
+
+  materialSalesPerSecond: number;
+  materialSalesThroughputPerSecond: number;
+
+  materialCapacity: number;
+  creditsPerMaterial: number;
+
   researchSpeedPerSecond: number;
   energyProduced: number;
   energyUsed: number;
@@ -25,7 +38,6 @@ const AFFINITY_MULTIPLIERS = {
   high: 1.25,
 } as const;
 
-const GRAD_COMMAND_STARTER_ENERGY = 6;
 const ENERGY_SHORTAGE_PRODUCTION_EFFICIENCY = 0.5;
 const BASE_RESEARCH_SPEED_PER_SECOND = 1;
 
@@ -39,8 +51,10 @@ export function calculateRates(state: GameState): CalculatedRates {
     energySurplus < 0 ? ENERGY_SHORTAGE_PRODUCTION_EFFICIENCY : 1;
 
   let epPerSecond = 0;
-  let creditsPerSecond = 0;
   let sciencePerSecond = 0;
+
+  let potentialMaterialProductionPerSecond = 0;
+  let materialSalesThroughputPerSecond = 0;
 
   for (const systemId of state.map.systemIds) {
     const system = state.map.systemsById[systemId];
@@ -65,10 +79,11 @@ export function calculateRates(state: GameState): CalculatedRates {
       }
 
       case "commerce": {
-        creditsPerSecond +=
-          getCommerceOutput(state, system) *
+        materialSalesThroughputPerSecond +=
+          getCommerceThroughput(state, system) *
           productionEfficiency *
           influenceOutputMultiplier;
+
         break;
       }
 
@@ -86,7 +101,7 @@ export function calculateRates(state: GameState): CalculatedRates {
       }
 
       case "extraction": {
-        creditsPerSecond +=
+        potentialMaterialProductionPerSecond +=
           getExtractionOutput(state, system) *
           productionEfficiency *
           influenceOutputMultiplier;
@@ -94,6 +109,32 @@ export function calculateRates(state: GameState): CalculatedRates {
       }
     }
   }
+
+
+  const materialCapacity =
+    calculateMaterialCapacity(state);
+
+  const materialFlow = calculateMaterialFlow({
+    storedMaterials: state.resources.materials,
+    materialCapacity,
+
+    potentialProductionPerSecond:
+      potentialMaterialProductionPerSecond,
+
+    salesThroughputPerSecond:
+      materialSalesThroughputPerSecond,
+
+    seconds: 1,
+  });
+
+  const materialProductionPerSecond =
+    materialFlow.materialsProduced;
+
+  const materialSalesPerSecond =
+    materialFlow.materialsSold;
+
+  const creditsPerSecond =
+    materialFlow.creditsEarned;
 
   const researchSpeedPerSecond = Math.max(
     BASE_RESEARCH_SPEED_PER_SECOND,
@@ -104,12 +145,45 @@ export function calculateRates(state: GameState): CalculatedRates {
     epPerSecond,
     creditsPerSecond,
     sciencePerSecond,
+
+    materialProductionPerSecond,
+    potentialMaterialProductionPerSecond,
+
+    materialSalesPerSecond,
+    materialSalesThroughputPerSecond,
+
+    materialCapacity,
+    creditsPerMaterial:
+      BASE_CREDITS_PER_MATERIAL,
+
     researchSpeedPerSecond,
+
     energyProduced,
     energyUsed,
     energySurplus,
     productionEfficiency,
   };
+}
+
+function calculateMaterialCapacity(state: GameState): number {
+  let materialCapacity = 0;
+
+  for (const systemId of state.map.systemIds) {
+    const system = state.map.systemsById[systemId];
+
+    if (
+      system.claimState !== "claimed" ||
+      system.primaryOutpostId !== "extraction_rig"
+    ) {
+      continue;
+    }
+
+    materialCapacity += getExtractionStorageCapacity(
+      system.primaryOutpostLevel,
+    );
+  }
+
+  return materialCapacity;
 }
 
 function calculateEnergyProduced(state: GameState): number {
@@ -210,13 +284,13 @@ function getSurveyOutput(state: GameState, system: StarSystem): number {
     AFFINITY_MULTIPLIERS[system.affinities.survey];
 
   output *= getResearchOutpostOutputMultiplier(state, outpost.id,);
-  
+
   output *= getSupportBuildingOutputMultiplier(system);
 
   return output;
 }
 
-function getCommerceOutput(state: GameState, system: StarSystem): number {
+export function getCommerceThroughput(state: GameState, system: StarSystem): number {
   const outpost = PRIMARY_OUTPOSTS.commerce_hub;
   const levelMultiplier = getOutpostLevelOutputMultiplier(
     system.primaryOutpostLevel,
@@ -270,7 +344,7 @@ function getPowerOutput(state: GameState, system: StarSystem): number {
   return output;
 }
 
-function getExtractionOutput(state: GameState, system: StarSystem): number {
+export function getExtractionOutput(state: GameState, system: StarSystem): number {
   const outpost = PRIMARY_OUTPOSTS.extraction_rig;
   const levelMultiplier = getOutpostLevelOutputMultiplier(
     system.primaryOutpostLevel,

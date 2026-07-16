@@ -55,7 +55,7 @@ export const PRIMARY_OUTPOSTS: Record<
         upgradeCreditCostGrowthRate: 1.35,
         baseEnergyUse: 2,
         usesEnergy: true,
-        description: "Produces Credits/sec.",
+        description: "Sells Materials automatically to generate Credits.",
     },
 
     science_station: {
@@ -97,7 +97,7 @@ export const PRIMARY_OUTPOSTS: Record<
         upgradeCreditCostGrowthRate: 1.4,
         baseEnergyUse: 3,
         usesEnergy: true,
-        description: "Extracts materials that are automatically converted into Credits/sec.",
+        description: "Produces Materials/sec and provides Material storage.",
     },
 };
 
@@ -115,4 +115,12 @@ export function getOutpostLevelEnergyUseMultiplier(level: number): number {
     }
 
     return 1 + (level - 1) * 0.1;
+}
+
+export function getExtractionStorageCapacity(level: number): number {
+    if (level <= 0) {
+        return 0;
+    }
+
+    return 100 + (level - 1) * 10;
 }

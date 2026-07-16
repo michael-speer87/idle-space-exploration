@@ -57,10 +57,9 @@ export function RunProgressPanel({
             <div
               className={`
                 h-full rounded-full transition-[width] duration-300
-                ${
-                  progress.isInfluenceResetReady
-                    ? "bg-ise-success"
-                    : "bg-ise-accent"
+                ${progress.isInfluenceResetReady
+                  ? "bg-ise-success"
+                  : "bg-ise-accent"
                 }
               `}
               style={{
@@ -88,6 +87,11 @@ export function RunProgressPanel({
           />
 
           <InfluenceRow
+            label="Expedition Funding"
+            value={`${resetPreview.currentExpeditionFunding} Credits`}
+          />
+
+          <InfluenceRow
             label="Current Bonus"
             value={formatMultiplierBonus(
               resetPreview.currentOutputMultiplier,
@@ -106,6 +110,12 @@ export function RunProgressPanel({
               <InfluenceRow
                 label="Reset Gain"
                 value={`+${resetPreview.influenceGain} Influence`}
+                emphasized
+              />
+
+              <InfluenceRow
+                label="Next Expedition"
+                value={`${resetPreview.nextExpeditionFunding} Credits`}
                 emphasized
               />
 

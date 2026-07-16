@@ -6,17 +6,21 @@ import {
 import {
   useGameDispatch,
   useGameState,
-} from "../game/GameContext";
+} from "../game/gameHooks";
 import { Section } from "./ui/Section";
+import { calculateRates } from "../game/systems/rateSystem";
 
 const DEV_CLAIM_OUTPOST_IDS: readonly PrimaryOutpostId[] = [
   "survey_array",
   "commerce_hub",
+  "extraction_rig",
 ];
 
 export function DevAdminPanel() {
   const gameState = useGameState();
   const dispatch = useGameDispatch();
+
+  const rates = calculateRates(gameState);
 
   const selectedSystem = gameState.selectedSystemId
     ? gameState.map.systemsById[gameState.selectedSystemId]
@@ -123,6 +127,43 @@ export function DevAdminPanel() {
         </div>
       </Section>
 
+      <div
+        className="
+    mb-3 grid grid-cols-2 gap-2
+    rounded-control border border-ise-border
+    bg-ise-background/60 p-2
+  "
+      >
+        <DevResourceMetric
+          label="Materials"
+          value={`${gameState.resources.materials.toFixed(1)} / ${rates.materialCapacity.toFixed(1)}`}
+        />
+
+        <DevResourceMetric
+          label="Material Rate"
+          value={`+${rates.materialProductionPerSecond.toFixed(1)}/sec`}
+        />
+        <DevResourceMetric
+          label="Material Production"
+          value={`+${rates.materialProductionPerSecond.toFixed(1)}/sec`}
+        />
+
+        <DevResourceMetric
+          label="Material Sales"
+          value={`-${rates.materialSalesPerSecond.toFixed(1)}/sec`}
+        />
+
+        <DevResourceMetric
+          label="Sales Throughput"
+          value={`${rates.materialSalesThroughputPerSecond.toFixed(1)}/sec`}
+        />
+
+        <DevResourceMetric
+          label="Trade Income"
+          value={`+${rates.creditsPerSecond.toFixed(1)} Credits/sec`}
+        />
+      </div>
+
       <Section title="Resources">
         <div className="grid grid-cols-2 gap-2">
           <DevActionButton
@@ -192,6 +233,56 @@ export function DevAdminPanel() {
           </p>
         )}
       </Section>
+
+      <Section title="Tutorial">
+        <div className="grid gap-2">
+          <div
+            className="
+        rounded-control border border-ise-border
+        bg-ise-background/60 p-3
+      "
+          >
+            <span
+              className="
+          block text-[0.65rem] font-semibold uppercase
+          tracking-[0.08em] text-ise-text-subtle
+        "
+            >
+              Current Status
+            </span>
+
+            <strong
+              className="
+          mt-1 block text-sm font-semibold
+          capitalize text-ise-text
+        "
+            >
+              {gameState.tutorial.status}
+            </strong>
+
+            {gameState.tutorial.currentStepId !== null && (
+              <span
+                className="
+            mt-1 block text-xs
+            text-ise-text-muted
+          "
+              >
+                {gameState.tutorial.currentStepId}
+              </span>
+            )}
+          </div>
+
+          <DevActionButton
+            onClick={() =>
+              dispatch({
+                type: "devResetTutorial",
+              })
+            }
+          >
+            Reset Tutorial Progress
+          </DevActionButton>
+        </div>
+      </Section>
     </div>
   );
 }
@@ -231,5 +322,37 @@ function DevActionButton({
     >
       {children}
     </button>
+  );
+}
+
+type DevResourceMetricProps = {
+  label: string;
+  value: string;
+};
+
+function DevResourceMetric({
+  label,
+  value,
+}: DevResourceMetricProps) {
+  return (
+    <div className="rounded-control px-2 py-1.5">
+      <span
+        className="
+          block text-[0.6rem] font-semibold uppercase
+          tracking-[0.08em] text-ise-text-subtle
+        "
+      >
+        {label}
+      </span>
+
+      <strong
+        className="
+          mt-0.5 block text-xs font-semibold
+          tabular-nums text-ise-text
+        "
+      >
+        {value}
+      </strong>
+    </div>
   );
 }

@@ -12,6 +12,7 @@ import {
 } from "../game/config/supportBuildings";
 import type {
   OutpostClaimOption,
+  PrimaryOutpostDecommissionPreview,
   PrimaryOutpostUpgradeOption,
 } from "../game/systems/outpostSystem";
 import type { SupportBuildingBuildOption } from "../game/systems/supportBuildingSystem";
@@ -26,10 +27,17 @@ type BuildTab = "primary" | "support";
 type BuildPanelProps = {
   system: StarSystem | null;
   outpostClaimOptions: OutpostClaimOption[];
-  primaryOutpostUpgradeOption: PrimaryOutpostUpgradeOption;
-  supportBuildingBuildOptions: SupportBuildingBuildOption[];
-  onClaimOutpost: (outpostId: PrimaryOutpostId) => void;
+  primaryOutpostUpgradeOption:
+  PrimaryOutpostUpgradeOption;
+  primaryOutpostDecommissionPreview:
+  PrimaryOutpostDecommissionPreview;
+  supportBuildingBuildOptions:
+  SupportBuildingBuildOption[];
+  onClaimOutpost: (
+    outpostId: PrimaryOutpostId,
+  ) => void;
   onUpgradePrimaryOutpost: () => void;
+  onDecommissionPrimaryOutpost: () => void;
   onBuildSupportBuilding: (
     supportBuildingId: SupportBuildingId,
   ) => void;
@@ -39,9 +47,11 @@ export function BuildPanel({
   system,
   outpostClaimOptions,
   primaryOutpostUpgradeOption,
+  primaryOutpostDecommissionPreview,
   supportBuildingBuildOptions,
   onClaimOutpost,
   onUpgradePrimaryOutpost,
+  onDecommissionPrimaryOutpost,
   onBuildSupportBuilding,
 }: BuildPanelProps) {
   const [activeTab, setActiveTab] =
@@ -110,7 +120,9 @@ export function BuildPanel({
         systemName={system.name}
         status={
           currentOutpost === null
-            ? "Ready to Claim"
+            ? system.claimState === "claimed"
+              ? "Claimed • Outpost Vacant"
+              : "Ready to Claim"
             : `${currentOutpost.name} • Level ${system.primaryOutpostLevel}`
         }
         supportSlots={system.supportSlotCount}
@@ -128,15 +140,16 @@ export function BuildPanel({
         className="grid gap-4"
         hidden={activeTab !== "primary"}
       >
-        {system.claimState === "unclaimed" && (
+        {currentOutpost === null && (
           <Section
             title="Available Primary Outposts"
             divider={false}
           >
             <div className="grid gap-3">
               <p className="m-0 text-xs leading-relaxed text-ise-text-muted">
-                Select a specialization to claim this system. The chosen
-                Primary Outpost defines the system’s main role.
+                {system.claimState === "claimed"
+                  ? "This claimed system has no active Primary Outpost. Select a new specialization to restore local operations."
+                  : "Select a specialization to claim this system. The chosen Primary Outpost defines the system’s main role."}
               </p>
 
               {outpostClaimOptions.map((option) => {
@@ -180,7 +193,9 @@ export function BuildPanel({
               }
               currentLevel={system.primaryOutpostLevel}
               upgradeOption={primaryOutpostUpgradeOption}
+              decommissionPreview={primaryOutpostDecommissionPreview}
               onUpgrade={onUpgradePrimaryOutpost}
+              onDecommission={onDecommissionPrimaryOutpost}
             />
           </Section>
         )}
@@ -194,7 +209,7 @@ export function BuildPanel({
         hidden={activeTab !== "support"}
       >
         {currentOutpost === null ||
-        system.claimState !== "claimed" ? (
+          system.claimState !== "claimed" ? (
           <BuildEmptyState
             title="Support Buildings Locked"
             description="Claim this system and establish a Primary Outpost before installing Support Buildings."
@@ -239,7 +254,7 @@ export function BuildPanel({
               {supportBuildingBuildOptions.map((option) => {
                 const building =
                   SUPPORT_BUILDINGS[
-                    option.supportBuildingId
+                  option.supportBuildingId
                   ];
 
                 const installedCount =
@@ -331,14 +346,13 @@ function BuildTabButton({
         focus-visible:outline-2
         focus-visible:outline-offset-2
         focus-visible:outline-ise-accent
-        ${
-          active
-            ? `
+        ${active
+          ? `
                 border-ise-accent/50
                 bg-ise-accent-muted
                 text-ise-accent-hover
               `
-            : `
+          : `
                 border-transparent
                 bg-transparent
                 text-ise-text-muted
@@ -526,7 +540,10 @@ type CurrentOutpostCardProps = {
   affinity: AffinityLevel;
   currentLevel: number;
   upgradeOption: PrimaryOutpostUpgradeOption;
+  decommissionPreview:
+  PrimaryOutpostDecommissionPreview;
   onUpgrade: () => void;
+  onDecommission: () => void;
 };
 
 function CurrentOutpostCard({
@@ -534,7 +551,9 @@ function CurrentOutpostCard({
   affinity,
   currentLevel,
   upgradeOption,
+  decommissionPreview,
   onUpgrade,
+  onDecommission,
 }: CurrentOutpostCardProps) {
   return (
     <article
@@ -632,6 +651,91 @@ function CurrentOutpostCard({
             {upgradeOption.blockedReason}
           </p>
         )}
+
+      <div
+        className="
+    mt-4 rounded-control
+    border border-ise-danger/30
+    bg-ise-danger/10 p-3
+  "
+      >
+        <strong
+          className="
+      block text-xs font-semibold
+      text-ise-danger
+    "
+        >
+          Decommission Outpost
+        </strong>
+
+        <p
+          className="
+      mt-1 mb-0 text-xs leading-relaxed
+      text-ise-text-muted
+    "
+        >
+          Remove this Primary Outpost and all installed
+          Support Buildings. The system remains claimed,
+          but no Credits are refunded.
+        </p>
+
+        {decommissionPreview.materialOverflowLost > 0 && (
+          <p
+            className="
+        mt-2 mb-0 rounded-control
+        border border-ise-danger/35
+        bg-ise-danger/10 p-2
+        text-xs font-semibold leading-relaxed
+        text-ise-danger
+      "
+          >
+            This will discard{" "}
+            {decommissionPreview.materialOverflowLost.toFixed(
+              1,
+            )}{" "}
+            Materials because the network will lose{" "}
+            {decommissionPreview.materialCapacityLost.toFixed(
+              0,
+            )}{" "}
+            storage capacity.
+          </p>
+        )}
+
+        <button
+          className="
+      mt-3 w-full rounded-control
+      border border-ise-danger/40
+      bg-ise-danger/10 px-3 py-2.5
+      text-xs font-semibold text-ise-danger
+      transition-colors
+      hover:bg-ise-danger/20
+      focus-visible:outline-2
+      focus-visible:outline-offset-2
+      focus-visible:outline-ise-danger
+      disabled:cursor-not-allowed
+      disabled:border-ise-border
+      disabled:bg-ise-void/60
+      disabled:text-ise-text-subtle
+    "
+          type="button"
+          disabled={!decommissionPreview.canDecommission}
+          onClick={onDecommission}
+        >
+          Decommission {outpost.name}
+        </button>
+
+        {!decommissionPreview.canDecommission &&
+          decommissionPreview.blockedReason !== null && (
+            <p
+              className="
+          mt-2 mb-0 text-xs leading-relaxed
+          text-ise-warning
+        "
+            >
+              {decommissionPreview.blockedReason}
+            </p>
+          )}
+      </div>
     </article>
   );
 }
@@ -662,13 +766,12 @@ function SupportSlotGrid({
             <div
               className={`
                 min-h-16 rounded-control border p-2.5
-                ${
-                  building === null
-                    ? `
+                ${building === null
+                  ? `
                         border-dashed border-ise-border
                         bg-ise-background/40
                       `
-                    : `
+                  : `
                         border-ise-success/30
                         bg-ise-success/10
                       `
@@ -688,10 +791,9 @@ function SupportSlotGrid({
               <strong
                 className={`
                   mt-1 block text-xs font-semibold
-                  ${
-                    building === null
-                      ? "text-ise-text-subtle"
-                      : "text-ise-success"
+                  ${building === null
+                    ? "text-ise-text-subtle"
+                    : "text-ise-success"
                   }
                 `}
               >
@@ -903,13 +1005,12 @@ function BuildEmptyState({
     <div
       className={`
         rounded-panel border border-dashed p-5 text-center
-        ${
-          tone === "success"
-            ? `
+        ${tone === "success"
+          ? `
                 border-ise-success/35
                 bg-ise-success/10
               `
-            : `
+          : `
                 border-ise-border
                 bg-ise-background/45
               `

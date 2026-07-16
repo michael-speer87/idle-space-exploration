@@ -2,6 +2,7 @@ import type { GameState } from "../types";
 import { advanceActiveSurvey } from "./explorationSystem";
 import { calculateRates } from "./rateSystem";
 import { advanceActiveResearch } from "./researchSystem";
+import { calculateMaterialFlow } from "./materialEconomySystem";
 
 export function advanceGameTime(
     state: GameState,
@@ -27,21 +28,53 @@ export function advanceGameTime(
 }
 
 function addResourceProduction(
-    state: GameState,
-    seconds: number,
-    rates: ReturnType<typeof calculateRates>
+  state: GameState,
+  seconds: number,
+  rates: ReturnType<typeof calculateRates>,
 ): GameState {
-    if (rates.creditsPerSecond <= 0 && rates.sciencePerSecond <= 0) {
-        return state;
-    }
+  const materialFlow = calculateMaterialFlow({
+    storedMaterials: state.resources.materials,
 
-    return {
-        ...state,
+    materialCapacity:
+      rates.materialCapacity,
 
-        resources: {
-            ...state.resources,
-            credits: state.resources.credits + rates.creditsPerSecond * seconds,
-            science: state.resources.science + rates.sciencePerSecond * seconds,
-        },
-    };
+    potentialProductionPerSecond:
+      rates.potentialMaterialProductionPerSecond,
+
+    salesThroughputPerSecond:
+      rates.materialSalesThroughputPerSecond,
+
+    seconds,
+
+    creditsPerMaterial:
+      rates.creditsPerMaterial,
+  });
+
+  if (
+    materialFlow.creditsEarned <= 0 &&
+    rates.sciencePerSecond <= 0 &&
+    materialFlow.materialsProduced <= 0 &&
+    materialFlow.materialsSold <= 0
+  ) {
+    return state;
+  }
+
+  return {
+    ...state,
+
+    resources: {
+      ...state.resources,
+
+      credits:
+        state.resources.credits +
+        materialFlow.creditsEarned,
+
+      science:
+        state.resources.science +
+        rates.sciencePerSecond * seconds,
+
+      materials:
+        materialFlow.nextMaterials,
+    },
+  };
 }

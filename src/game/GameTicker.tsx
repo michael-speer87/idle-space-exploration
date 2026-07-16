@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { useGameDispatch, useGameState } from "./GameContext";
+import { useGameDispatch, useGameState } from "./gameHooks";
 import { calculateRates } from "./systems/rateSystem";
 
 const TICK_INTERVAL_MS = 250;
@@ -16,7 +16,9 @@ export function GameTicker() {
     const rates = calculateRates(gameState);
 
     const hasActiveProduction =
-        rates.creditsPerSecond > 0 || rates.sciencePerSecond > 0;
+        rates.creditsPerSecond > 0 || 
+        rates.sciencePerSecond > 0 ||
+        rates.materialProductionPerSecond > 0;
     
     const shouldTick = hasActiveSurvey || hasActiveProduction || hasActiveResearch;
 

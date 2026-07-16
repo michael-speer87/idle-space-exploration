@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { GameProvider, useGameDispatch, useGameState } from "./game/GameContext";
+import { useMemo, useCallback, useEffect, useRef, useState } from "react";
+import { GameProvider } from "./game/GameContext";
+import { useGameDispatch, useGameState } from "./game/gameHooks";
 import { SelectedSystemPanel } from "./components/SelectedSystemPanel";
 import {
   StarMapCanvas,
@@ -13,9 +14,10 @@ import { ResourceBar } from "./components/ResourceBar";
 import { calculateRates } from "./game/systems/rateSystem";
 import {
   getOutpostClaimOptions,
+  getPrimaryOutpostDecommissionPreview,
   getPrimaryOutpostUpgradeOption,
 } from "./game/systems/outpostSystem";
-import type { PrimaryOutpostId } from "./game/config/outposts";
+import { PRIMARY_OUTPOSTS, type PrimaryOutpostId } from "./game/config/outposts";
 import { ResearchPanel } from "./components/ResearchPanel";
 import type { ResearchProjectId } from "./game/config/research";
 import { getStartableResearchProjectIds } from "./game/systems/researchSystem";
@@ -34,6 +36,9 @@ import { BuildPanel } from "./components/BuildPanel";
 import packageJson from "../package.json";
 import type { SupportBuildingId } from "./game/config/supportBuildings";
 import { getSupportBuildingBuildOptions } from "./game/systems/supportBuildingSystem";
+import { TutorialPanel } from "./components/TutorialPanel";
+import { getCurrentTutorialStep, getTutorialProgress } from "./game/systems/tutorialSystem";
+import { KOFI_URL } from "./game/config/externalLinks";
 
 const GAME_VERSION_LABEL = `v${packageJson.version}`;
 
@@ -59,8 +64,11 @@ function GameScreen() {
   const runStatsSummary = getRunStatsSummary(gameState);
   const starMapCameraRef = useRef<StarMapCameraHandle | null>(null);
 
-  const [activeWorkspace, setActiveWorkspace] =
-    useState<MissionWorkspaceId | null>(null);
+  const [activeWorkspace, setActiveWorkspace] = useState<MissionWorkspaceId | null>(null);
+
+  const currentTutorialStep = getCurrentTutorialStep(gameState);
+
+  const tutorialProgress = getTutorialProgress(gameState);
 
   const isWorkspaceOpen = activeWorkspace !== null;
 
@@ -88,7 +96,39 @@ function GameScreen() {
         blockedReason: "No system selected",
       };
 
+  const primaryOutpostDecommissionPreview = useMemo(
+    () =>
+      selectedSystem !== null
+        ? getPrimaryOutpostDecommissionPreview(
+          gameState,
+          selectedSystem.id,
+        )
+        : {
+          canDecommission: false,
+          supportBuildingsRemoved: 0,
+          materialCapacityLost: 0,
+          materialOverflowLost: 0,
+          blockedReason: "No system selected.",
+        },
+    [gameState, selectedSystem],
+  );
+
   const rates = calculateRates(gameState);
+
+  const materialStoragePercent =
+    rates.materialCapacity > 0
+      ? Math.min(
+        100,
+        Math.max(
+          0,
+          Math.round(
+            (gameState.resources.materials /
+              rates.materialCapacity) *
+            100,
+          ),
+        ),
+      )
+      : 0;
 
   const outpostClaimOptions =
     selectedSystem !== null
@@ -202,6 +242,7 @@ function GameScreen() {
         `You will gain +${influenceResetPreview.influenceGain} Lifetime Influence.`,
         `Current bonus: ${formatOutputBonus(influenceResetPreview.currentOutputMultiplier)}`,
         `Next bonus: ${formatOutputBonus(influenceResetPreview.nextOutputMultiplier)}`,
+        `Next expedition funding: ${influenceResetPreview.nextExpeditionFunding} Credits.`,
         "",
         "This will restart the current map, resources, claims, outposts, and exploration progress.",
       ].join("\n"),
@@ -217,6 +258,25 @@ function GameScreen() {
       type: "performInfluenceReset"
     });
   }, [dispatch, influenceResetPreview]);
+
+  const handleSkipTutorial = useCallback(() => {
+    const confirmed = window.confirm(
+      [
+        "Skip GRaD Orientation?",
+        "",
+        "The tutorial objectives will be hidden.",
+        "This does not alter game progress or provide any rewards.",
+      ].join("\n"),
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    dispatch({
+      type: "skipTutorial",
+    });
+  }, [dispatch]);
 
   const handleUpgradePrimaryOutpost = useCallback(() => {
     if (selectedSystem === null) {
@@ -237,6 +297,87 @@ function GameScreen() {
     },
     [],
   )
+
+  const handleDecommissionPrimaryOutpost =
+    useCallback(() => {
+      if (
+        selectedSystem === null ||
+        selectedSystem.primaryOutpostId === null ||
+        !primaryOutpostDecommissionPreview.canDecommission
+      ) {
+        return;
+      }
+
+      const outpost =
+        PRIMARY_OUTPOSTS[
+        selectedSystem.primaryOutpostId
+        ];
+
+      const confirmationLines = [
+        `Decommission ${outpost.name}?`,
+        "",
+        `The Level ${selectedSystem.primaryOutpostLevel} Primary Outpost will be removed.`,
+      ];
+
+      if (
+        primaryOutpostDecommissionPreview
+          .supportBuildingsRemoved > 0
+      ) {
+        confirmationLines.push(
+          `${primaryOutpostDecommissionPreview.supportBuildingsRemoved} Support Building${primaryOutpostDecommissionPreview
+            .supportBuildingsRemoved === 1
+            ? ""
+            : "s"
+          } will also be removed.`,
+        );
+      }
+
+      if (
+        primaryOutpostDecommissionPreview
+          .materialCapacityLost > 0
+      ) {
+        confirmationLines.push(
+          `Material capacity will fall by ${primaryOutpostDecommissionPreview.materialCapacityLost.toFixed(
+            0,
+          )}.`,
+        );
+      }
+
+      if (
+        primaryOutpostDecommissionPreview
+          .materialOverflowLost > 0
+      ) {
+        confirmationLines.push(
+          "",
+          `WARNING: ${primaryOutpostDecommissionPreview.materialOverflowLost.toFixed(
+            1,
+          )} stored Materials will be discarded.`,
+        );
+      }
+
+      confirmationLines.push(
+        "",
+        "No Credits will be refunded.",
+        "The system will remain claimed and can receive another Primary Outpost.",
+      );
+
+      const confirmed = window.confirm(
+        confirmationLines.join("\n"),
+      );
+
+      if (!confirmed) {
+        return;
+      }
+
+      dispatch({
+        type: "decommissionPrimaryOutpost",
+        systemId: selectedSystem.id,
+      });
+    }, [
+      dispatch,
+      primaryOutpostDecommissionPreview,
+      selectedSystem,
+    ]);
 
   const handleShowBuildWorkspace = useCallback(() => {
     setActiveWorkspace("build");
@@ -269,8 +410,17 @@ function GameScreen() {
         bg-ise-void/85 p-3.5
         "
       >
+        {currentTutorialStep !== null && (
+          <TutorialPanel
+            step={currentTutorialStep}
+            currentStepNumber={tutorialProgress.currentStepNumber}
+            totalStepCount={tutorialProgress.totalStepCount}
+            onSkip={handleSkipTutorial}
+          />
+        )}
         <SelectedSystemPanel
           gameState={gameState}
+          rates={rates}
           system={selectedSystem}
           activeSurvey={activeSurveyForSelectedSystem}
           canBeginSurvey={canBeginSurveyForSelectedSystem}
@@ -324,6 +474,38 @@ function GameScreen() {
               Home Cluster · Seed {gameState.seed} .{" "}
               {gameState.map.systemIds.length} systems
             </p>
+
+            <a
+              className="
+    inline-flex shrink-0 items-center gap-1.5
+    rounded-control border border-ise-border
+    bg-ise-background/70 px-2.5 py-1.5
+    text-xs font-semibold text-ise-text-muted
+    transition-colors
+    hover:border-[#ff5e5b]/60
+    hover:bg-[#ff5e5b]/10
+    hover:text-ise-text
+    focus-visible:outline-2
+    focus-visible:outline-offset-2
+    focus-visible:outline-[#ff5e5b]
+  "
+              href={KOFI_URL}
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Support GRaD Command on Ko-fi"
+              title="Support GRaD Command on Ko-fi"
+            >
+              <span
+                aria-hidden="true"
+                className="text-sm leading-none"
+              >
+                ☕
+              </span>
+
+              <span className="hidden sm:inline">
+                Support on Ko-fi
+              </span>
+            </a>
           </div>
 
           <ResourceBar
@@ -339,14 +521,13 @@ function GameScreen() {
 
           transition-all duration-200 ease-out
 
-          ${
-            isWorkspaceOpen
-              ? `
+          ${isWorkspaceOpen
+            ? `
                 pointer-events-none
                 translate-x-[calc(100%+2rem)]
                 opacity-0
               `
-              : `
+            : `
                 pointer-events-auto
                 translate-x-0
                 opacity-100
@@ -397,11 +578,25 @@ function GameScreen() {
               <BuildPanel
                 system={selectedSystem}
                 outpostClaimOptions={outpostClaimOptions}
-                primaryOutpostUpgradeOption={primaryOutpostUpgradeOption}
-                supportBuildingBuildOptions={supportBuildingBuildOptions}
+                primaryOutpostUpgradeOption={
+                  primaryOutpostUpgradeOption
+                }
+                primaryOutpostDecommissionPreview={
+                  primaryOutpostDecommissionPreview
+                }
+                supportBuildingBuildOptions={
+                  supportBuildingBuildOptions
+                }
                 onClaimOutpost={handleClaimOutpost}
-                onUpgradePrimaryOutpost={handleUpgradePrimaryOutpost}
-                onBuildSupportBuilding={handleBuildSupportBuilding}
+                onUpgradePrimaryOutpost={
+                  handleUpgradePrimaryOutpost
+                }
+                onDecommissionPrimaryOutpost={
+                  handleDecommissionPrimaryOutpost
+                }
+                onBuildSupportBuilding={
+                  handleBuildSupportBuilding
+                }
               />
             </MissionWorkspace>
           </div>
@@ -512,6 +707,7 @@ function GameScreen() {
           ref={starMapCameraRef}
           map={gameState.map}
           selectedSystemId={gameState.selectedSystemId}
+          materialStoragePercent={materialStoragePercent}
           onSelectSystem={handleSelectSystem}
         />
       </section>

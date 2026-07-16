@@ -1,8 +1,9 @@
 import type { PrimaryOutpostId } from "./config/outposts";
 import type { ResearchProjectId } from "./config/research";
 import type { SupportBuildingId } from "./config/supportBuildings";
+import type { TutorialStepId } from "./config/tutorial";
 
-export type GameVersion = 1;
+export type GameVersion = 3;
 
 export type StarSystemId = string;
 
@@ -30,6 +31,16 @@ export type ExplorationState =
   | "surveyed";
 
 export type ClaimState = "unclaimed" | "claimed";
+
+export type TutorialStatus =
+  | "active"
+  | "completed"
+  | "skipped";
+
+export type TutorialState = {
+  status: TutorialStatus;
+  currentStepId: TutorialStepId | null;
+}
 
 export type ResearchProjectState = {
   id: ResearchProjectId;
@@ -73,6 +84,7 @@ export type StarMapState = {
 export type ResourceState = {
   credits: number;
   science: number;
+  materials: number;
 };
 
 export type ResearchState = {
@@ -107,6 +119,7 @@ export type GameState = {
   exploration: ExplorationRunState;
   research: ResearchState;
   influence: InfluenceState;
+  tutorial: TutorialState;
   map: StarMapState;
 
   selectedSystemId: StarSystemId | null;

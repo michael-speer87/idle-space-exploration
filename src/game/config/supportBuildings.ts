@@ -19,7 +19,7 @@ export type SupportBuildingDefinition = {
 };
 
 export const SUPPORT_BUILDINGS: Record<SupportBuildingId, SupportBuildingDefinition> = {
-     survey_booster: {
+  survey_booster: {
     id: "survey_booster",
     name: "Survey Booster",
     requiredPrimaryOutpostId: "survey_array",
@@ -36,7 +36,7 @@ export const SUPPORT_BUILDINGS: Record<SupportBuildingId, SupportBuildingDefinit
     unlockResearchId: "regional_trade_networks",
     creditCost: 75,
     outputBonus: 0.15,
-    description: "Increases this system's Commerce Hub Credit output by 15%.",
+    description: "Increases this system's Material sales throughput by 15%.",
   },
 
   research_annex: {
@@ -66,7 +66,7 @@ export const SUPPORT_BUILDINGS: Record<SupportBuildingId, SupportBuildingDefinit
     unlockResearchId: "industrial_refining_methods",
     creditCost: 100,
     outputBonus: 0.15,
-    description: "Increases this system's Extraction Rig output by 15%.",
+    description: "Increases this system's Material production by 15%.",
   },
 };
 

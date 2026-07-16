@@ -287,6 +287,7 @@ function GameScreen() {
       >
         <SelectedSystemPanel
           gameState={gameState}
+          rates={rates}
           system={selectedSystem}
           activeSurvey={activeSurveyForSelectedSystem}
           canBeginSurvey={canBeginSurveyForSelectedSystem}

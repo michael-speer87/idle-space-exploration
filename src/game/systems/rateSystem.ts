@@ -290,7 +290,7 @@ function getSurveyOutput(state: GameState, system: StarSystem): number {
   return output;
 }
 
-function getCommerceThroughput(state: GameState, system: StarSystem): number {
+export function getCommerceThroughput(state: GameState, system: StarSystem): number {
   const outpost = PRIMARY_OUTPOSTS.commerce_hub;
   const levelMultiplier = getOutpostLevelOutputMultiplier(
     system.primaryOutpostLevel,
@@ -344,7 +344,7 @@ function getPowerOutput(state: GameState, system: StarSystem): number {
   return output;
 }
 
-function getExtractionOutput(state: GameState, system: StarSystem): number {
+export function getExtractionOutput(state: GameState, system: StarSystem): number {
   const outpost = PRIMARY_OUTPOSTS.extraction_rig;
   const levelMultiplier = getOutpostLevelOutputMultiplier(
     system.primaryOutpostLevel,

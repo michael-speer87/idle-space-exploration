@@ -4,7 +4,7 @@ import type {
   GameState,
   StarSystem
 } from "../game/types";
-import { PRIMARY_OUTPOSTS } from "../game/config/outposts"
+import { getExtractionStorageCapacity, PRIMARY_OUTPOSTS } from "../game/config/outposts"
 import {
   SYSTEM_RARITIES,
   getSystemQualityScore,
@@ -20,9 +20,13 @@ import {
   getSystemSurveyReport,
   type SystemSurveyReport,
 } from "../game/content/systemSurveyReports";
+import { getCommerceThroughput, getExtractionOutput, type CalculatedRates } from "../game/systems/rateSystem";
+import { getInfluenceOutputMultiplier } from "../game/systems/influenceSystem";
+import { formatNumber, formatRate } from "../game/utils/formatNumber";
 
 type SelectedSystemPanelProps = {
   gameState: GameState;
+  rates: CalculatedRates;
   system: StarSystem | null;
   activeSurvey: ActiveSurveyState | null;
   canBeginSurvey: boolean;
@@ -33,6 +37,7 @@ type SelectedSystemPanelProps = {
 
 export function SelectedSystemPanel({
   gameState,
+  rates,
   system,
   activeSurvey,
   canBeginSurvey,
@@ -119,6 +124,55 @@ export function SelectedSystemPanel({
         : isSurveyed
           ? "System ready to claim"
           : "Survey required before construction";
+
+  const influenceOutputMultiplier =
+    getInfluenceOutputMultiplier(gameState);
+
+  const selectedExtractionProduction =
+    currentOutpost?.category === "extraction"
+      ? getExtractionOutput(gameState, system) *
+      rates.productionEfficiency *
+      influenceOutputMultiplier
+      : 0;
+
+  const selectedExtractionStorage =
+    currentOutpost?.category === "extraction"
+      ? getExtractionStorageCapacity(
+        system.primaryOutpostLevel,
+      )
+      : 0;
+
+  const selectedCommerceThroughput =
+    currentOutpost?.category === "commerce"
+      ? getCommerceThroughput(gameState, system) *
+      rates.productionEfficiency *
+      influenceOutputMultiplier
+      : 0;
+
+  const materialStorageIsFull =
+    rates.materialCapacity > 0 &&
+    gameState.resources.materials >=
+    rates.materialCapacity - 0.01;
+
+  const extractionStatus =
+    getExtractionStatus({
+      materialStorageIsFull,
+      productionEfficiency: rates.productionEfficiency,
+      actualProduction:
+        rates.materialProductionPerSecond,
+      potentialProduction:
+        rates.potentialMaterialProductionPerSecond,
+      materialSales:
+        rates.materialSalesPerSecond,
+    });
+
+  const commerceStatus =
+    getCommerceStatus({
+      productionEfficiency: rates.productionEfficiency,
+      actualSales: rates.materialSalesPerSecond,
+      salesThroughput:
+        rates.materialSalesThroughputPerSecond,
+    });
 
   return (
     <Panel
@@ -411,6 +465,121 @@ export function SelectedSystemPanel({
             )}
           </div>
         </Section>
+
+        {currentOutpost?.category === "extraction" && (
+          <Section title="Material Network">
+            <div className="grid gap-3">
+              <div
+                className="
+          grid grid-cols-2 gap-2
+          rounded-control border border-ise-border
+          bg-ise-background/60 p-2
+        "
+              >
+                <SystemMetric
+                  label="Production Potential"
+                  value={`${formatRate(
+                    selectedExtractionProduction,
+                  )} Materials/sec`}
+                />
+
+                <SystemMetric
+                  label="Storage Provided"
+                  value={`${formatNumber(
+                    selectedExtractionStorage,
+                  )} Materials`}
+                />
+
+                <SystemMetric
+                  label="Network Storage"
+                  value={`${formatNumber(
+                    gameState.resources.materials,
+                    {
+                      maximumFractionDigits: 1,
+                    },
+                  )} / ${formatNumber(
+                    rates.materialCapacity,
+                  )}`}
+                />
+
+                <SystemMetric
+                  label="Network Production"
+                  value={`${formatRate(
+                    rates.materialProductionPerSecond,
+                  )} Materials/sec`}
+                />
+              </div>
+
+              <EconomyStatus
+                status={extractionStatus}
+                tone={
+                  extractionStatus === "Paused: Storage Full"
+                    ? "warning"
+                    : extractionStatus ===
+                      "Limited by Commerce"
+                      ? "warning"
+                      : rates.productionEfficiency < 1
+                        ? "warning"
+                        : "success"
+                }
+              />
+            </div>
+          </Section>
+        )}
+
+        {currentOutpost?.category === "commerce" && (
+          <Section title="Trade Operations">
+            <div className="grid gap-3">
+              <div
+                className="
+          grid grid-cols-2 gap-2
+          rounded-control border border-ise-border
+          bg-ise-background/60 p-2
+        "
+              >
+                <SystemMetric
+                  label="System Throughput"
+                  value={`${formatRate(
+                    selectedCommerceThroughput,
+                  )} Materials/sec`}
+                />
+
+                <SystemMetric
+                  label="Network Sales"
+                  value={`${formatRate(
+                    rates.materialSalesPerSecond,
+                  )} Materials/sec`}
+                />
+
+                <SystemMetric
+                  label="Material Value"
+                  value={`${formatNumber(
+                    rates.creditsPerMaterial,
+                  )} Credit each`}
+                />
+
+                <SystemMetric
+                  label="Trade Income"
+                  value={`${formatRate(
+                    rates.creditsPerSecond,
+                  )} Credits/sec`}
+                />
+              </div>
+
+              <EconomyStatus
+                status={commerceStatus}
+                tone={
+                  commerceStatus === "Selling at Capacity"
+                    ? "success"
+                    : commerceStatus ===
+                      "Waiting for Materials"
+                      ? "neutral"
+                      : "warning"
+                }
+              />
+            </div>
+          </Section>
+        )}
       </div>
     </Panel>
   );
@@ -609,6 +778,122 @@ function SystemMetric({
       </strong>
     </div>
   );
+}
+
+type EconomyStatusTone =
+  | "success"
+  | "warning"
+  | "neutral";
+
+type EconomyStatusProps = {
+  status: string;
+  tone: EconomyStatusTone;
+};
+
+function EconomyStatus({
+  status,
+  tone,
+}: EconomyStatusProps) {
+  const toneClasses =
+    tone === "success"
+      ? `
+        border-ise-success/30
+        bg-ise-success/10
+        text-ise-success
+      `
+      : tone === "warning"
+        ? `
+          border-ise-warning/30
+          bg-ise-warning/10
+          text-ise-warning
+        `
+        : `
+          border-ise-border
+          bg-ise-void/45
+          text-ise-text-muted
+        `;
+
+  return (
+    <div
+      className={`
+        flex items-center justify-between gap-3
+        rounded-control border px-3 py-2.5
+        text-xs
+        ${toneClasses}
+      `}
+    >
+      <span className="font-medium">
+        Operational Status
+      </span>
+
+      <strong className="text-right font-semibold">
+        {status}
+      </strong>
+    </div>
+  );
+}
+
+type ExtractionStatusInput = {
+  materialStorageIsFull: boolean;
+  productionEfficiency: number;
+  actualProduction: number;
+  potentialProduction: number;
+  materialSales: number;
+};
+
+function getExtractionStatus({
+  materialStorageIsFull,
+  productionEfficiency,
+  actualProduction,
+  potentialProduction,
+  materialSales,
+}: ExtractionStatusInput): string {
+  if (
+    materialStorageIsFull &&
+    materialSales <= 0
+  ) {
+    return "Paused: Storage Full";
+  }
+
+  if (
+    materialStorageIsFull &&
+    actualProduction <
+      potentialProduction - 0.01
+  ) {
+    return "Limited by Commerce";
+  }
+
+  if (productionEfficiency < 1) {
+    return "Reduced by Energy Shortage";
+  }
+
+  return "Producing";
+}
+
+type CommerceStatusInput = {
+  productionEfficiency: number;
+  actualSales: number;
+  salesThroughput: number;
+};
+
+function getCommerceStatus({
+  productionEfficiency,
+  actualSales,
+  salesThroughput,
+}: CommerceStatusInput): string {
+  if (actualSales <= 0) {
+    return "Waiting for Materials";
+  }
+
+  if (productionEfficiency < 1) {
+    return "Reduced by Energy Shortage";
+  }
+
+  if (actualSales < salesThroughput - 0.01) {
+    return "Limited by Supply";
+  }
+
+  return "Selling at Capacity";
 }
 
 type OutpostStateBadgeProps = {

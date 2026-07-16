@@ -39,6 +39,7 @@ import { getSupportBuildingBuildOptions } from "./game/systems/supportBuildingSy
 import { TutorialPanel } from "./components/TutorialPanel";
 import { getCurrentTutorialStep, getTutorialProgress } from "./game/systems/tutorialSystem";
 import { KOFI_URL } from "./game/config/externalLinks";
+import { KofiOverlay } from "./components/KofiOverlay";
 
 const GAME_VERSION_LABEL = `v${packageJson.version}`;
 
@@ -50,6 +51,7 @@ function App() {
       <GameTicker />
       <GameAutosave />
       <GameScreen />
+      <KofiOverlay />
     </GameProvider>
   );
 }

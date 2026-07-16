@@ -47,3 +47,32 @@
     "Segoe UI", sans-serif;
 }
 
+/* Compact Ko-fi launcher above the Session / Dev bar */
+.floatingchat-container-wrap,
+.floatingchat-container-wrap-mobi {
+  left: unset !important;
+  right: 10rem !important;
+  bottom: 5.5rem !important;
+
+  width: auto !important;
+
+  transform: scale(0.78);
+  transform-origin: bottom right;
+}
+
+/* Open donation panel on the right as well */
+.floating-chat-kofi-popup-iframe,
+.floating-chat-kofi-popup-iframe-mobi {
+  left: unset !important;
+  right: 1rem !important;
+  bottom: 9rem !important;
+
+  width: min(360px, calc(100vw - 2rem)) !important;
+  height: min(560px, calc(100vh - 11rem)) !important;
+}
+
+/* Keep the mobile close button aligned with the popup */
+.floating-chat-kofi-popup-iframe-closer-mobi {
+  left: unset !important;
+  right: 1rem !important;
+}

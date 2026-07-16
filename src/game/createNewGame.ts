@@ -1,7 +1,8 @@
-import type { GameState, InfluenceState, ResearchState } from "./types";
+import type { GameState, InfluenceState, ResearchState, TutorialState } from "./types";
 import { generateHexMap } from "./map/generateHexMap";
 import { createInitialResearchState } from "./systems/researchSystem";
 import { BASE_EXPEDITION_CREDITS } from "./config/economy";
+import { createInitialTutorialState } from "./systems/tutorialSystem";
 
 export function createNewGame(
     seed = 12345,
@@ -10,6 +11,7 @@ export function createNewGame(
         totalResets: 0,
     },
     research: ResearchState = createInitialResearchState(),
+    tutorial: TutorialState = createInitialTutorialState(),
 ): GameState {
     const map = generateHexMap({
         seed,
@@ -17,7 +19,7 @@ export function createNewGame(
     });
 
     return {
-        version: 2,
+        version: 3,
         seed,
 
         resources: {
@@ -34,6 +36,8 @@ export function createNewGame(
         research,
 
         influence,
+
+        tutorial,
 
         map,
 

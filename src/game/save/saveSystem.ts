@@ -1,6 +1,8 @@
 import type { GameState } from "../types";
 import { getSurveyRequirementForSystem } from "../systems/explorationSystem";
 import { ensureResearchProjectStates } from "../systems/researchSystem";
+import { ensureTutorialState, synchronizeTutorialProgress } from "../systems/tutorialSystem";
+import { isTutorialStepId } from "../config/tutorial";
 
 const SAVE_KEY = "idle-space-exploration.save.v1";
 const CORRUPTED_SAVE_KEY_PREFIX = "idle-space-exploration.corrupted-save";
@@ -48,13 +50,18 @@ export function loadGame(): LoadGameResult {
       };
     }
 
-    const normalizedGameState: GameState = {
-      ...migratedSave,
+    const normalizedGameState =
+      synchronizeTutorialProgress({
+        ...migratedSave,
 
-      research: ensureResearchProjectStates(
-        migratedSave.research,
-      ),
-    };
+        research: ensureResearchProjectStates(
+          migratedSave.research,
+        ),
+
+        tutorial: ensureTutorialState(
+          migratedSave.tutorial,
+        ),
+      });
 
     return {
       status: "loaded",
@@ -89,7 +96,9 @@ function migrateGameState(value: unknown): unknown {
     return value;
   }
 
-  if (value.version !== 1 && value.version !== 2) {
+  if (value.version !== 1 &&
+    value.version !== 2 &&
+    value.version !== 3) {
     return value;
   }
 
@@ -103,6 +112,7 @@ function migrateGameState(value: unknown): unknown {
   const resources = isRecord(value.resources)
     ? {
       ...value.resources,
+
       materials:
         typeof value.resources.materials === "number"
           ? value.resources.materials
@@ -112,10 +122,12 @@ function migrateGameState(value: unknown): unknown {
 
   const migratedValue = {
     ...value,
-    version: 2,
+
+    version: 3,
     resources,
     influence,
-  }
+    tutorial: ensureTutorialState(value.tutorial),
+  };
 
   if (!isValidGameStateShapeForMigration(migratedValue)) {
     return migratedValue;
@@ -167,7 +179,7 @@ function isValidGameState(value: unknown): value is GameState {
     return false;
   }
 
-  if (value.version !== 2) {
+  if (value.version !== 3) {
     return false;
   }
 
@@ -212,6 +224,32 @@ function isValidGameState(value: unknown): value is GameState {
   }
 
   if (typeof value.influence.totalResets !== "number") {
+    return false;
+  }
+
+  if (!isRecord(value.tutorial)) {
+    return false;
+  }
+
+  if (
+    value.tutorial.status !== "active" &&
+    value.tutorial.status !== "completed" &&
+    value.tutorial.status !== "skipped"
+  ) {
+    return false;
+  }
+
+  if (
+    value.tutorial.status === "active" &&
+    !isTutorialStepId(value.tutorial.currentStepId)
+  ) {
+    return false;
+  }
+
+  if (
+    value.tutorial.status !== "active" &&
+    value.tutorial.currentStepId !== null
+  ) {
     return false;
   }
 

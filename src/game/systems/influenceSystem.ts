@@ -79,7 +79,7 @@ export function performInfluenceReset(state: GameState): GameState {
 
     const nextSeed = createNextRunSeed(state);
 
-    return createNewGame(nextSeed, nextInfluence, state.research);
+    return createNewGame(nextSeed, nextInfluence, state.research, state.tutorial);
 }
 
 export function getInfluenceOutputMultiplier(state: GameState): number {

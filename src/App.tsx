@@ -36,6 +36,8 @@ import { BuildPanel } from "./components/BuildPanel";
 import packageJson from "../package.json";
 import type { SupportBuildingId } from "./game/config/supportBuildings";
 import { getSupportBuildingBuildOptions } from "./game/systems/supportBuildingSystem";
+import { TutorialPanel } from "./components/TutorialPanel";
+import { getCurrentTutorialStep, getTutorialProgress } from "./game/systems/tutorialSystem";
 
 const GAME_VERSION_LABEL = `v${packageJson.version}`;
 
@@ -61,8 +63,11 @@ function GameScreen() {
   const runStatsSummary = getRunStatsSummary(gameState);
   const starMapCameraRef = useRef<StarMapCameraHandle | null>(null);
 
-  const [activeWorkspace, setActiveWorkspace] =
-    useState<MissionWorkspaceId | null>(null);
+  const [activeWorkspace, setActiveWorkspace] = useState<MissionWorkspaceId | null>(null);
+
+  const currentTutorialStep = getCurrentTutorialStep(gameState);
+
+  const tutorialProgress = getTutorialProgress(gameState);
 
   const isWorkspaceOpen = activeWorkspace !== null;
 
@@ -252,6 +257,25 @@ function GameScreen() {
     });
   }, [dispatch, influenceResetPreview]);
 
+  const handleSkipTutorial = useCallback(() => {
+    const confirmed = window.confirm(
+      [
+        "Skip GRaD Orientation?",
+        "",
+        "The tutorial objectives will be hidden.",
+        "This does not alter game progress or provide any rewards.",
+      ].join("\n"),
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    dispatch({
+      type: "skipTutorial",
+    });
+  }, [dispatch]);
+
   const handleUpgradePrimaryOutpost = useCallback(() => {
     if (selectedSystem === null) {
       return;
@@ -384,6 +408,14 @@ function GameScreen() {
         bg-ise-void/85 p-3.5
         "
       >
+        {currentTutorialStep !== null && (
+          <TutorialPanel
+            step={currentTutorialStep}
+            currentStepNumber={tutorialProgress.currentStepNumber}
+            totalStepCount={tutorialProgress.totalStepCount}
+            onSkip={handleSkipTutorial}
+          />
+        )}
         <SelectedSystemPanel
           gameState={gameState}
           rates={rates}

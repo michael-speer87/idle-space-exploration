@@ -233,6 +233,56 @@ export function DevAdminPanel() {
           </p>
         )}
       </Section>
+
+      <Section title="Tutorial">
+        <div className="grid gap-2">
+          <div
+            className="
+        rounded-control border border-ise-border
+        bg-ise-background/60 p-3
+      "
+          >
+            <span
+              className="
+          block text-[0.65rem] font-semibold uppercase
+          tracking-[0.08em] text-ise-text-subtle
+        "
+            >
+              Current Status
+            </span>
+
+            <strong
+              className="
+          mt-1 block text-sm font-semibold
+          capitalize text-ise-text
+        "
+            >
+              {gameState.tutorial.status}
+            </strong>
+
+            {gameState.tutorial.currentStepId !== null && (
+              <span
+                className="
+            mt-1 block text-xs
+            text-ise-text-muted
+          "
+              >
+                {gameState.tutorial.currentStepId}
+              </span>
+            )}
+          </div>
+
+          <DevActionButton
+            onClick={() =>
+              dispatch({
+                type: "devResetTutorial",
+              })
+            }
+          >
+            Reset Tutorial Progress
+          </DevActionButton>
+        </div>
+      </Section>
     </div>
   );
 }

@@ -15,6 +15,7 @@ import {
     devDetectAllSystems,
     devSurveySystem,
 } from "./systems/devAdminSystem";
+import { advanceTutorialProgress, resetTutorial, skipTutorial } from "./systems/tutorialSystem";
 
 export type GameAction =
     | {
@@ -55,11 +56,21 @@ export type GameAction =
         systemId: StarSystemId;
     }
     | {
+        type: "decommissionPrimaryOutpost";
+        systemId: StarSystemId;
+    }
+    | {
+        type: "skipTutorial";
+    }
+    | {
+        type: "devResetTutorial";
+    }
+    | {
         type: "devAddResources";
         credits?: number;
         science?: number;
     }
-    |{
+    | {
         type: "devSurveySystem";
         systemId: StarSystemId;
     }
@@ -71,13 +82,19 @@ export type GameAction =
         systemId: StarSystemId;
         outpostId: PrimaryOutpostId;
     }
-    | {
-        type: "decommissionPrimaryOutpost";
-        systemId: StarSystemId;
-    }
-    
+
 
 export function gameReducer(
+    state: GameState,
+    action: GameAction,
+): GameState {
+    const nextState = reduceGameAction(state, action);
+
+    return advanceTutorialProgress(nextState);
+}
+
+
+function reduceGameAction(
     state: GameState,
     action: GameAction,
 ): GameState {
@@ -135,6 +152,18 @@ export function gameReducer(
             return decommissionPrimaryOutpost(state, action.systemId);
         }
 
+        case "skipTutorial": {
+            return skipTutorial(state);
+        }
+
+        case "devResetTutorial": {
+            if (!import.meta.env.DEV) {
+                return state;
+            }
+
+            return resetTutorial(state);
+        }
+
         case "devAddResources": {
             if (!import.meta.env.DEV) {
                 return state;
@@ -163,7 +192,7 @@ export function gameReducer(
         }
 
         case "devClaimWithOutpost": {
-            if (!import.meta.env.DEV) { 
+            if (!import.meta.env.DEV) {
                 return state;
             }
 

@@ -1,7 +1,7 @@
 import type { GameState, StarSystemId } from "./types";
 import { beginSurvey } from "./systems/explorationSystem";
 import type { PrimaryOutpostId } from "./config/outposts";
-import { claimWithOutpost, upgradePrimaryOutpost } from "./systems/outpostSystem";
+import { claimWithOutpost, decommissionPrimaryOutpost, upgradePrimaryOutpost } from "./systems/outpostSystem";
 import { advanceGameTime } from "./systems/timeSystem";
 import type { ResearchProjectId } from "./config/research";
 import { startResearch } from "./systems/researchSystem";
@@ -71,6 +71,10 @@ export type GameAction =
         systemId: StarSystemId;
         outpostId: PrimaryOutpostId;
     }
+    | {
+        type: "decommissionPrimaryOutpost";
+        systemId: StarSystemId;
+    }
     
 
 export function gameReducer(
@@ -125,6 +129,10 @@ export function gameReducer(
 
         case "upgradePrimaryOutpost": {
             return upgradePrimaryOutpost(state, action.systemId);
+        }
+
+        case "decommissionPrimaryOutpost": {
+            return decommissionPrimaryOutpost(state, action.systemId);
         }
 
         case "devAddResources": {

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useMemo, useCallback, useEffect, useRef, useState } from "react";
 import { GameProvider } from "./game/GameContext";
 import { useGameDispatch, useGameState } from "./game/gameHooks";
 import { SelectedSystemPanel } from "./components/SelectedSystemPanel";
@@ -14,9 +14,10 @@ import { ResourceBar } from "./components/ResourceBar";
 import { calculateRates } from "./game/systems/rateSystem";
 import {
   getOutpostClaimOptions,
+  getPrimaryOutpostDecommissionPreview,
   getPrimaryOutpostUpgradeOption,
 } from "./game/systems/outpostSystem";
-import type { PrimaryOutpostId } from "./game/config/outposts";
+import { PRIMARY_OUTPOSTS, type PrimaryOutpostId } from "./game/config/outposts";
 import { ResearchPanel } from "./components/ResearchPanel";
 import type { ResearchProjectId } from "./game/config/research";
 import { getStartableResearchProjectIds } from "./game/systems/researchSystem";
@@ -88,6 +89,23 @@ function GameScreen() {
         nextLevel: 0,
         blockedReason: "No system selected",
       };
+
+  const primaryOutpostDecommissionPreview = useMemo(
+    () =>
+      selectedSystem !== null
+        ? getPrimaryOutpostDecommissionPreview(
+          gameState,
+          selectedSystem.id,
+        )
+        : {
+          canDecommission: false,
+          supportBuildingsRemoved: 0,
+          materialCapacityLost: 0,
+          materialOverflowLost: 0,
+          blockedReason: "No system selected.",
+        },
+    [gameState, selectedSystem],
+  );
 
   const rates = calculateRates(gameState);
 
@@ -254,6 +272,87 @@ function GameScreen() {
     [],
   )
 
+  const handleDecommissionPrimaryOutpost =
+    useCallback(() => {
+      if (
+        selectedSystem === null ||
+        selectedSystem.primaryOutpostId === null ||
+        !primaryOutpostDecommissionPreview.canDecommission
+      ) {
+        return;
+      }
+
+      const outpost =
+        PRIMARY_OUTPOSTS[
+        selectedSystem.primaryOutpostId
+        ];
+
+      const confirmationLines = [
+        `Decommission ${outpost.name}?`,
+        "",
+        `The Level ${selectedSystem.primaryOutpostLevel} Primary Outpost will be removed.`,
+      ];
+
+      if (
+        primaryOutpostDecommissionPreview
+          .supportBuildingsRemoved > 0
+      ) {
+        confirmationLines.push(
+          `${primaryOutpostDecommissionPreview.supportBuildingsRemoved} Support Building${primaryOutpostDecommissionPreview
+            .supportBuildingsRemoved === 1
+            ? ""
+            : "s"
+          } will also be removed.`,
+        );
+      }
+
+      if (
+        primaryOutpostDecommissionPreview
+          .materialCapacityLost > 0
+      ) {
+        confirmationLines.push(
+          `Material capacity will fall by ${primaryOutpostDecommissionPreview.materialCapacityLost.toFixed(
+            0,
+          )}.`,
+        );
+      }
+
+      if (
+        primaryOutpostDecommissionPreview
+          .materialOverflowLost > 0
+      ) {
+        confirmationLines.push(
+          "",
+          `WARNING: ${primaryOutpostDecommissionPreview.materialOverflowLost.toFixed(
+            1,
+          )} stored Materials will be discarded.`,
+        );
+      }
+
+      confirmationLines.push(
+        "",
+        "No Credits will be refunded.",
+        "The system will remain claimed and can receive another Primary Outpost.",
+      );
+
+      const confirmed = window.confirm(
+        confirmationLines.join("\n"),
+      );
+
+      if (!confirmed) {
+        return;
+      }
+
+      dispatch({
+        type: "decommissionPrimaryOutpost",
+        systemId: selectedSystem.id,
+      });
+    }, [
+      dispatch,
+      primaryOutpostDecommissionPreview,
+      selectedSystem,
+    ]);
+
   const handleShowBuildWorkspace = useCallback(() => {
     setActiveWorkspace("build");
   }, []);
@@ -413,11 +512,25 @@ function GameScreen() {
               <BuildPanel
                 system={selectedSystem}
                 outpostClaimOptions={outpostClaimOptions}
-                primaryOutpostUpgradeOption={primaryOutpostUpgradeOption}
-                supportBuildingBuildOptions={supportBuildingBuildOptions}
+                primaryOutpostUpgradeOption={
+                  primaryOutpostUpgradeOption
+                }
+                primaryOutpostDecommissionPreview={
+                  primaryOutpostDecommissionPreview
+                }
+                supportBuildingBuildOptions={
+                  supportBuildingBuildOptions
+                }
                 onClaimOutpost={handleClaimOutpost}
-                onUpgradePrimaryOutpost={handleUpgradePrimaryOutpost}
-                onBuildSupportBuilding={handleBuildSupportBuilding}
+                onUpgradePrimaryOutpost={
+                  handleUpgradePrimaryOutpost
+                }
+                onDecommissionPrimaryOutpost={
+                  handleDecommissionPrimaryOutpost
+                }
+                onBuildSupportBuilding={
+                  handleBuildSupportBuilding
+                }
               />
             </MissionWorkspace>
           </div>

@@ -1,9 +1,12 @@
 import type { GameState, StarSystemId } from "../types";
 import {
+  getExtractionStorageCapacity,
   PRIMARY_OUTPOSTS,
   type PrimaryOutpostId,
 } from "../config/outposts";
 import { calculateRates } from "./rateSystem";
+
+
 
 export const CLAIMABLE_PRIMARY_OUTPOST_IDS: readonly PrimaryOutpostId[] = [
   "survey_array",
@@ -25,6 +28,14 @@ export type PrimaryOutpostUpgradeOption = {
   creditCost: number;
   currentLevel: number;
   nextLevel: number;
+  blockedReason: string | null;
+};
+
+export type PrimaryOutpostDecommissionPreview = {
+  canDecommission: boolean;
+  supportBuildingsRemoved: number;
+  materialCapacityLost: number;
+  materialOverflowLost: number;
   blockedReason: string | null;
 };
 
@@ -149,12 +160,8 @@ function getOutpostClaimBlockedReason(
     return "Survey this system first.";
   }
 
-  if (system.claimState !== "unclaimed") {
-    return "System is already claimed.";
-  }
-
   if (system.primaryOutpostId !== null) {
-    return "System already has a primary outpost.";
+    return "System already has a Primary Outpost.";
   }
 
   const rates = calculateRates(state);
@@ -248,6 +255,135 @@ export function upgradePrimaryOutpost(
         },
       },
     },
+  };
+}
+
+export function getPrimaryOutpostDecommissionPreview(
+  state: GameState,
+  systemId: StarSystemId,
+): PrimaryOutpostDecommissionPreview {
+  const system = state.map.systemsById[systemId];
+
+  if (!system) {
+    return createBlockedDecommissionPreview(
+      "System does not exist.",
+    );
+  }
+
+  if (system.isHome || system.hasGradCommand) {
+    return createBlockedDecommissionPreview(
+      "GRaD Command cannot be decommissioned.",
+    );
+  }
+
+  if (
+    system.claimState !== "claimed" ||
+    system.primaryOutpostId === null
+  ) {
+    return createBlockedDecommissionPreview(
+      "This system has no Primary Outpost.",
+    );
+  }
+
+  const materialCapacityLost =
+    system.primaryOutpostId === "extraction_rig"
+      ? getExtractionStorageCapacity(
+          system.primaryOutpostLevel,
+        )
+      : 0;
+
+  const currentMaterialCapacity =
+    calculateRates(state).materialCapacity;
+
+  const nextMaterialCapacity = Math.max(
+    0,
+    currentMaterialCapacity - materialCapacityLost,
+  );
+
+  const materialOverflowLost = Math.max(
+    0,
+    state.resources.materials -
+      nextMaterialCapacity,
+  );
+
+  return {
+    canDecommission: true,
+    supportBuildingsRemoved:
+      system.supportBuildingIds.length,
+    materialCapacityLost,
+    materialOverflowLost,
+    blockedReason: null,
+  };
+}
+
+export function decommissionPrimaryOutpost(
+  state: GameState,
+  systemId: StarSystemId,
+): GameState {
+  const preview =
+    getPrimaryOutpostDecommissionPreview(
+      state,
+      systemId,
+    );
+
+  if (!preview.canDecommission) {
+    return state;
+  }
+
+  const system = state.map.systemsById[systemId];
+
+  const currentMaterialCapacity =
+    calculateRates(state).materialCapacity;
+
+  const nextMaterialCapacity = Math.max(
+    0,
+    currentMaterialCapacity -
+      preview.materialCapacityLost,
+  );
+
+  return {
+    ...state,
+
+    resources: {
+      ...state.resources,
+
+      materials: Math.min(
+        state.resources.materials,
+        nextMaterialCapacity,
+      ),
+    },
+
+    map: {
+      ...state.map,
+
+      systemsById: {
+        ...state.map.systemsById,
+
+        [systemId]: {
+          ...system,
+
+          /*
+           * The system remains claimed, but its local
+           * infrastructure is completely removed.
+           */
+          primaryOutpostId: null,
+          primaryOutpostLevel: 0,
+          supportBuildingIds: [],
+        },
+      },
+    },
+  };
+}
+
+function createBlockedDecommissionPreview(
+  blockedReason: string,
+): PrimaryOutpostDecommissionPreview {
+  return {
+    canDecommission: false,
+    supportBuildingsRemoved: 0,
+    materialCapacityLost: 0,
+    materialOverflowLost: 0,
+    blockedReason,
   };
 }
 

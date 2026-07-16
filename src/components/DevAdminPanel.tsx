@@ -143,6 +143,25 @@ export function DevAdminPanel() {
           label="Material Rate"
           value={`+${rates.materialProductionPerSecond.toFixed(1)}/sec`}
         />
+        <DevResourceMetric
+          label="Material Production"
+          value={`+${rates.materialProductionPerSecond.toFixed(1)}/sec`}
+        />
+
+        <DevResourceMetric
+          label="Material Sales"
+          value={`-${rates.materialSalesPerSecond.toFixed(1)}/sec`}
+        />
+
+        <DevResourceMetric
+          label="Sales Throughput"
+          value={`${rates.materialSalesThroughputPerSecond.toFixed(1)}/sec`}
+        />
+
+        <DevResourceMetric
+          label="Trade Income"
+          value={`+${rates.creditsPerSecond.toFixed(1)} Credits/sec`}
+        />
       </div>
 
       <Section title="Resources">

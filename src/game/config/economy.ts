@@ -1,0 +1,3 @@
+export const BASE_EXPEDITION_CREDITS = 50;
+export const BASE_CREDITS_PER_MATERIAL = 1;
+export const GRAD_COMMAND_STARTER_ENERGY = 10;

@@ -36,7 +36,7 @@ export const SUPPORT_BUILDINGS: Record<SupportBuildingId, SupportBuildingDefinit
     unlockResearchId: "regional_trade_networks",
     creditCost: 75,
     outputBonus: 0.15,
-    description: "Increases this system's Commerce Hub Credit output by 15%.",
+    description: "Increases this system's Material sales throughput by 15%.",
   },
 
   research_annex: {

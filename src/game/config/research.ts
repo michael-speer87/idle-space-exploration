@@ -62,7 +62,7 @@ export const RESEARCH_PROJECTS: Record<
     name: "Commerce Optimization",
     scienceCost: 1_500,
     prerequisiteIds: [],
-    description: "Increases Commerce Hub Credits/sec output by 25%.",
+    description: "Increases Commerce Hub Material sales throughput by 25%.",
     effects: [
       {
         type: "primary_outpost_output_bonus",
@@ -107,7 +107,7 @@ export const RESEARCH_PROJECTS: Record<
     name: "Extraction Handling",
     scienceCost: 2_000,
     prerequisiteIds: [],
-    description: "Increases Extraction Rig Credits/sec output by 25%.",
+    description: "Increases Extraction Rig Material production by 25%.",
     effects: [
       {
         type: "primary_outpost_output_bonus",
@@ -188,7 +188,7 @@ export const RESEARCH_PROJECTS: Record<
     scienceCost: 7_500,
     prerequisiteIds: ["commerce_optimization"],
     description:
-      "Increases Commerce Hub Credit output by an additional 20%.",
+      "Increases Commerce Hub Material sales throughput by an additional 20%.",
     effects: [
       {
         type: "primary_outpost_output_bonus",
@@ -236,7 +236,7 @@ export const RESEARCH_PROJECTS: Record<
     scienceCost: 8_000,
     prerequisiteIds: ["extraction_handling"],
     description:
-      "Increases Extraction Rig Credit output by an additional 20%.",
+      "Increases Extraction Rig Material production by an additional 20%.",
     effects: [
       {
         type: "primary_outpost_output_bonus",

@@ -55,7 +55,7 @@ export const PRIMARY_OUTPOSTS: Record<
         upgradeCreditCostGrowthRate: 1.35,
         baseEnergyUse: 2,
         usesEnergy: true,
-        description: "Produces Credits/sec.",
+        description: "Sells Materials automatically to generate Credits.",
     },
 
     science_station: {

@@ -13,11 +13,6 @@ export const CLAIMABLE_PRIMARY_OUTPOST_IDS: readonly PrimaryOutpostId[] = [
   "extraction_rig",
 ];
 
-const STARTER_FREE_OUTPOST_IDS: readonly PrimaryOutpostId[] = [
-  "survey_array",
-  "commerce_hub",
-];
-
 export type OutpostClaimOption = {
   outpostId: PrimaryOutpostId;
   creditCost: number;
@@ -121,11 +116,6 @@ export function getOutpostClaimCreditCost(
   outpostId: PrimaryOutpostId,
 ): number {
   const ownedCount = getClaimedPrimaryOutpostCount(state, outpostId);
-  const isStarterFreeOutpost = STARTER_FREE_OUTPOST_IDS.includes(outpostId);
-
-  if (isStarterFreeOutpost && ownedCount === 0) {
-    return 0;
-  }
 
   const outpost = PRIMARY_OUTPOSTS[outpostId];
 

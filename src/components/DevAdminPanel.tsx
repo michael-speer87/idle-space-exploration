@@ -6,7 +6,7 @@ import {
 import {
   useGameDispatch,
   useGameState,
-} from "../game/GameContext";
+} from "../game/gameHooks";
 import { Section } from "./ui/Section";
 
 const DEV_CLAIM_OUTPOST_IDS: readonly PrimaryOutpostId[] = [

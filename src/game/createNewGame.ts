@@ -16,12 +16,13 @@ export function createNewGame(
     });
 
     return {
-        version: 1,
+        version: 2,
         seed,
 
         resources: {
             credits: 0,
             science: 0,
+            materials: 0,
         },
 
         exploration: {

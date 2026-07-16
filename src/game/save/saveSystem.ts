@@ -89,7 +89,7 @@ function migrateGameState(value: unknown): unknown {
     return value;
   }
 
-  if (value.version !== 1) {
+  if (value.version !== 1 && value.version !== 2) {
     return value;
   }
 
@@ -100,10 +100,22 @@ function migrateGameState(value: unknown): unknown {
       totalResets: 0,
     };
 
+  const resources = isRecord(value.resources)
+    ? {
+      ...value.resources,
+      materials:
+        typeof value.resources.materials === "number"
+          ? value.resources.materials
+          : 0,
+    }
+    : value.resources;
+
   const migratedValue = {
     ...value,
+    version: 2,
+    resources,
     influence,
-  };
+  }
 
   if (!isValidGameStateShapeForMigration(migratedValue)) {
     return migratedValue;
@@ -155,7 +167,7 @@ function isValidGameState(value: unknown): value is GameState {
     return false;
   }
 
-  if (value.version !== 1) {
+  if (value.version !== 2) {
     return false;
   }
 
@@ -172,6 +184,10 @@ function isValidGameState(value: unknown): value is GameState {
   }
 
   if (typeof value.resources.science !== "number") {
+    return false;
+  }
+
+  if (typeof value.resources.materials !== "number") {
     return false;
   }
 

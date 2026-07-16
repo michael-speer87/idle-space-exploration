@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { GameProvider, useGameDispatch, useGameState } from "./game/GameContext";
+import { GameProvider } from "./game/GameContext";
+import { useGameDispatch, useGameState } from "./game/gameHooks";
 import { SelectedSystemPanel } from "./components/SelectedSystemPanel";
 import {
   StarMapCanvas,

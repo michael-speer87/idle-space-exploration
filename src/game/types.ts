@@ -2,7 +2,7 @@ import type { PrimaryOutpostId } from "./config/outposts";
 import type { ResearchProjectId } from "./config/research";
 import type { SupportBuildingId } from "./config/supportBuildings";
 
-export type GameVersion = 1;
+export type GameVersion = 2;
 
 export type StarSystemId = string;
 
@@ -73,6 +73,7 @@ export type StarMapState = {
 export type ResourceState = {
   credits: number;
   science: number;
+  materials: number;
 };
 
 export type ResearchState = {

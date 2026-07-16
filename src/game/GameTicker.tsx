@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { useGameDispatch, useGameState } from "./GameContext";
+import { useGameDispatch, useGameState } from "./gameHooks";
 import { calculateRates } from "./systems/rateSystem";
 
 const TICK_INTERVAL_MS = 250;

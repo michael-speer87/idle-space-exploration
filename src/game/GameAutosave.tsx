@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { useGameState } from "./GameContext";
+import { useGameState } from "./gameHooks";
 import { saveGame } from "./save/saveSystem";
 
 const AUTOSAVE_INTERVAL_MS = 30_000;

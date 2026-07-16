@@ -8,15 +8,19 @@ import {
   useGameState,
 } from "../game/gameHooks";
 import { Section } from "./ui/Section";
+import { calculateRates } from "../game/systems/rateSystem";
 
 const DEV_CLAIM_OUTPOST_IDS: readonly PrimaryOutpostId[] = [
   "survey_array",
   "commerce_hub",
+  "extraction_rig",
 ];
 
 export function DevAdminPanel() {
   const gameState = useGameState();
   const dispatch = useGameDispatch();
+
+  const rates = calculateRates(gameState);
 
   const selectedSystem = gameState.selectedSystemId
     ? gameState.map.systemsById[gameState.selectedSystemId]
@@ -122,6 +126,24 @@ export function DevAdminPanel() {
           </strong>
         </div>
       </Section>
+
+      <div
+        className="
+    mb-3 grid grid-cols-2 gap-2
+    rounded-control border border-ise-border
+    bg-ise-background/60 p-2
+  "
+      >
+        <DevResourceMetric
+          label="Materials"
+          value={`${gameState.resources.materials.toFixed(1)} / ${rates.materialCapacity.toFixed(1)}`}
+        />
+
+        <DevResourceMetric
+          label="Material Rate"
+          value={`+${rates.materialProductionPerSecond.toFixed(1)}/sec`}
+        />
+      </div>
 
       <Section title="Resources">
         <div className="grid grid-cols-2 gap-2">
@@ -231,5 +253,37 @@ function DevActionButton({
     >
       {children}
     </button>
+  );
+}
+
+type DevResourceMetricProps = {
+  label: string;
+  value: string;
+};
+
+function DevResourceMetric({
+  label,
+  value,
+}: DevResourceMetricProps) {
+  return (
+    <div className="rounded-control px-2 py-1.5">
+      <span
+        className="
+          block text-[0.6rem] font-semibold uppercase
+          tracking-[0.08em] text-ise-text-subtle
+        "
+      >
+        {label}
+      </span>
+
+      <strong
+        className="
+          mt-0.5 block text-xs font-semibold
+          tabular-nums text-ise-text
+        "
+      >
+        {value}
+      </strong>
+    </div>
   );
 }

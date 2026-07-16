@@ -16,7 +16,9 @@ export function GameTicker() {
     const rates = calculateRates(gameState);
 
     const hasActiveProduction =
-        rates.creditsPerSecond > 0 || rates.sciencePerSecond > 0;
+        rates.creditsPerSecond > 0 || 
+        rates.sciencePerSecond > 0 ||
+        rates.materialProductionPerSecond > 0;
     
     const shouldTick = hasActiveSurvey || hasActiveProduction || hasActiveResearch;
 

@@ -1,4 +1,5 @@
 import {
+  getExtractionStorageCapacity,
   getOutpostLevelEnergyUseMultiplier,
   getOutpostLevelOutputMultiplier,
   PRIMARY_OUTPOSTS,
@@ -12,6 +13,11 @@ export type CalculatedRates = {
   epPerSecond: number;
   creditsPerSecond: number;
   sciencePerSecond: number;
+
+  materialProductionPerSecond: number;
+  potentialMaterialProductionPerSecond: number;
+  materialCapacity: number;
+
   researchSpeedPerSecond: number;
   energyProduced: number;
   energyUsed: number;
@@ -41,6 +47,7 @@ export function calculateRates(state: GameState): CalculatedRates {
   let epPerSecond = 0;
   let creditsPerSecond = 0;
   let sciencePerSecond = 0;
+  let potentialMaterialProductionPerSecond = 0;
 
   for (const systemId of state.map.systemIds) {
     const system = state.map.systemsById[systemId];
@@ -86,7 +93,7 @@ export function calculateRates(state: GameState): CalculatedRates {
       }
 
       case "extraction": {
-        creditsPerSecond +=
+        potentialMaterialProductionPerSecond +=
           getExtractionOutput(state, system) *
           productionEfficiency *
           influenceOutputMultiplier;
@@ -94,6 +101,13 @@ export function calculateRates(state: GameState): CalculatedRates {
       }
     }
   }
+
+  const materialCapacity = calculateMaterialCapacity(state);
+
+  const materialProductionPerSecond =
+    state.resources.materials < materialCapacity
+      ? potentialMaterialProductionPerSecond
+      : 0;
 
   const researchSpeedPerSecond = Math.max(
     BASE_RESEARCH_SPEED_PER_SECOND,
@@ -104,12 +118,38 @@ export function calculateRates(state: GameState): CalculatedRates {
     epPerSecond,
     creditsPerSecond,
     sciencePerSecond,
+
+    materialProductionPerSecond,
+    potentialMaterialProductionPerSecond,
+    materialCapacity,
+
     researchSpeedPerSecond,
     energyProduced,
     energyUsed,
     energySurplus,
     productionEfficiency,
   };
+}
+
+function calculateMaterialCapacity(state: GameState): number {
+  let materialCapacity = 0;
+
+  for (const systemId of state.map.systemIds) {
+    const system = state.map.systemsById[systemId];
+
+    if (
+      system.claimState !== "claimed" ||
+      system.primaryOutpostId !== "extraction_rig"
+    ) {
+      continue;
+    }
+
+    materialCapacity += getExtractionStorageCapacity(
+      system.primaryOutpostLevel,
+    );
+  }
+
+  return materialCapacity;
 }
 
 function calculateEnergyProduced(state: GameState): number {

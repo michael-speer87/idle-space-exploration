@@ -27,21 +27,38 @@ export function advanceGameTime(
 }
 
 function addResourceProduction(
-    state: GameState,
-    seconds: number,
-    rates: ReturnType<typeof calculateRates>
+  state: GameState,
+  seconds: number,
+  rates: ReturnType<typeof calculateRates>,
 ): GameState {
-    if (rates.creditsPerSecond <= 0 && rates.sciencePerSecond <= 0) {
-        return state;
-    }
+  if (
+    rates.creditsPerSecond <= 0 &&
+    rates.sciencePerSecond <= 0 &&
+    rates.materialProductionPerSecond <= 0
+  ) {
+    return state;
+  }
 
-    return {
-        ...state,
+  const nextMaterials = Math.min(
+    rates.materialCapacity,
+    state.resources.materials +
+      rates.materialProductionPerSecond * seconds,
+  );
 
-        resources: {
-            ...state.resources,
-            credits: state.resources.credits + rates.creditsPerSecond * seconds,
-            science: state.resources.science + rates.sciencePerSecond * seconds,
-        },
-    };
+  return {
+    ...state,
+
+    resources: {
+      ...state.resources,
+      credits:
+        state.resources.credits +
+        rates.creditsPerSecond * seconds,
+
+      science:
+        state.resources.science +
+        rates.sciencePerSecond * seconds,
+
+      materials: nextMaterials,
+    },
+  };
 }

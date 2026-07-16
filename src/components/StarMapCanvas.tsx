@@ -19,6 +19,7 @@ import type { PrimaryOutpostId } from "../game/config/outposts";
 type StarMapCanvasProps = {
     map: StarMapState;
     selectedSystemId: StarSystemId | null;
+    materialStoragePercent: number;
     onSelectSystem: (systemId: StarSystemId) => void;
 };
 
@@ -57,6 +58,7 @@ export const StarMapCanvas = forwardRef<
     {
         map,
         selectedSystemId,
+        materialStoragePercent,
         onSelectSystem,
     },
     ref,
@@ -207,6 +209,7 @@ export const StarMapCanvas = forwardRef<
             mapLayer,
             map,
             selectedSystemId,
+            materialStoragePercent,
             onSelectSystem,
             canSelectSystem: () => !interactionStateRef.current.suppressSelection,
         });
@@ -217,7 +220,7 @@ export const StarMapCanvas = forwardRef<
             mapLayer,
         );
 
-    }, [isPixiReady, map, selectedSystemId, onSelectSystem]);
+    }, [isPixiReady, map, selectedSystemId, materialStoragePercent, onSelectSystem]);
 
     return <div ref={hostRef} className="star-map-canvas" />;
 });
@@ -627,14 +630,16 @@ type DrawStarMapOptions = {
     mapLayer: Container;
     map: StarMapState;
     selectedSystemId: StarSystemId | null;
+    materialStoragePercent: number;
     onSelectSystem: (systemId: StarSystemId) => void;
     canSelectSystem: () => boolean;
-};
+};;
 
 function drawStarMap({
     mapLayer,
     map,
     selectedSystemId,
+    materialStoragePercent,
     onSelectSystem,
     canSelectSystem,
 }: DrawStarMapOptions) {
@@ -663,7 +668,7 @@ function drawStarMap({
         })
 
         drawSystemHex(systemContainer, hexPoints, system, selectedSystemId);
-        drawSystemStar(systemContainer, system, selectedSystemId);
+        drawSystemStar(systemContainer, system, selectedSystemId, materialStoragePercent);
 
         mapLayer.addChild(systemContainer);
     }
@@ -692,9 +697,10 @@ function drawSystemHex(
 }
 
 function drawSystemStar(
-    container: Container,
-    system: StarSystem,
-    selectedSystemId: StarSystemId | null,
+  container: Container,
+  system: StarSystem,
+  selectedSystemId: StarSystemId | null,
+  materialStoragePercent: number,
 ) {
     const isSelected = system.id === selectedSystemId;
     const isUnknown = system.explorationState === "unknown";
@@ -736,7 +742,7 @@ function drawSystemStar(
     container.addChild(star);
 
     if (system.claimState === "claimed") {
-        drawClaimedOutpostMarker(container, system);
+        drawClaimedOutpostMarker(container, system, materialStoragePercent);
     }
 
     if (system.hasGradCommand) {
@@ -751,7 +757,7 @@ function drawSystemStar(
     }
 }
 
-function drawClaimedOutpostMarker(container: Container, system: StarSystem) {
+function drawClaimedOutpostMarker(container: Container, system: StarSystem, materialStoragePercent: number,) {
     if (system.primaryOutpostId === null) {
         return;
     }
@@ -846,79 +852,152 @@ function drawClaimedOutpostMarker(container: Container, system: StarSystem) {
         markerColor,
         markerY,
     );
+
+    if (system.primaryOutpostId === "extraction_rig") {
+        drawExtractionStorageGauge(
+            container,
+            materialStoragePercent,
+            markerY,
+        )
+    }
 }
 
-function drawOutpostLevelIndicator(
+function drawExtractionStorageGauge(
   container: Container,
-  system: StarSystem,
-  markerColor: number,
+  storagePercent: number,
   markerY: number,
 ): void {
-  if (system.primaryOutpostLevel <= 0) {
-    return;
-  }
-
-  const label = `L${system.primaryOutpostLevel}`;
-
-  const tagHeight = 12;
-  const tagWidth = Math.max(
-    22,
-    10 + label.length * 5,
+  const clampedPercent = Math.min(
+    100,
+    Math.max(0, storagePercent),
   );
 
-  const tagX = 9;
-  const tagY = markerY - tagHeight / 2;
+  const fillRatio = clampedPercent / 100;
 
-  const tag = new Graphics();
+  const gaugeWidth = 30;
+  const gaugeHeight = 5;
+  const gaugeX = -gaugeWidth / 2;
+  const gaugeY = markerY + 10;
 
-  tag
-    .moveTo(6, markerY)
-    .lineTo(tagX, markerY)
-    .stroke({
-      color: markerColor,
-      width: 1.5,
-      alpha: 0.9,
-    });
+  const gaugeColor =
+    clampedPercent >= 100
+      ? 0xff6b6b
+      : clampedPercent >= 80
+        ? 0xffd36e
+        : 0x30D158;
 
-  tag
+  const gauge = new Graphics();
+
+  gauge
     .roundRect(
-      tagX,
-      tagY,
-      tagWidth,
-      tagHeight,
-      3,
+      gaugeX,
+      gaugeY,
+      gaugeWidth,
+      gaugeHeight,
+      2,
     )
     .fill({
       color: 0x07111f,
       alpha: 0.94,
     })
     .stroke({
-      color: markerColor,
-      width: 1.25,
+      color: gaugeColor,
+      width: 1,
       alpha: 0.95,
     });
 
-  const levelText = new Text({
-    text: label,
+  const innerWidth =
+    (gaugeWidth - 2) * fillRatio;
 
-    style: {
-      fontFamily:
-        "Inter, ui-sans-serif, system-ui, sans-serif",
+  if (innerWidth > 0) {
+    gauge
+      .roundRect(
+        gaugeX + 1,
+        gaugeY + 1,
+        Math.max(1, innerWidth),
+        gaugeHeight - 2,
+        1,
+      )
+      .fill({
+        color: gaugeColor,
+        alpha: 0.95,
+      });
+  }
 
-      fontSize: 8,
-      fontWeight: "700",
-      fill: markerColor,
-      letterSpacing: 0.4,
-    },
-  });
+  container.addChild(gauge);
+}
 
-  levelText.anchor.set(0.5);
+function drawOutpostLevelIndicator(
+    container: Container,
+    system: StarSystem,
+    markerColor: number,
+    markerY: number,
+): void {
+    if (system.primaryOutpostLevel <= 0) {
+        return;
+    }
 
-  levelText.position.set(
-    tagX + tagWidth / 2,
-    markerY,
-  );
+    const label = `L${system.primaryOutpostLevel}`;
 
-  container.addChild(tag);
-  container.addChild(levelText);
+    const tagHeight = 12;
+    const tagWidth = Math.max(
+        22,
+        10 + label.length * 5,
+    );
+
+    const tagX = 9;
+    const tagY = markerY - tagHeight / 2;
+
+    const tag = new Graphics();
+
+    tag
+        .moveTo(6, markerY)
+        .lineTo(tagX, markerY)
+        .stroke({
+            color: markerColor,
+            width: 1.5,
+            alpha: 0.9,
+        });
+
+    tag
+        .roundRect(
+            tagX,
+            tagY,
+            tagWidth,
+            tagHeight,
+            3,
+        )
+        .fill({
+            color: 0x07111f,
+            alpha: 0.94,
+        })
+        .stroke({
+            color: markerColor,
+            width: 1.25,
+            alpha: 0.95,
+        });
+
+    const levelText = new Text({
+        text: label,
+
+        style: {
+            fontFamily:
+                "Inter, ui-sans-serif, system-ui, sans-serif",
+
+            fontSize: 8,
+            fontWeight: "700",
+            fill: markerColor,
+            letterSpacing: 0.4,
+        },
+    });
+
+    levelText.anchor.set(0.5);
+
+    levelText.position.set(
+        tagX + tagWidth / 2,
+        markerY,
+    );
+
+    container.addChild(tag);
+    container.addChild(levelText);
 }

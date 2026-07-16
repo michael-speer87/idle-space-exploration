@@ -91,6 +91,21 @@ function GameScreen() {
 
   const rates = calculateRates(gameState);
 
+  const materialStoragePercent =
+    rates.materialCapacity > 0
+      ? Math.min(
+        100,
+        Math.max(
+          0,
+          Math.round(
+            (gameState.resources.materials /
+              rates.materialCapacity) *
+            100,
+          ),
+        ),
+      )
+      : 0;
+
   const outpostClaimOptions =
     selectedSystem !== null
       ? getOutpostClaimOptions(gameState, selectedSystem.id)
@@ -340,14 +355,13 @@ function GameScreen() {
 
           transition-all duration-200 ease-out
 
-          ${
-            isWorkspaceOpen
-              ? `
+          ${isWorkspaceOpen
+            ? `
                 pointer-events-none
                 translate-x-[calc(100%+2rem)]
                 opacity-0
               `
-              : `
+            : `
                 pointer-events-auto
                 translate-x-0
                 opacity-100
@@ -513,6 +527,7 @@ function GameScreen() {
           ref={starMapCameraRef}
           map={gameState.map}
           selectedSystemId={gameState.selectedSystemId}
+          materialStoragePercent={materialStoragePercent}
           onSelectSystem={handleSelectSystem}
         />
       </section>

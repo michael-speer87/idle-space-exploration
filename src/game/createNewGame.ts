@@ -1,7 +1,7 @@
 import type { GameState, InfluenceState, ResearchState, TutorialState } from "./types";
 import { generateHexMap } from "./map/generateHexMap";
 import { createInitialResearchState } from "./systems/researchSystem";
-import { BASE_EXPEDITION_CREDITS } from "./config/economy";
+import { getExpeditionStartingCredits } from "./config/economy";
 import { createInitialTutorialState } from "./systems/tutorialSystem";
 
 export function createNewGame(
@@ -23,7 +23,7 @@ export function createNewGame(
         seed,
 
         resources: {
-            credits: BASE_EXPEDITION_CREDITS,
+            credits: getExpeditionStartingCredits(influence.lifetimeInfluence),
             science: 0,
             materials: 0,
         },

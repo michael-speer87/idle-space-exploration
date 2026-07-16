@@ -241,6 +241,7 @@ function GameScreen() {
         `You will gain +${influenceResetPreview.influenceGain} Lifetime Influence.`,
         `Current bonus: ${formatOutputBonus(influenceResetPreview.currentOutputMultiplier)}`,
         `Next bonus: ${formatOutputBonus(influenceResetPreview.nextOutputMultiplier)}`,
+        `Next expedition funding: ${influenceResetPreview.nextExpeditionFunding} Credits.`,
         "",
         "This will restart the current map, resources, claims, outposts, and exploration progress.",
       ].join("\n"),

@@ -3,24 +3,31 @@ import { INFLUENCE_OUTPUT_BONUS_PER_POINT } from "../config/influence";
 import { FIRST_INFLUENCE_RESET_CLAIMED_SYSTEM_REQUIREMENT } from "../config/progression";
 import { createNewGame } from "../createNewGame";
 import {
-    canPerformInfluenceReset,
-    getClaimedSystemCount,
+  canPerformInfluenceReset,
+  getClaimedSystemCount,
 } from "./progressionSystem"
+import { getExpeditionStartingCredits } from "../config/economy";
 
 export type InfluenceResetPreview = {
-    canReset: boolean;
-    claimedSystemCount: number;
-    claimedSystemRequirement: number;
-    influenceGain: number;
-    currentLifetimeInfluence: number;
-    nextLifetimeInfluence: number;
-    totalResets: number;
-    currentOutputMultiplier: number;
-    nextOutputMultiplier: number;
-    nextInfluenceAtClaimedSystems: number;
-    claimedSystemsTowardNextInfluence: number;
-    claimedSystemsNeededForNextInfluence: number;
-    blockedReason: string | null;
+  canReset: boolean;
+  claimedSystemCount: number;
+  claimedSystemRequirement: number;
+  influenceGain: number;
+
+  currentLifetimeInfluence: number;
+  nextLifetimeInfluence: number;
+  totalResets: number;
+
+  currentOutputMultiplier: number;
+  nextOutputMultiplier: number;
+
+  currentExpeditionFunding: number;
+  nextExpeditionFunding: number;
+
+  nextInfluenceAtClaimedSystems: number;
+  claimedSystemsTowardNextInfluence: number;
+  claimedSystemsNeededForNextInfluence: number;
+  blockedReason: string | null;
 };
 
 export function getInfluenceResetPreview(
@@ -35,6 +42,16 @@ export function getInfluenceResetPreview(
 
   const currentLifetimeInfluence = state.influence.lifetimeInfluence;
   const nextLifetimeInfluence = currentLifetimeInfluence + influenceGain;
+
+  const currentExpeditionFunding =
+    getExpeditionStartingCredits(
+      currentLifetimeInfluence,
+    );
+
+  const nextExpeditionFunding =
+    getExpeditionStartingCredits(
+      nextLifetimeInfluence,
+    );
 
   const nextInfluenceAtClaimedSystems =
     (influenceGain + 1) * claimedSystemRequirement;
@@ -53,12 +70,22 @@ export function getInfluenceResetPreview(
     currentLifetimeInfluence,
     nextLifetimeInfluence,
     totalResets: state.influence.totalResets,
-    currentOutputMultiplier: getInfluenceOutputMultiplier(state),
+
+    currentOutputMultiplier:
+      getInfluenceOutputMultiplier(state),
+
     nextOutputMultiplier:
-      1 + nextLifetimeInfluence * INFLUENCE_OUTPUT_BONUS_PER_POINT,
+      1 +
+      nextLifetimeInfluence *
+      INFLUENCE_OUTPUT_BONUS_PER_POINT,
+
+    currentExpeditionFunding,
+    nextExpeditionFunding,
+
     nextInfluenceAtClaimedSystems,
     claimedSystemsTowardNextInfluence,
     claimedSystemsNeededForNextInfluence,
+
     blockedReason: canReset
       ? null
       : `Claim ${claimedSystemRequirement} systems to authorize reset.`,
@@ -66,40 +93,40 @@ export function getInfluenceResetPreview(
 }
 
 export function performInfluenceReset(state: GameState): GameState {
-    if (!canPerformInfluenceReset(state)) {
-        return state;
-    }
+  if (!canPerformInfluenceReset(state)) {
+    return state;
+  }
 
-    const influenceGain = calculateInfluenceGain(state);
+  const influenceGain = calculateInfluenceGain(state);
 
-    const nextInfluence = {
-        lifetimeInfluence: state.influence.lifetimeInfluence + influenceGain,
-        totalResets: state.influence.totalResets + 1,
-    };
+  const nextInfluence = {
+    lifetimeInfluence: state.influence.lifetimeInfluence + influenceGain,
+    totalResets: state.influence.totalResets + 1,
+  };
 
-    const nextSeed = createNextRunSeed(state);
+  const nextSeed = createNextRunSeed(state);
 
-    return createNewGame(nextSeed, nextInfluence, state.research, state.tutorial);
+  return createNewGame(nextSeed, nextInfluence, state.research, state.tutorial);
 }
 
 export function getInfluenceOutputMultiplier(state: GameState): number {
-    return (
-        1 +
-        state.influence.lifetimeInfluence * INFLUENCE_OUTPUT_BONUS_PER_POINT
-    );
+  return (
+    1 +
+    state.influence.lifetimeInfluence * INFLUENCE_OUTPUT_BONUS_PER_POINT
+  );
 }
 
 function calculateInfluenceGain(state: GameState): number {
-    const claimedSystemCount = getClaimedSystemCount(state)
+  const claimedSystemCount = getClaimedSystemCount(state)
 
-    return Math.max(
-        1,
-        Math.floor(
-            claimedSystemCount / FIRST_INFLUENCE_RESET_CLAIMED_SYSTEM_REQUIREMENT,
-        ),
-    );
+  return Math.max(
+    1,
+    Math.floor(
+      claimedSystemCount / FIRST_INFLUENCE_RESET_CLAIMED_SYSTEM_REQUIREMENT,
+    ),
+  );
 }
 
 function createNextRunSeed(state: GameState): number {
-    return state.seed + 1009 + state.influence.totalResets
+  return state.seed + 1009 + state.influence.totalResets
 }

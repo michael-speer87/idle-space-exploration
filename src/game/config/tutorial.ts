@@ -1,11 +1,12 @@
+import { BASE_EXPEDITION_CREDITS } from "./economy";
+
 export const TUTORIAL_STEPS = [
   {
     id: "complete_first_survey",
     title: "Survey the Frontier",
     objective:
       "Select a detected neighboring system and complete the first free survey.",
-    guidance:
-      "GRaD has provided 100 Credits and enough starter Energy to establish the expedition.",
+    guidance: `GRaD has provided ${BASE_EXPEDITION_CREDITS} Credits and enough starter Energy to establish the expedition.`,
   },
   {
     id: "build_survey_array",

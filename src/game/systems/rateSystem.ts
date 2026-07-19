@@ -3,11 +3,12 @@ import {
   getOutpostLevelEnergyUseMultiplier,
   getOutpostLevelOutputMultiplier,
   PRIMARY_OUTPOSTS,
+  type PrimaryOutpostId,
 } from "../config/outposts";
 import { SUPPORT_BUILDINGS } from "../config/supportBuildings";
 import type { GameState, StarSystem } from "../types";
 import { getInfluenceOutputMultiplier } from "./influenceSystem";
-import { getResearchOutpostOutputMultiplier } from "./researchSystem";
+import { getResearchOutpostOutputBonus } from "./researchSystem";
 import { BASE_CREDITS_PER_MATERIAL, GRAD_COMMAND_STARTER_ENERGY } from "../config/economy";
 import { calculateMaterialFlow } from "./materialEconomySystem";
 
@@ -270,96 +271,86 @@ function getSupportBuildingOutputBonus(system: StarSystem): number {
   );
 }
 
-function getSupportBuildingOutputMultiplier(system: StarSystem): number {
-  return 1 + getSupportBuildingOutputBonus(system);
-}
+function getPrimaryOutpostRate(
+  state: GameState,
+  system: StarSystem,
+  outpostId: PrimaryOutpostId,
+): number {
+  if (system.primaryOutpostId !== outpostId) {
+    return 0;
+  }
 
-function getSurveyOutput(state: GameState, system: StarSystem): number {
-  const outpost = PRIMARY_OUTPOSTS.survey_array;
+  const outpost = PRIMARY_OUTPOSTS[outpostId];
+
   const levelMultiplier = getOutpostLevelOutputMultiplier(
     system.primaryOutpostLevel,
   );
 
-  let output =
+  const affinityMultiplier = AFFINITY_MULTIPLIERS[system.affinities[outpost.category]];
+
+  const primaryRateBonus =
+    getResearchOutpostOutputBonus(state, outpost.id) +
+    getSupportBuildingOutputBonus(system);
+
+  return (
     outpost.baseOutput *
     levelMultiplier *
-    AFFINITY_MULTIPLIERS[system.affinities.survey];
-
-  output *= getResearchOutpostOutputMultiplier(state, outpost.id,);
-
-  output *= getSupportBuildingOutputMultiplier(system);
-
-  return output;
+    affinityMultiplier *
+    (1 + primaryRateBonus)
+  );
 }
 
-export function getCommerceThroughput(state: GameState, system: StarSystem): number {
-  const outpost = PRIMARY_OUTPOSTS.commerce_hub;
-  const levelMultiplier = getOutpostLevelOutputMultiplier(
-    system.primaryOutpostLevel,
+function getSurveyOutput(
+  state: GameState,
+  system: StarSystem,
+): number {
+  return getPrimaryOutpostRate(
+    state,
+    system,
+    "survey_array",
   );
-
-  let output =
-    outpost.baseOutput *
-    levelMultiplier *
-    AFFINITY_MULTIPLIERS[system.affinities.commerce];
-
-  output *= getResearchOutpostOutputMultiplier(state, outpost.id,);
-
-  output *= getSupportBuildingOutputMultiplier(system);
-
-  return output;
 }
 
-function getScienceOutput(state: GameState, system: StarSystem): number {
-  const outpost = PRIMARY_OUTPOSTS.science_station;
-  const levelMultiplier = getOutpostLevelOutputMultiplier(
-    system.primaryOutpostLevel,
+export function getCommerceThroughput(
+  state: GameState,
+  system: StarSystem,
+): number {
+  return getPrimaryOutpostRate(
+    state,
+    system,
+    "commerce_hub",
   );
-
-  let output =
-    outpost.baseOutput *
-    levelMultiplier *
-    AFFINITY_MULTIPLIERS[system.affinities.science];
-
-  output *= getResearchOutpostOutputMultiplier(state, outpost.id,);
-
-  output *= getSupportBuildingOutputMultiplier(system);
-
-  return output;
 }
 
-function getPowerOutput(state: GameState, system: StarSystem): number {
-  const outpost = PRIMARY_OUTPOSTS.power_relay;
-  const levelMultiplier = getOutpostLevelOutputMultiplier(
-    system.primaryOutpostLevel,
+function getScienceOutput(
+  state: GameState,
+  system: StarSystem,
+): number {
+  return getPrimaryOutpostRate(
+    state,
+    system,
+    "science_station",
   );
-
-  let output =
-    outpost.baseOutput *
-    levelMultiplier *
-    AFFINITY_MULTIPLIERS[system.affinities.power];
-
-  output *= getResearchOutpostOutputMultiplier(state, outpost.id,);
-
-  output *= getSupportBuildingOutputMultiplier(system);
-
-  return output;
 }
 
-export function getExtractionOutput(state: GameState, system: StarSystem): number {
-  const outpost = PRIMARY_OUTPOSTS.extraction_rig;
-  const levelMultiplier = getOutpostLevelOutputMultiplier(
-    system.primaryOutpostLevel,
+function getPowerOutput(
+  state: GameState,
+  system: StarSystem,
+): number {
+  return getPrimaryOutpostRate(
+    state,
+    system,
+    "power_relay",
   );
+}
 
-  let output =
-    outpost.baseOutput *
-    levelMultiplier *
-    AFFINITY_MULTIPLIERS[system.affinities.extraction];
-
-  output *= getResearchOutpostOutputMultiplier(state, outpost.id,);
-
-  output *= getSupportBuildingOutputMultiplier(system);
-
-  return output;
+export function getExtractionOutput(
+  state: GameState,
+  system: StarSystem,
+): number {
+  return getPrimaryOutpostRate(
+    state,
+    system,
+    "extraction_rig",
+  );
 }

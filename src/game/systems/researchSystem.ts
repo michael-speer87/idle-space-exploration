@@ -221,9 +221,9 @@ export function isResearchCompleted(
     return state.research.projectsById[projectId]?.isCompleted === true;
 }
 
-export function getResearchOutpostOutputMultiplier(
+export function getResearchOutpostOutputBonus(
     state: GameState,
-    outpostId: PrimaryOutpostId
+    outpostId: PrimaryOutpostId,
 ): number {
     let totalBonus = 0;
 
@@ -244,7 +244,14 @@ export function getResearchOutpostOutputMultiplier(
         }
     }
 
-    return 1 + totalBonus;
+    return totalBonus;
+}
+
+export function getResearchOutpostOutputMultiplier(
+    state: GameState,
+    outpostId: PrimaryOutpostId,
+): number {
+    return 1 + getResearchOutpostOutputBonus(state, outpostId);
 }
 
 function completeResearchProject(

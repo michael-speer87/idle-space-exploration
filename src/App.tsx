@@ -51,7 +51,11 @@ function App() {
       <GameTicker />
       <GameAutosave />
       <GameScreen />
-      <KofiOverlay />
+
+      {!import.meta.env.DEV &&
+        <KofiOverlay />
+      }
+
     </GameProvider>
   );
 }
@@ -476,38 +480,39 @@ function GameScreen() {
               Home Cluster · Seed {gameState.seed} .{" "}
               {gameState.map.systemIds.length} systems
             </p>
-
-            <a
-              className="
-    inline-flex shrink-0 items-center gap-1.5
-    rounded-control border border-ise-border
-    bg-ise-background/70 px-2.5 py-1.5
-    text-xs font-semibold text-ise-text-muted
-    transition-colors
-    hover:border-[#ff5e5b]/60
-    hover:bg-[#ff5e5b]/10
-    hover:text-ise-text
-    focus-visible:outline-2
-    focus-visible:outline-offset-2
-    focus-visible:outline-[#ff5e5b]
-  "
-              href={KOFI_URL}
-              target="_blank"
-              rel="noreferrer"
-              aria-label="Support GRaD Command on Ko-fi"
-              title="Support GRaD Command on Ko-fi"
-            >
-              <span
-                aria-hidden="true"
-                className="text-sm leading-none"
+            {!import.meta.env.DEV &&
+              <a
+                className="
+                    inline-flex shrink-0 items-center gap-1.5
+                    rounded-control border border-ise-border
+                    bg-ise-background/70 px-2.5 py-1.5
+                    text-xs font-semibold text-ise-text-muted
+                    transition-colors
+                    hover:border-[#ff5e5b]/60
+                    hover:bg-[#ff5e5b]/10
+                    hover:text-ise-text
+                    focus-visible:outline-2
+                    focus-visible:outline-offset-2
+                    focus-visible:outline-[#ff5e5b]
+                  "
+                href={KOFI_URL}
+                target="_blank"
+                rel="noreferrer"
+                aria-label="Support GRaD Command on Ko-fi"
+                title="Support GRaD Command on Ko-fi"
               >
-                ☕
-              </span>
+                <span
+                  aria-hidden="true"
+                  className="text-sm leading-none"
+                >
+                  ☕
+                </span>
 
-              <span className="hidden sm:inline">
-                Support on Ko-fi
-              </span>
-            </a>
+                <span className="hidden sm:inline">
+                  Support on Ko-fi
+                </span>
+              </a>
+            }
           </div>
 
           <ResourceBar

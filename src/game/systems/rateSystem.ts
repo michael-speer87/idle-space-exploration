@@ -250,12 +250,12 @@ function getGradCommandEnergyProduced(state: GameState): number {
   return hasGradCommand ? GRAD_COMMAND_STARTER_ENERGY : 0;
 }
 
-function getSupportBuildingOutputMultiplier(system: StarSystem): number {
+function getSupportBuildingOutputBonus(system: StarSystem): number {
   if (system.primaryOutpostId === null) {
-    return 1;
+    return 0;
   }
 
-  const totalBonus = system.supportBuildingIds.reduce(
+  return system.supportBuildingIds.reduce(
     (bonus, supportBuildingId) => {
       const building = SUPPORT_BUILDINGS[supportBuildingId];
 
@@ -268,8 +268,10 @@ function getSupportBuildingOutputMultiplier(system: StarSystem): number {
     },
     0,
   );
+}
 
-  return 1 + totalBonus;
+function getSupportBuildingOutputMultiplier(system: StarSystem): number {
+  return 1 + getSupportBuildingOutputBonus(system);
 }
 
 function getSurveyOutput(state: GameState, system: StarSystem): number {

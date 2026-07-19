@@ -90,6 +90,24 @@ export function getCompletedNonHomeSurveyCount(state: GameState): number {
   }).length;
 }
 
+export function getActiveSurveySpeed(
+  state: GameState,
+): number {
+  const activeSurvey = state.exploration.activeSurvey;
+
+  if (activeSurvey === null) {
+    return 0;
+  }
+
+  if (activeSurvey.isFirstFreeSurvey) {
+    return FIRST_FREE_SURVEY_SPEED_PER_SECOND;
+  }
+
+  const rates = calculateRates(state);
+
+  return Math.max(0, rates.epPerSecond);
+}
+
 export function beginSurvey(
   state: GameState,
   systemId: StarSystemId,
@@ -159,10 +177,16 @@ export function advanceActiveSurvey(
   }
 
   const requiredProgress = activeSurvey.requiredProgress;
+  const surveySpeedPerSecond = getActiveSurveySpeed(state);
+
+  if (surveySpeedPerSecond <= 0) {
+    return state;
+  }
 
   const nextProgress = Math.min(
     requiredProgress,
-    activeSurvey.progress + activeSurvey.speedPerSecond * seconds,
+    activeSurvey.progress +
+    surveySpeedPerSecond * seconds,
   );
 
   if (nextProgress < requiredProgress) {

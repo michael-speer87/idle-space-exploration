@@ -11,7 +11,7 @@ import {
   getSystemRarityFromStarVisual,
   type SystemRarity,
 } from "../game/config/systemRarity";
-import { getSurveyRequirementForSystem } from "../game/systems/explorationSystem";
+import { getSurveyRequirementForSystem, getActiveSurveySpeed, } from "../game/systems/explorationSystem";
 import { formatDuration } from "../game/utils/formatDuration";
 import { Panel } from "./ui/Panel";
 import { Section } from "./ui/Section";
@@ -77,16 +77,22 @@ export function SelectedSystemPanel({
         ? 100
         : 0;
 
-  const surveySecondsRemaining =
-    activeSurvey !== null && activeSurvey.speedPerSecond > 0
-      ? (activeSurvey.requiredProgress - activeSurvey.progress) /
-      activeSurvey.speedPerSecond
-      : null;
+  const activeSurveySpeed =
+    activeSurvey !== null
+      ? getActiveSurveySpeed(gameState)
+      : 0;
 
   const surveyEtaLabel =
-    surveySecondsRemaining !== null
-      ? formatDuration(surveySecondsRemaining)
-      : "Not surveying"
+    activeSurvey === null
+      ? "Not surveying"
+      : activeSurveySpeed <= 0
+        ? "Paused: No EP"
+        : formatDuration(
+          (
+            activeSurvey.requiredProgress -
+            activeSurvey.progress
+          ) / activeSurveySpeed,
+        );
 
   const isSurveyed = system.explorationState === "surveyed";
   const isRarityKnown = system.explorationState !== "unknown";
@@ -858,7 +864,7 @@ function getExtractionStatus({
   if (
     materialStorageIsFull &&
     actualProduction <
-      potentialProduction - 0.01
+    potentialProduction - 0.01
   ) {
     return "Limited by Commerce";
   }

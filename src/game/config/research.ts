@@ -23,11 +23,16 @@ export type ResearchProjectId =
   | "basic_influence_calibration";
 
 
-export type ResearchEffect = {
-  type: "primary_outpost_output_bonus"
-  outpostId: PrimaryOutpostId;
-  amount: number;
-}
+export type ResearchEffect =
+  | {
+    type: "primary_outpost_output_bonus";
+    outpostId: PrimaryOutpostId;
+    amount: number;
+  }
+  | {
+    type: "survey_distance_reduction";
+    amount: number;
+  };
 
 export type ResearchProjectDefinition = {
   id: ResearchProjectId;
@@ -172,14 +177,14 @@ export const RESEARCH_PROJECTS: Record<
     name: "Deep Range Telemetry",
     scienceCost: 7_500,
     prerequisiteIds: ["improved_survey_arrays"],
-    description: "Increases Survey Array EP/sec output by an additional 20%.",
+    description:
+      "Reduces the distance contribution to Survey requirements by 10%.",
     effects: [
       {
-        type: "primary_outpost_output_bonus",
-        outpostId: "survey_array",
-        amount: 0.2,
-      }
-    ]
+        type: "survey_distance_reduction",
+        amount: 0.1,
+      },
+    ],
   },
 
   interstellar_market_forecasting: {

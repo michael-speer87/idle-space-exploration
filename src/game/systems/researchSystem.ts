@@ -247,6 +247,28 @@ export function getResearchOutpostOutputBonus(
     return totalBonus;
 }
 
+export function getSurveyDistanceReduction(
+  state: GameState,
+): number {
+  let totalReduction = 0;
+
+  for (const projectId of RESEARCH_PROJECT_IDS) {
+    if (!isResearchCompleted(state, projectId)) {
+      continue;
+    }
+
+    const project = RESEARCH_PROJECTS[projectId];
+
+    for (const effect of project.effects) {
+      if (effect.type === "survey_distance_reduction") {
+        totalReduction += effect.amount;
+      }
+    }
+  }
+
+  return Math.min(1, Math.max(0, totalReduction));
+}
+
 export function getResearchOutpostOutputMultiplier(
     state: GameState,
     outpostId: PrimaryOutpostId,

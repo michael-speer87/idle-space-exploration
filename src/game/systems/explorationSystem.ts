@@ -4,8 +4,9 @@ import { calculateRates } from "./rateSystem";
 import {
   BASE_SURVEY_REQUIREMENT,
   SURVEY_REQUIREMENT_GROWTH_RATE,
-  SURVEY_DISTANCE_MULTIPLIER,
+  BASE_SURVEY_DISTANCE_COEFFICIENT,
 } from "../config/exploration";
+import { getSurveyDistanceReduction } from "./researchSystem";
 
 const FIRST_FREE_SURVEY_SPEED_PER_SECOND = 2;
 
@@ -62,10 +63,22 @@ export function getSurveyRequirementForSystem(
     completedNonHomeSurveyCount,
   );
 
-  const distanceMultipler = 1 + distanceFromHome  * SURVEY_DISTANCE_MULTIPLIER
+  const telemetryReduction =
+    getSurveyDistanceReduction(state);
+
+  const effectiveDistanceCoefficient =
+    BASE_SURVEY_DISTANCE_COEFFICIENT *
+    (1 - telemetryReduction);
+
+  const distanceMultiplier =
+    1 +
+    distanceFromHome *
+    effectiveDistanceCoefficient;
 
   return Math.ceil(
-    BASE_SURVEY_REQUIREMENT * expansionMultiplier * distanceMultipler,
+    BASE_SURVEY_REQUIREMENT *
+    expansionMultiplier *
+    distanceMultiplier,
   );
 }
 

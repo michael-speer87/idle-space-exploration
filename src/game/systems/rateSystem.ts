@@ -39,8 +39,30 @@ const AFFINITY_MULTIPLIERS = {
   high: 1.25,
 } as const;
 
-const ENERGY_SHORTAGE_PRODUCTION_EFFICIENCY = 0.5;
+const MINIMUM_PRODUCTION_EFFICIENCY = 0.1;
 const BASE_RESEARCH_SPEED_PER_SECOND = 1;
+
+export function calculateProductionEfficiency(
+  energyProduced: number,
+  energyUsed: number,
+): number {
+  const safeEnergyUsed = Math.max(0, energyUsed);
+
+  if (safeEnergyUsed === 0) {
+    return 1;
+  }
+
+  const energyCoverage = Math.min(
+    1,
+    Math.max(0, energyProduced) / safeEnergyUsed,
+  );
+
+  return (
+    MINIMUM_PRODUCTION_EFFICIENCY +
+    (1 - MINIMUM_PRODUCTION_EFFICIENCY) *
+    energyCoverage
+  );
+}
 
 export function calculateRates(state: GameState): CalculatedRates {
   const energyProduced = calculateEnergyProduced(state);
@@ -49,7 +71,12 @@ export function calculateRates(state: GameState): CalculatedRates {
   const influenceOutputMultiplier = getInfluenceOutputMultiplier(state);
 
   const productionEfficiency =
-    energySurplus < 0 ? ENERGY_SHORTAGE_PRODUCTION_EFFICIENCY : 1;
+    calculateProductionEfficiency(
+      energyProduced,
+      energyUsed,
+    );
+
+  
 
   let epPerSecond = 0;
   let sciencePerSecond = 0;

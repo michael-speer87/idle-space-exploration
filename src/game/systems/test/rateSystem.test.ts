@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createNewGame } from "../../createNewGame";
-import { calculateRates } from "../rateSystem";
+import { calculateRates, calculateProductionEfficiency } from "../rateSystem";
 
 describe("calculateRates", () => {
   it("adds Research and Support Building output bonuses together", () => {
@@ -23,5 +23,47 @@ describe("calculateRates", () => {
     const rates = calculateRates(state);
 
     expect(rates.epPerSecond).toBeCloseTo(1.4);
+  });
+});
+
+describe("calculateProductionEfficiency", () => {
+  it("returns full efficiency when Energy demand is covered", () => {
+    expect(
+      calculateProductionEfficiency(100, 100),
+    ).toBe(1);
+
+    expect(
+      calculateProductionEfficiency(125, 100),
+    ).toBe(1);
+  });
+
+  it("gradually lowers efficiency as Energy coverage falls", () => {
+    expect(
+      calculateProductionEfficiency(90, 100),
+    ).toBeCloseTo(0.91);
+
+    expect(
+      calculateProductionEfficiency(50, 100),
+    ).toBeCloseTo(0.55);
+
+    expect(
+      calculateProductionEfficiency(10, 100),
+    ).toBeCloseTo(0.19);
+  });
+
+  it("never falls below ten percent efficiency", () => {
+    expect(
+      calculateProductionEfficiency(0, 100),
+    ).toBeCloseTo(0.1);
+
+    expect(
+      calculateProductionEfficiency(-50, 100),
+    ).toBeCloseTo(0.1);
+  });
+
+  it("returns full efficiency when nothing uses Energy", () => {
+    expect(
+      calculateProductionEfficiency(0, 0),
+    ).toBe(1);
   });
 });

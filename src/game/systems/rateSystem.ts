@@ -27,6 +27,7 @@ export type CalculatedRates = {
   creditsPerMaterial: number;
 
   researchSpeedPerSecond: number;
+  researchCapacityPerSecond: number;
   energyProduced: number;
   energyUsed: number;
   energySurplus: number;
@@ -80,6 +81,7 @@ export function calculateRates(state: GameState): CalculatedRates {
 
   let epPerSecond = 0;
   let sciencePerSecond = 0;
+  let researchCapacityPerSecond = 0;
 
   let potentialMaterialProductionPerSecond = 0;
   let materialSalesThroughputPerSecond = 0;
@@ -120,6 +122,14 @@ export function calculateRates(state: GameState): CalculatedRates {
           getScienceOutput(state, system) *
           productionEfficiency *
           influenceOutputMultiplier;
+        break;
+      }
+
+      case "research": {
+        researchCapacityPerSecond +=
+          getResearchCapacity(state, system) *
+          productionEfficiency;
+
         break;
       }
 
@@ -185,6 +195,7 @@ export function calculateRates(state: GameState): CalculatedRates {
       BASE_CREDITS_PER_MATERIAL,
 
     researchSpeedPerSecond,
+    researchCapacityPerSecond,
 
     energyProduced,
     energyUsed,
@@ -313,7 +324,7 @@ function getPrimaryOutpostRate(
     system.primaryOutpostLevel,
   );
 
-  const affinityMultiplier = AFFINITY_MULTIPLIERS[system.affinities[outpost.category]];
+  const affinityMultiplier = AFFINITY_MULTIPLIERS[system.affinities[outpost.affinityKey]];
 
   const primaryRateBonus =
     getResearchOutpostOutputBonus(state, outpost.id) +
@@ -379,5 +390,16 @@ export function getExtractionOutput(
     state,
     system,
     "extraction_rig",
+  );
+}
+
+export function getResearchCapacity(
+  state: GameState,
+  system: StarSystem,
+): number {
+  return getPrimaryOutpostRate(
+    state,
+    system,
+    "research_academy",
   );
 }

@@ -156,7 +156,7 @@ export function BuildPanel({
                 const outpost =
                   PRIMARY_OUTPOSTS[option.outpostId];
                 const affinity =
-                  system.affinities[outpost.category];
+                  system.affinities[outpost.affinityKey];
 
                 return (
                   <BuildOutpostCard
@@ -189,7 +189,7 @@ export function BuildPanel({
             <CurrentOutpostCard
               outpost={currentOutpost}
               affinity={
-                system.affinities[currentOutpost.category]
+                system.affinities[currentOutpost.affinityKey]
               }
               currentLevel={system.primaryOutpostLevel}
               upgradeOption={primaryOutpostUpgradeOption}

@@ -43,6 +43,7 @@ export function getRunStatsSummary(state: GameState): RunStatsSummary {
     science_station: 0,
     power_relay: 0,
     extraction_rig: 0,
+    research_academy: 0,
   };
 
   for (const systemId of state.map.systemIds) {

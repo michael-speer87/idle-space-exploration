@@ -24,6 +24,30 @@ describe("calculateRates", () => {
 
     expect(rates.epPerSecond).toBeCloseTo(1.4);
   });
+
+  it("calculates Research Academy capacity without producing Science", () => {
+    const state = createNewGame();
+
+    const academySystem =
+      state.map.systemsById["1,0"];
+
+    academySystem.claimState = "claimed";
+    academySystem.primaryOutpostId =
+      "research_academy";
+    academySystem.primaryOutpostLevel = 1;
+    academySystem.affinities.science =
+      "neutral";
+
+    const rates = calculateRates(state);
+
+    expect(
+      rates.researchCapacityPerSecond,
+    ).toBeCloseTo(1);
+
+    expect(
+      rates.sciencePerSecond,
+    ).toBe(0);
+  });
 });
 
 describe("calculateProductionEfficiency", () => {

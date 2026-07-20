@@ -43,6 +43,7 @@ const OUTPOST_MARKER_COLORS: Record<PrimaryOutpostId, number> = {
     science_station: 0x72e0ff,
     power_relay: 0x9cffb1,
     extraction_rig: 0xff9f6e,
+    research_academy: 0x72e0ff,
 };
 
 const MIN_MAP_SCALE = 0.55;

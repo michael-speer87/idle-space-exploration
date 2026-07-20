@@ -3,19 +3,29 @@ export type PrimaryOutpostId =
     | "commerce_hub"
     | "science_station"
     | "power_relay"
-    | "extraction_rig";
+    | "extraction_rig"
+    | "research_academy";
 
 export type OutpostCategory =
     | "survey"
     | "commerce"
     | "science"
     | "power"
-    | "extraction";
+    | "extraction"
+    | "research";
+
+export type OutpostAffinityKey =
+  | "survey"
+  | "commerce"
+  | "science"
+  | "power"
+  | "extraction";
 
 export type PrimaryOutpostDefinition = {
     id: PrimaryOutpostId;
     name: string;
     category: OutpostCategory;
+    affinityKey: OutpostAffinityKey;
     baseOutput: number;
     claimCreditCost: number;
     claimCreditCostGrowthRate: number;
@@ -34,6 +44,7 @@ export const PRIMARY_OUTPOSTS: Record<
         id: "survey_array",
         name: "Survey Array",
         category: "survey",
+        affinityKey: "survey",
         baseOutput: 1,
         claimCreditCost: 10,
         claimCreditCostGrowthRate: 1.18,
@@ -48,6 +59,7 @@ export const PRIMARY_OUTPOSTS: Record<
         id: "commerce_hub",
         name: "Commerce Hub",
         category: "commerce",
+        affinityKey: "commerce",
         baseOutput: 1,
         claimCreditCost: 10,
         claimCreditCostGrowthRate: 1.18,
@@ -62,6 +74,7 @@ export const PRIMARY_OUTPOSTS: Record<
         id: "science_station",
         name: "Science Station",
         category: "science",
+        affinityKey: "science",
         baseOutput: 1,
         claimCreditCost: 15,
         claimCreditCostGrowthRate: 1.2,
@@ -76,6 +89,7 @@ export const PRIMARY_OUTPOSTS: Record<
         id: "power_relay",
         name: "Power Relay",
         category: "power",
+        affinityKey: "power",
         baseOutput: 5,
         claimCreditCost: 20,
         claimCreditCostGrowthRate: 1.22,
@@ -90,6 +104,7 @@ export const PRIMARY_OUTPOSTS: Record<
         id: "extraction_rig",
         name: "Extraction Rig",
         category: "extraction",
+        affinityKey: "extraction",
         baseOutput: 1,
         claimCreditCost: 15,
         claimCreditCostGrowthRate: 1.2,
@@ -98,6 +113,23 @@ export const PRIMARY_OUTPOSTS: Record<
         baseEnergyUse: 3,
         usesEnergy: true,
         description: "Produces Materials/sec and provides Material storage.",
+    },
+
+    research_academy: {
+        id: "research_academy",
+        name: "Research Acadamy",
+        category: "research",
+        affinityKey: "science",
+        baseOutput: 1,
+        claimCreditCost: 30,
+        claimCreditCostGrowthRate: 1.2,
+        upgradeCreditCost: 35,
+        upgradeCreditCostGrowthRate: 1.4,
+        baseEnergyUse: 4,
+        usesEnergy: true,
+
+        description:
+            "Routes fresh science into active Research up to its Research Capacity.",
     },
 };
 

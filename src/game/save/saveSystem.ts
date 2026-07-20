@@ -120,11 +120,22 @@ function migrateGameState(value: unknown): unknown {
     }
     : value.resources;
 
+  const research = isRecord(value.research)
+    ? {
+      ...value.research,
+    }
+    : value.research;
+
+  if (isRecord(research)) {
+    delete research.speedPerSecond;
+  }
+
   const migratedValue = {
     ...value,
 
     version: 3,
     resources,
+    research,
     influence,
     tutorial: ensureTutorialState(value.tutorial),
   };

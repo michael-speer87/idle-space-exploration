@@ -89,7 +89,6 @@ export type ResourceState = {
 
 export type ResearchState = {
   activeProjectId: ResearchProjectId | null;
-  speedPerSecond: number;
   projectsById: Record<ResearchProjectId, ResearchProjectState>;
 };
 

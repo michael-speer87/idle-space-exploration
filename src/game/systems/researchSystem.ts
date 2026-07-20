@@ -6,8 +6,6 @@ import {
 } from "../config/research"
 import type { PrimaryOutpostId } from "../config/outposts";
 
-const DEFAULT_RESEARCH_SPEED_PER_SECOND = 1;
-
 export function createInitialResearchState(): ResearchState {
     const projectsById = {} as ResearchState["projectsById"]
 
@@ -21,7 +19,6 @@ export function createInitialResearchState(): ResearchState {
 
     return {
         activeProjectId: null,
-        speedPerSecond: DEFAULT_RESEARCH_SPEED_PER_SECOND,
         projectsById,
     };
 }

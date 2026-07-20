@@ -5,10 +5,8 @@ import {
   getActiveSurveySpeed,
   getSurveyRequirementForSystem,
 } from "../explorationSystem";
-import {
-  getSurveyDistanceReduction,
-} from "../researchSystem";
 import { calculateRates } from "../rateSystem";
+import { getSurveyDistanceReduction } from "../researchSystem";
 
 const DISTANCE_TWO_SYSTEM_ID = "2,0";
 
@@ -49,7 +47,7 @@ describe("Survey distance requirements", () => {
 });
 
 describe("Active Survey speed", () => {
-  it("uses current EP production instead of the stored launch speed", () => {
+  it("uses current EP production while a Survey is active", () => {
     const state = createNewGame();
 
     const homeSystem =
@@ -69,26 +67,26 @@ describe("Active Survey speed", () => {
       systemId: targetSystem.id,
       progress: 0,
       requiredProgress: 1_000,
-
-      // Deliberately wrong legacy value.
-      speedPerSecond: 999,
-
       isFirstFreeSurvey: false,
     };
 
-    const expectedLiveSpeed =
+    const initialSpeed = getActiveSurveySpeed(state);
+
+    state.research.projectsById
+      .improved_survey_arrays
+      .isCompleted = true;
+
+    const updatedSpeed =
       calculateRates(state).epPerSecond;
 
-    expect(
-      getActiveSurveySpeed(state),
-    ).toBeCloseTo(expectedLiveSpeed);
+    expect(updatedSpeed).toBeGreaterThan(initialSpeed);
 
     const advancedState =
       advanceActiveSurvey(state, 1);
 
     expect(
       advancedState.exploration.activeSurvey?.progress,
-    ).toBeCloseTo(expectedLiveSpeed);
+    ).toBeCloseTo(updatedSpeed);
   });
 
   it("keeps the first free Survey at its fixed speed", () => {
@@ -103,10 +101,6 @@ describe("Active Survey speed", () => {
       systemId: targetSystem.id,
       progress: 0,
       requiredProgress: 100,
-
-      // This should also be ignored.
-      speedPerSecond: 999,
-
       isFirstFreeSurvey: true,
     };
 

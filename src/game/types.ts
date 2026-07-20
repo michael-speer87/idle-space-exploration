@@ -102,7 +102,6 @@ export type ActiveSurveyState = {
   systemId: StarSystemId;
   progress: number;
   requiredProgress: number;
-  speedPerSecond: number;
   isFirstFreeSurvey: boolean;
 };
 

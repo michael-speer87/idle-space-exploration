@@ -117,7 +117,6 @@ export function beginSurvey(
   }
 
   const system = state.map.systemsById[systemId];
-  const rates = calculateRates(state);
   const isFirstFreeSurvey = state.exploration.firstFreeSurveyAvailable;
   const requiredProgress = getSurveyRequirementForSystem(state, systemId);
 
@@ -130,9 +129,6 @@ export function beginSurvey(
         systemId,
         progress: 0,
         requiredProgress,
-        speedPerSecond: isFirstFreeSurvey
-          ? FIRST_FREE_SURVEY_SPEED_PER_SECOND
-          : rates.epPerSecond,
         isFirstFreeSurvey,
       },
     },

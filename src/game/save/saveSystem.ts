@@ -152,7 +152,6 @@ function migrateGameState(value: unknown): unknown {
     isRecord(activeSurvey) &&
     typeof activeSurvey.systemId === "string" &&
     typeof activeSurvey.progress === "number" &&
-    typeof activeSurvey.speedPerSecond === "number" &&
     typeof activeSurvey.isFirstFreeSurvey === "boolean" &&
     typeof activeSurvey.requiredProgress !== "number"
   ) {

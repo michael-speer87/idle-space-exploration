@@ -41,7 +41,6 @@ const AFFINITY_MULTIPLIERS = {
 } as const;
 
 const MINIMUM_PRODUCTION_EFFICIENCY = 0.1;
-const BASE_RESEARCH_SPEED_PER_SECOND = 1;
 
 export function calculateProductionEfficiency(
   energyProduced: number,
@@ -174,10 +173,21 @@ export function calculateRates(state: GameState): CalculatedRates {
   const creditsPerSecond =
     materialFlow.creditsEarned;
 
-  const researchSpeedPerSecond = Math.max(
-    BASE_RESEARCH_SPEED_PER_SECOND,
-    sciencePerSecond,
-  );
+  const activeProjectId =
+    state.research.activeProjectId;
+  
+  const hasActiveResearch =
+    activeProjectId !== null &&
+    state.research.projectsById[activeProjectId]
+      ?.isCompleted === false;
+  
+  const researchSpeedPerSecond =
+    hasActiveResearch
+      ? Math.min(
+        sciencePerSecond,
+        researchCapacityPerSecond,
+        )
+      : 0;
 
   return {
     epPerSecond,

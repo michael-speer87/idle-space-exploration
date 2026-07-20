@@ -34,7 +34,7 @@ export function ResourceBar({
       <ResourceCard
         label="Science"
         value={formatResource(science)}
-        detail={`+${formatRate(rates.sciencePerSecond)}/sec`}
+        detail={`${formatRate(rates.sciencePerSecond)}/sec generated`}
         accentClass="text-ise-science"
       />
 

@@ -565,9 +565,19 @@ function GameScreen() {
             >
               <ResearchPanel
                 research={gameState.research}
-                startableProjectIds={startableResearchProjectIds}
+                startableProjectIds={
+                  startableResearchProjectIds
+                }
                 science={gameState.resources.science}
-                researchSpeedPerSecond={rates.researchSpeedPerSecond}
+                sciencePerSecond={
+                  rates.sciencePerSecond
+                }
+                researchCapacityPerSecond={
+                  rates.researchCapacityPerSecond
+                }
+                researchSpeedPerSecond={
+                  rates.researchSpeedPerSecond
+                }
                 onStartResearch={handleStartResearch}
               />
             </MissionWorkspace>

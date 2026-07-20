@@ -14,6 +14,7 @@ export const CLAIMABLE_PRIMARY_OUTPOST_IDS: readonly PrimaryOutpostId[] = [
   "science_station",
   "power_relay",
   "extraction_rig",
+  "research_academy",
 ];
 
 export type OutpostClaimOption = {

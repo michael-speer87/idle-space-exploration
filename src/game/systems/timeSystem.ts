@@ -1,36 +1,111 @@
 import type { GameState } from "../types";
 import { advanceActiveSurvey } from "./explorationSystem";
 import { calculateRates } from "./rateSystem";
-import { advanceActiveResearch } from "./researchSystem";
+import { applyResearchProgress } from "./researchSystem";
 import { calculateMaterialFlow } from "./materialEconomySystem";
+import { RESEARCH_PROJECTS } from "../config/research";
+import { calculateResearchFlow } from "./researchFlowSystem";
 
 export function advanceGameTime(
-    state: GameState,
-    seconds: number,
+  state: GameState,
+  seconds: number,
 ): GameState {
-    if (seconds <= 0) {
-        return state;
-    }
+  if (seconds <= 0) {
+    return state;
+  }
 
-    const rates = calculateRates(state);
+  const rates = calculateRates(state);
 
-    let nextState = addResourceProduction(state, seconds, rates);
+  const researchFlow = getResearchFlowForTick(
+    state,
+    rates,
+    seconds,
+  );
 
-    nextState = advanceActiveResearch(
-        nextState,
-        seconds,
-        rates.researchSpeedPerSecond,
-    )
+  let nextState = addResourceProduction(state, seconds, rates, researchFlow.scienceAddedToStorage);
 
-    nextState = advanceActiveSurvey(nextState, seconds);
+  nextState = applyResearchProgress(
+    nextState,
+    researchFlow.researchProgressAdded,
+  );
 
-    return nextState;
+  nextState = advanceActiveSurvey(
+    nextState,
+    seconds,
+  );
+
+  return nextState;
+}
+
+function getResearchFlowForTick(
+  state: GameState,
+  rates: ReturnType<typeof calculateRates>,
+  seconds: number,
+) {
+  const activeProjectId =
+    state.research.activeProjectId;
+
+  if (activeProjectId === null) {
+    return calculateResearchFlow({
+      freshSciencePerSecond:
+        rates.sciencePerSecond,
+
+      researchCapacityPerSecond:
+        rates.researchCapacityPerSecond,
+
+      seconds,
+      hasActiveResearch: false,
+      remainingResearch: 0,
+    });
+  }
+
+  const projectState =
+    state.research.projectsById[activeProjectId];
+
+  const projectDefinition =
+    RESEARCH_PROJECTS[activeProjectId];
+
+  if (
+    !projectState ||
+    !projectDefinition ||
+    projectState.isCompleted
+  ) {
+    return calculateResearchFlow({
+      freshSciencePerSecond:
+        rates.sciencePerSecond,
+
+      researchCapacityPerSecond:
+        rates.researchCapacityPerSecond,
+
+      seconds,
+      hasActiveResearch: false,
+      remainingResearch: 0,
+    });
+  }
+
+  return calculateResearchFlow({
+    freshSciencePerSecond:
+      rates.sciencePerSecond,
+
+    researchCapacityPerSecond:
+      rates.researchCapacityPerSecond,
+
+    seconds,
+    hasActiveResearch: true,
+
+    remainingResearch: Math.max(
+      0,
+      projectDefinition.scienceCost -
+        projectState.progress,
+    ),
+  });
 }
 
 function addResourceProduction(
   state: GameState,
   seconds: number,
   rates: ReturnType<typeof calculateRates>,
+  scienceAddedToStorage: number,
 ): GameState {
   const materialFlow = calculateMaterialFlow({
     storedMaterials: state.resources.materials,
@@ -52,7 +127,7 @@ function addResourceProduction(
 
   if (
     materialFlow.creditsEarned <= 0 &&
-    rates.sciencePerSecond <= 0 &&
+    scienceAddedToStorage <= 0 &&
     materialFlow.materialsProduced <= 0 &&
     materialFlow.materialsSold <= 0
   ) {
@@ -71,7 +146,7 @@ function addResourceProduction(
 
       science:
         state.resources.science +
-        rates.sciencePerSecond * seconds,
+        scienceAddedToStorage,
 
       materials:
         materialFlow.nextMaterials,

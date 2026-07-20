@@ -119,99 +119,89 @@ export function startResearch(
     };
 }
 
-export function advanceActiveResearch(
-    state: GameState,
-    seconds: number,
-    researchSpeedPerSecond = state.research.speedPerSecond,
+export function applyResearchProgress(
+  state: GameState,
+  researchProgressAdded: number,
 ): GameState {
-    const activeProjectId = state.research.activeProjectId;
+  const activeProjectId =
+    state.research.activeProjectId;
 
-    if (activeProjectId === null) {
-        return state;
-    }
+  if (activeProjectId === null) {
+    return state;
+  }
 
-    if (seconds <= 0) {
-        return state;
-    }
+  const projectState =
+    state.research.projectsById[activeProjectId];
 
-    const projectState = state.research.projectsById[activeProjectId];
-    const projectDefinition = RESEARCH_PROJECTS[activeProjectId];
+  const projectDefinition =
+    RESEARCH_PROJECTS[activeProjectId];
 
-    if (!projectState || !projectDefinition || projectState.isCompleted) {
-        return {
-            ...state,
-            research: {
-                ...state.research,
-                activeProjectId: null,
-            },
-        };
-    }
+  if (
+    !projectState ||
+    !projectDefinition ||
+    projectState.isCompleted
+  ) {
+    return {
+      ...state,
 
-    const remainingScienceNeeded = 
-        projectDefinition.scienceCost - projectState.progress;
+      research: {
+        ...state.research,
+        activeProjectId: null,
+      },
+    };
+  }
 
-    if (remainingScienceNeeded <= 0) {
-        return completeResearchProject(state, activeProjectId);
-    }
+  if (researchProgressAdded <= 0) {
+    return state;
+  }
 
-    const maxScienceToSpend = researchSpeedPerSecond * seconds;
+  const remainingResearch =
+    projectDefinition.scienceCost -
+    projectState.progress;
 
-    const scienceSpent = Math.min(
-        state.resources.science,
-        maxScienceToSpend,
-        remainingScienceNeeded,
-    );
-
-    if (scienceSpent <= 0) {
-        return state;
-    }
-
-    const nextProgress = projectState.progress + scienceSpent;
-
-    if (nextProgress < projectDefinition.scienceCost) {
-        return {
-            ...state,
-
-            resources: {
-                ...state.resources,
-                science: state.resources.science - scienceSpent,
-            },
-
-            research: {
-                ...state.research,
-                projectsById: {
-                    ...state.research.projectsById,
-                    [activeProjectId]: {
-                        ...projectState,
-                        progress: nextProgress,
-                    },
-                },
-            },
-        };
-    }
-
+  if (remainingResearch <= 0) {
     return completeResearchProject(
-        {
-            ...state,
-
-            resources: {
-                ...state.resources,
-                science: state.resources.science - scienceSpent,
-            },
-
-            research: {
-                ...state.research,
-                projectsById: {
-                    ...state.research.projectsById,
-                    [activeProjectId]: {
-                        ...projectState,
-                        progress: projectDefinition.scienceCost,
-                    },
-                },
-            },
-        },
-        activeProjectId,
+      state,
+      activeProjectId,
     );
+  }
+
+  const appliedProgress = Math.min(
+    researchProgressAdded,
+    remainingResearch,
+  );
+
+  const nextProgress =
+    projectState.progress + appliedProgress;
+
+  const nextState: GameState = {
+    ...state,
+
+    research: {
+      ...state.research,
+
+      projectsById: {
+        ...state.research.projectsById,
+
+        [activeProjectId]: {
+          ...projectState,
+          progress: nextProgress,
+        },
+      },
+    },
+  };
+
+  if (
+    nextProgress <
+    projectDefinition.scienceCost
+  ) {
+    return nextState;
+  }
+
+  return completeResearchProject(
+    nextState,
+    activeProjectId,
+  );
 }
 
 export function isResearchCompleted(

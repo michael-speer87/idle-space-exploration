@@ -14,14 +14,19 @@ type ResearchPanelProps = {
   research: ResearchState;
   startableProjectIds: ResearchProjectId[];
   science: number;
+  sciencePerSecond: number;
+  researchCapacityPerSecond: number;
   researchSpeedPerSecond: number;
-  onStartResearch: (projectId: ResearchProjectId) => void;
+  onStartResearch:
+  (projectId: ResearchProjectId) => void;
 };
 
 export function ResearchPanel({
   research,
   startableProjectIds,
   science,
+  sciencePerSecond,
+  researchCapacityPerSecond,
   researchSpeedPerSecond,
   onStartResearch,
 }: ResearchPanelProps) {
@@ -73,10 +78,16 @@ export function ResearchPanel({
 
   const activeResearchEtaLabel =
     activeResearchSecondsRemaining !== null
-      ? formatDuration(activeResearchSecondsRemaining)
-      : researchSpeedPerSecond <= 0 && activeProject !== null
-        ? "Research paused"
-        : "No active research";
+      ? formatDuration(
+        activeResearchSecondsRemaining,
+      )
+      : activeProject === null
+        ? "No active research"
+        : researchCapacityPerSecond <= 0
+          ? "Paused: No Research Academy"
+          : sciencePerSecond <= 0
+            ? "Paused: No fresh Science"
+            : "Research paused";
 
   const completedProjectCount =
     RESEARCH_WEB_PROJECT_IDS.filter(
@@ -88,9 +99,19 @@ export function ResearchPanel({
     <div className="grid gap-4">
       <ResearchStatusSummary
         science={science}
-        researchSpeedPerSecond={researchSpeedPerSecond}
-        completedProjectCount={completedProjectCount}
-        totalProjectCount={RESEARCH_WEB_PROJECT_IDS.length}
+        sciencePerSecond={sciencePerSecond}
+        researchCapacityPerSecond={
+          researchCapacityPerSecond
+        }
+        researchSpeedPerSecond={
+          researchSpeedPerSecond
+        }
+        completedProjectCount={
+          completedProjectCount
+        }
+        totalProjectCount={
+          RESEARCH_WEB_PROJECT_IDS.length
+        }
       />
 
       <ActiveResearchStrip
@@ -129,6 +150,8 @@ export function ResearchPanel({
 
 type ResearchStatusSummaryProps = {
   science: number;
+  sciencePerSecond: number;
+  researchCapacityPerSecond: number;
   researchSpeedPerSecond: number;
   completedProjectCount: number;
   totalProjectCount: number;
@@ -136,6 +159,8 @@ type ResearchStatusSummaryProps = {
 
 function ResearchStatusSummary({
   science,
+  sciencePerSecond,
+  researchCapacityPerSecond,
   researchSpeedPerSecond,
   completedProjectCount,
   totalProjectCount,
@@ -143,19 +168,32 @@ function ResearchStatusSummary({
   return (
     <div
       className="
-        grid grid-cols-3 gap-2
+        grid grid-cols-2 gap-2
         rounded-panel border border-ise-border
         bg-ise-surface p-2
+        md:grid-cols-5
       "
     >
       <ResearchMetric
-        label="Science"
+        label="Stored Science"
         value={science.toFixed(1)}
         valueClassName="text-ise-science"
       />
 
       <ResearchMetric
-        label="Research Speed"
+        label="Science Flow"
+        value={`${sciencePerSecond.toFixed(2)}/sec`}
+        valueClassName="text-ise-science"
+      />
+
+      <ResearchMetric
+        label="Academy Capacity"
+        value={`${researchCapacityPerSecond.toFixed(2)}/sec`}
+        valueClassName="text-ise-accent-hover"
+      />
+
+      <ResearchMetric
+        label="Research Rate"
         value={`${researchSpeedPerSecond.toFixed(2)}/sec`}
         valueClassName="text-ise-accent-hover"
       />

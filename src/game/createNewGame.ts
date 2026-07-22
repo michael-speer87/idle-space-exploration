@@ -19,7 +19,7 @@ export function createNewGame(
     });
 
     return {
-        version: 3,
+        version: 4,
         seed,
 
         resources: {

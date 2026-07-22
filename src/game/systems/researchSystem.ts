@@ -1,26 +1,27 @@
 import type { GameState, ResearchState } from "../types";
 import {
-    RESEARCH_PROJECTS,
-    RESEARCH_PROJECT_IDS,
-    type ResearchProjectId,
+  RESEARCH_PROJECTS,
+  RESEARCH_PROJECT_IDS,
+  type ResearchProjectId,
 } from "../config/research"
 import type { PrimaryOutpostId } from "../config/outposts";
 
 export function createInitialResearchState(): ResearchState {
-    const projectsById = {} as ResearchState["projectsById"]
+  const projectsById = {} as ResearchState["projectsById"]
 
-    for (const projectId of RESEARCH_PROJECT_IDS) {
-        projectsById[projectId] = {
-            id: projectId,
-            progress: 0,
-            isCompleted: false,
-        };
-    }
-
-    return {
-        activeProjectId: null,
-        projectsById,
+  for (const projectId of RESEARCH_PROJECT_IDS) {
+    projectsById[projectId] = {
+      id: projectId,
+      completedRank: 0,
+      progress: 0,
+      isCompleted: false,
     };
+  }
+
+  return {
+    activeProjectId: null,
+    projectsById,
+  };
 }
 
 export function ensureResearchProjectStates(
@@ -33,22 +34,54 @@ export function ensureResearchProjectStates(
   };
 
   for (const projectId of RESEARCH_PROJECT_IDS) {
-    if (projectsById[projectId] !== undefined) {
+    const projectState =
+      projectsById[projectId];
+
+    if (projectState === undefined) {
+      hasChanges = true;
+
+      projectsById[projectId] = {
+        id: projectId,
+        completedRank: 0,
+        progress: 0,
+        isCompleted: false,
+      };
+
       continue;
     }
 
-    hasChanges = true;
+    const completedRank =
+      typeof projectState.completedRank ===
+        "number" &&
+        Number.isFinite(
+          projectState.completedRank,
+        )
+        ? Math.max(
+          0,
+          Math.floor(
+            projectState.completedRank,
+          ),
+        )
+        : projectState.isCompleted
+          ? 1
+          : 0;
 
-    projectsById[projectId] = {
-      id: projectId,
-      progress: 0,
-      isCompleted: false,
-    };
+    if (
+      completedRank !==
+      projectState.completedRank
+    ) {
+      hasChanges = true;
+
+      projectsById[projectId] = {
+        ...projectState,
+        completedRank,
+      };
+    }
   }
 
   const activeProjectId =
     research.activeProjectId !== null &&
-    RESEARCH_PROJECTS[research.activeProjectId] !== undefined
+      RESEARCH_PROJECTS[research.activeProjectId] !== undefined
       ? research.activeProjectId
       : null;
 
@@ -68,52 +101,52 @@ export function ensureResearchProjectStates(
 }
 
 export function canStartResearch(
-    state: GameState,
-    projectId: ResearchProjectId,
+  state: GameState,
+  projectId: ResearchProjectId,
 ): boolean {
-    const projectState = state.research.projectsById[projectId];
-    const projectDefinition = RESEARCH_PROJECTS[projectId];
+  const projectState = state.research.projectsById[projectId];
+  const projectDefinition = RESEARCH_PROJECTS[projectId];
 
-    if (!projectState || !projectDefinition) {
-        return false;
-    }
+  if (!projectState || !projectDefinition) {
+    return false;
+  }
 
-    if (projectState.isCompleted) {
-        return false;
-    }
+  if (projectState.isCompleted) {
+    return false;
+  }
 
-    return projectDefinition.prerequisiteIds.every((prerequisiteId) => {
-        return state.research.projectsById[prerequisiteId]?.isCompleted === true;
-    });
+  return projectDefinition.prerequisiteIds.every((prerequisiteId) => {
+    return state.research.projectsById[prerequisiteId]?.isCompleted === true;
+  });
 }
 
 export function getStartableResearchProjectIds(
-    state: GameState,
+  state: GameState,
 ): ResearchProjectId[] {
-    return RESEARCH_PROJECT_IDS.filter((projectId) => 
-        canStartResearch(state, projectId),
-    );
+  return RESEARCH_PROJECT_IDS.filter((projectId) =>
+    canStartResearch(state, projectId),
+  );
 }
 
 export function startResearch(
-    state: GameState,
-    projectId: ResearchProjectId,
+  state: GameState,
+  projectId: ResearchProjectId,
 ): GameState {
-    if (!canStartResearch(state, projectId)) {
-        return state;
-    }
+  if (!canStartResearch(state, projectId)) {
+    return state;
+  }
 
-    if (state.research.activeProjectId === projectId) {
-        return state;
-    }
+  if (state.research.activeProjectId === projectId) {
+    return state;
+  }
 
-    return {
-        ...state,
-        research: {
-            ...state.research,
-            activeProjectId: projectId,
-        },
-    };
+  return {
+    ...state,
+    research: {
+      ...state.research,
+      activeProjectId: projectId,
+    },
+  };
 }
 
 export function applyResearchProgress(
@@ -202,36 +235,36 @@ export function applyResearchProgress(
 }
 
 export function isResearchCompleted(
-    state: GameState,
-    projectId: ResearchProjectId,
+  state: GameState,
+  projectId: ResearchProjectId,
 ): boolean {
-    return state.research.projectsById[projectId]?.isCompleted === true;
+  return state.research.projectsById[projectId]?.isCompleted === true;
 }
 
 export function getResearchOutpostOutputBonus(
-    state: GameState,
-    outpostId: PrimaryOutpostId,
+  state: GameState,
+  outpostId: PrimaryOutpostId,
 ): number {
-    let totalBonus = 0;
+  let totalBonus = 0;
 
-    for (const projectId of RESEARCH_PROJECT_IDS) {
-        if (!isResearchCompleted(state, projectId)) {
-            continue;
-        }
-
-        const project = RESEARCH_PROJECTS[projectId];
-
-        for (const effect of project.effects) {
-            if (
-                effect.type === "primary_outpost_output_bonus" &&
-                effect.outpostId === outpostId
-            ) {
-                totalBonus += effect.amount;
-            }
-        }
+  for (const projectId of RESEARCH_PROJECT_IDS) {
+    if (!isResearchCompleted(state, projectId)) {
+      continue;
     }
 
-    return totalBonus;
+    const project = RESEARCH_PROJECTS[projectId];
+
+    for (const effect of project.effects) {
+      if (
+        effect.type === "primary_outpost_output_bonus" &&
+        effect.outpostId === outpostId
+      ) {
+        totalBonus += effect.amount;
+      }
+    }
+  }
+
+  return totalBonus;
 }
 
 export function getSurveyDistanceReduction(
@@ -257,38 +290,42 @@ export function getSurveyDistanceReduction(
 }
 
 export function getResearchOutpostOutputMultiplier(
-    state: GameState,
-    outpostId: PrimaryOutpostId,
+  state: GameState,
+  outpostId: PrimaryOutpostId,
 ): number {
-    return 1 + getResearchOutpostOutputBonus(state, outpostId);
+  return 1 + getResearchOutpostOutputBonus(state, outpostId);
 }
 
 function completeResearchProject(
-    state: GameState,
-    projectId: ResearchProjectId,
+  state: GameState,
+  projectId: ResearchProjectId,
 ): GameState {
-    const projectState = state.research.projectsById[projectId];
+  const projectState = state.research.projectsById[projectId];
 
-    if (!projectState) {
-        return state;
-    }
+  if (!projectState) {
+    return state;
+  }
 
-    return {
-        ...state,
+  return {
+    ...state,
 
-        research: {
-            ...state.research,
-            activeProjectId:
-                state.research.activeProjectId === projectId
-                    ? null
-                    : state.research.activeProjectId,
-            projectsById: {
-                ...state.research.projectsById,
-                [projectId]: {
-                    ...projectState,
-                    isCompleted: true,
-                },
-            },
+    research: {
+      ...state.research,
+      activeProjectId:
+        state.research.activeProjectId === projectId
+          ? null
+          : state.research.activeProjectId,
+      projectsById: {
+        ...state.research.projectsById,
+        [projectId]: {
+          ...projectState,
+          completedRank: Math.max(
+            1,
+            projectState.completedRank,
+          ),
+          isCompleted: true,
         },
-    };
+      },
+    },
+  };
 }

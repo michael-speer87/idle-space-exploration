@@ -91,14 +91,17 @@ function preserveCorruptedSave(rawSave: string): string {
   return backupKey;
 }
 
-function migrateGameState(value: unknown): unknown {
+export function migrateGameState(value: unknown): unknown {
   if (!isRecord(value)) {
     return value;
   }
 
-  if (value.version !== 1 &&
+  if (
+    value.version !== 1 &&
     value.version !== 2 &&
-    value.version !== 3) {
+    value.version !== 3 &&
+    value.version !== 4
+  ) {
     return value;
   }
 
@@ -120,20 +123,15 @@ function migrateGameState(value: unknown): unknown {
     }
     : value.resources;
 
-  const research = isRecord(value.research)
-    ? {
-      ...value.research,
-    }
-    : value.research;
-
-  if (isRecord(research)) {
-    delete research.speedPerSecond;
-  }
+  const research =
+    migrateResearchStateToVersion4(
+      value.research,
+    );
 
   const migratedValue = {
     ...value,
 
-    version: 3,
+    version: 4,
     resources,
     research,
     influence,
@@ -189,7 +187,7 @@ function isValidGameState(value: unknown): value is GameState {
     return false;
   }
 
-  if (value.version !== 3) {
+  if (value.version !== 4) {
     return false;
   }
 
@@ -321,6 +319,70 @@ function isValidGameStateShapeForMigration(
   }
 
   return true;
+}
+
+function migrateResearchStateToVersion4(
+  value: unknown,
+): unknown {
+  if (!isRecord(value)) {
+    return value;
+  }
+
+  const projectsById = isRecord(
+    value.projectsById,
+  )
+    ? Object.fromEntries(
+      Object.entries(
+        value.projectsById,
+      ).map(
+        ([projectId, projectValue]) => {
+          if (!isRecord(projectValue)) {
+            return [
+              projectId,
+              projectValue,
+            ];
+          }
+
+          const existingCompletedRank =
+            projectValue.completedRank;
+
+          const completedRank =
+            typeof existingCompletedRank ===
+              "number" &&
+              Number.isFinite(
+                existingCompletedRank,
+              )
+              ? Math.max(
+                0,
+                Math.floor(
+                  existingCompletedRank,
+                ),
+              )
+              : projectValue.isCompleted ===
+                true
+                ? 1
+                : 0;
+
+          return [
+            projectId,
+            {
+              ...projectValue,
+              completedRank,
+            },
+          ];
+        },
+      ),
+    )
+    : value.projectsById;
+
+  const migratedResearch: Record<string, unknown> = {
+    ...value,
+    projectsById,
+  };
+
+  delete migratedResearch.speedPerSecond;
+
+  return migratedResearch;
 }
 
 function migrateStarSystemsPrimaryOutpostLevel(

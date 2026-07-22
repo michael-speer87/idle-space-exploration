@@ -3,7 +3,7 @@ import type { ResearchProjectId } from "./config/research";
 import type { SupportBuildingId } from "./config/supportBuildings";
 import type { TutorialStepId } from "./config/tutorial";
 
-export type GameVersion = 3;
+export type GameVersion = 4;
 
 export type StarSystemId = string;
 
@@ -44,7 +44,11 @@ export type TutorialState = {
 
 export type ResearchProjectState = {
   id: ResearchProjectId;
+  completedRank: number;
   progress: number;
+
+  // Temporary compatibility field.
+  // The ranked lifecycle will replace this.
   isCompleted: boolean;
 };
 

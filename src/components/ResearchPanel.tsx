@@ -1,5 +1,5 @@
 import {
-  RESEARCH_PROJECTS,
+  RESEARCH_PROGRAMS,
   type ResearchProjectId,
 } from "../game/config/research";
 import type { ResearchState } from "../game/types";
@@ -47,32 +47,59 @@ export function ResearchPanel({
     setSelectedProjectId(null);
   }, []);
 
-  const activeProject =
+  const activeProgram =
     research.activeProjectId !== null
-      ? RESEARCH_PROJECTS[research.activeProjectId]
+      ? RESEARCH_PROGRAMS[
+      research.activeProjectId
+      ]
       : null;
 
-  const activeProjectState =
+  const activeProgramState =
     research.activeProjectId !== null
-      ? research.projectsById[research.activeProjectId]
+      ? research.projectsById[
+      research.activeProjectId
+      ]
+      : null;
+
+  const activeRank =
+    activeProgram !== null &&
+      activeProgramState !== null
+      ? activeProgram.ranks[
+      activeProgramState.completedRank
+      ] ?? null
+      : null;
+
+  const activeRankNumber =
+    activeRank !== null &&
+      activeProgramState !== null
+      ? activeProgramState.completedRank + 1
+      : null;
+
+  const activeRankLabel =
+    activeProgram !== null &&
+      activeRankNumber !== null
+      ? `Rank ${activeRankNumber} of ${activeProgram.ranks.length}`
       : null;
 
   const activeProgressPercent =
-    activeProject !== null && activeProjectState !== null
+    activeRank !== null &&
+      activeProgramState !== null
       ? calculateProgressPercent(
-        activeProjectState.progress,
-        activeProject.scienceCost,
+        activeProgramState.progress,
+        activeRank.scienceCost,
       )
       : 0;
 
   const activeResearchSecondsRemaining =
-    activeProject !== null &&
-      activeProjectState !== null &&
+    activeRank !== null &&
+      activeProgramState !== null &&
       researchSpeedPerSecond > 0
       ? Math.max(
         0,
-        (activeProject.scienceCost - activeProjectState.progress) /
-        researchSpeedPerSecond,
+        (
+          activeRank.scienceCost -
+          activeProgramState.progress
+        ) / researchSpeedPerSecond,
       )
       : null;
 
@@ -81,7 +108,8 @@ export function ResearchPanel({
       ? formatDuration(
         activeResearchSecondsRemaining,
       )
-      : activeProject === null
+      : activeProgram === null ||
+        activeRank === null
         ? "No active research"
         : researchCapacityPerSecond <= 0
           ? "Paused: No Research Academy"
@@ -89,11 +117,37 @@ export function ResearchPanel({
             ? "Paused: No fresh Science"
             : "Research paused";
 
-  const completedProjectCount =
-    RESEARCH_WEB_PROJECT_IDS.filter(
-      (projectId) =>
-        research.projectsById[projectId]?.isCompleted === true,
-    ).length;
+  const completedRankCount =
+    RESEARCH_WEB_PROJECT_IDS.reduce(
+      (total, projectId) => {
+        const program =
+          RESEARCH_PROGRAMS[projectId];
+
+        const programState =
+          research.projectsById[projectId];
+
+        const completedRank =
+          programState?.completedRank ?? 0;
+
+        return (
+          total +
+          Math.min(
+            program.ranks.length,
+            Math.max(0, completedRank),
+          )
+        );
+      },
+      0,
+    );
+
+  const totalRankCount =
+    RESEARCH_WEB_PROJECT_IDS.reduce(
+      (total, projectId) =>
+        total +
+        RESEARCH_PROGRAMS[projectId]
+          .ranks.length,
+      0,
+    );
 
   return (
     <div className="grid gap-4">
@@ -106,22 +160,22 @@ export function ResearchPanel({
         researchSpeedPerSecond={
           researchSpeedPerSecond
         }
-        completedProjectCount={
-          completedProjectCount
+        completedRankCount={
+          completedRankCount
         }
-        totalProjectCount={
-          RESEARCH_WEB_PROJECT_IDS.length
+        totalRankCount={
+          totalRankCount
         }
       />
 
       <ActiveResearchStrip
         projectId={research.activeProjectId}
-        projectName={activeProject?.name ?? null}
+        projectName={activeProgram?.name ?? null}
+        rankLabel={activeRankLabel}
         progressPercent={activeProgressPercent}
         etaLabel={activeResearchEtaLabel}
         onSelect={handleSelectProject}
       />
-
       <Section title="Research Viewport">
         <div
           className="
@@ -153,8 +207,8 @@ type ResearchStatusSummaryProps = {
   sciencePerSecond: number;
   researchCapacityPerSecond: number;
   researchSpeedPerSecond: number;
-  completedProjectCount: number;
-  totalProjectCount: number;
+  completedRankCount: number;
+  totalRankCount: number;
 };
 
 function ResearchStatusSummary({
@@ -162,8 +216,8 @@ function ResearchStatusSummary({
   sciencePerSecond,
   researchCapacityPerSecond,
   researchSpeedPerSecond,
-  completedProjectCount,
-  totalProjectCount,
+  completedRankCount,
+  totalRankCount,
 }: ResearchStatusSummaryProps) {
   return (
     <div
@@ -199,8 +253,8 @@ function ResearchStatusSummary({
       />
 
       <ResearchMetric
-        label="Completed"
-        value={`${completedProjectCount}/${totalProjectCount}`}
+        label="Ranks Completed"
+        value={`${completedRankCount}/${totalRankCount}`}
         valueClassName="text-ise-success"
       />
     </div>
@@ -210,6 +264,7 @@ function ResearchStatusSummary({
 type ActiveResearchStripProps = {
   projectId: ResearchProjectId | null;
   projectName: string | null;
+  rankLabel: string | null;
   progressPercent: number;
   etaLabel: string;
   onSelect: (projectId: ResearchProjectId) => void;
@@ -218,6 +273,7 @@ type ActiveResearchStripProps = {
 function ActiveResearchStrip({
   projectId,
   projectName,
+  rankLabel,
   progressPercent,
   etaLabel,
   onSelect,
@@ -247,7 +303,7 @@ function ActiveResearchStrip({
               text-ise-text-muted
             "
           >
-            No active project
+            No active program
           </strong>
         </div>
 
@@ -279,7 +335,11 @@ function ActiveResearchStrip({
       "
       type="button"
       onClick={() => onSelect(projectId)}
-      aria-label={`View active Research: ${projectName}`}
+      aria-label={
+        rankLabel !== null
+          ? `View active Research: ${projectName}, ${rankLabel}`
+          : `View active Research: ${projectName}`
+      }
     >
       <div
         className="
@@ -297,15 +357,38 @@ function ActiveResearchStrip({
             Active Research
           </span>
 
-          <strong
+          <div
             className="
-              mt-0.5 block truncate
-              text-xs font-semibold text-ise-text
+              mt-0.5 flex min-w-0
+              items-center gap-2
             "
-            title={projectName}
           >
-            {projectName}
-          </strong>
+            <strong
+              className="
+                min-w-0 truncate
+                text-xs font-semibold text-ise-text
+              "
+              title={projectName}
+            >
+              {projectName}
+            </strong>
+
+            {rankLabel !== null && (
+              <span
+                className="
+                  shrink-0 rounded-full
+                  border border-ise-accent/30
+                  bg-ise-accent/10
+                  px-1.5 py-0.5
+                  text-[0.55rem] font-semibold
+                  uppercase tracking-[0.06em]
+                  text-ise-accent-hover
+                "
+              >
+                {rankLabel}
+              </span>
+            )}
+          </div>
         </div>
 
         <div
@@ -334,7 +417,11 @@ function ActiveResearchStrip({
       <ProgressBar
         value={progressPercent}
         height="sm"
-        ariaLabel={`Research progress for ${projectName}`}
+        ariaLabel={
+          rankLabel !== null
+            ? `Research progress for ${projectName}, ${rankLabel}`
+            : `Research progress for ${projectName}`
+        }
       />
 
       <span

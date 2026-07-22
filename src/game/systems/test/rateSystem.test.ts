@@ -18,7 +18,7 @@ describe("calculateRates", () => {
 
     state.research.projectsById
       .improved_survey_arrays
-      .isCompleted = true;
+      .completedRank = 1;
 
     const rates = calculateRates(state);
 

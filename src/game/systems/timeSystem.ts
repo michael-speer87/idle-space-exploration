@@ -1,9 +1,8 @@
 import type { GameState } from "../types";
 import { advanceActiveSurvey } from "./explorationSystem";
 import { calculateRates } from "./rateSystem";
-import { applyResearchProgress } from "./researchSystem";
+import { applyResearchProgress, getNextResearchRankDefinition } from "./researchSystem";
 import { calculateMaterialFlow } from "./materialEconomySystem";
-import { RESEARCH_PROJECTS } from "../config/research";
 import { calculateResearchFlow } from "./researchFlowSystem";
 
 export function advanceGameTime(
@@ -62,13 +61,15 @@ function getResearchFlowForTick(
   const projectState =
     state.research.projectsById[activeProjectId];
 
-  const projectDefinition =
-    RESEARCH_PROJECTS[activeProjectId];
+  const nextRank =
+    getNextResearchRankDefinition(
+      state,
+      activeProjectId,
+    );
 
   if (
     !projectState ||
-    !projectDefinition ||
-    projectState.isCompleted
+    nextRank === null
   ) {
     return calculateResearchFlow({
       freshSciencePerSecond:
@@ -95,8 +96,8 @@ function getResearchFlowForTick(
 
     remainingResearch: Math.max(
       0,
-      projectDefinition.scienceCost -
-        projectState.progress,
+      nextRank.scienceCost -
+      projectState.progress,
     ),
   });
 }

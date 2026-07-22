@@ -31,7 +31,7 @@ describe("Survey distance requirements", () => {
 
     state.research.projectsById
       .deep_range_telemetry
-      .isCompleted = true;
+      .completedRank = 1;
 
     expect(
       getSurveyDistanceReduction(state),
@@ -74,7 +74,7 @@ describe("Active Survey speed", () => {
 
     state.research.projectsById
       .improved_survey_arrays
-      .isCompleted = true;
+      .completedRank = 1;
 
     const updatedSpeed =
       calculateRates(state).epPerSecond;

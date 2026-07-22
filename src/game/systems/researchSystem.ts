@@ -1,15 +1,18 @@
 import type { GameState, ResearchState } from "../types";
 import {
-  RESEARCH_PROJECTS,
+  RESEARCH_PROGRAM_IDS,
+  RESEARCH_PROGRAMS,
   RESEARCH_PROJECT_IDS,
+  RESEARCH_PROJECTS,
   type ResearchProjectId,
-} from "../config/research"
+  type ResearchRankDefinition,
+} from "../config/research";
 import type { PrimaryOutpostId } from "../config/outposts";
 
 export function createInitialResearchState(): ResearchState {
   const projectsById = {} as ResearchState["projectsById"]
 
-  for (const projectId of RESEARCH_PROJECT_IDS) {
+  for (const projectId of RESEARCH_PROGRAM_IDS) {
     projectsById[projectId] = {
       id: projectId,
       completedRank: 0,
@@ -33,7 +36,13 @@ export function ensureResearchProjectStates(
     ...research.projectsById,
   };
 
-  for (const projectId of RESEARCH_PROJECT_IDS) {
+  for (
+    const projectId of
+    RESEARCH_PROGRAM_IDS
+  ) {
+    const program =
+      RESEARCH_PROGRAMS[projectId];
+
     const projectState =
       projectsById[projectId];
 
@@ -50,42 +59,68 @@ export function ensureResearchProjectStates(
       continue;
     }
 
-    const completedRank =
+    const rawCompletedRank =
       typeof projectState.completedRank ===
         "number" &&
         Number.isFinite(
           projectState.completedRank,
         )
-        ? Math.max(
-          0,
-          Math.floor(
-            projectState.completedRank,
-          ),
+        ? Math.floor(
+          projectState.completedRank,
         )
         : projectState.isCompleted
           ? 1
           : 0;
 
+    const completedRank = Math.min(
+      program.ranks.length,
+      Math.max(0, rawCompletedRank),
+    );
+
+    const isCompleted =
+      completedRank >= program.ranks.length;
+
     if (
       completedRank !==
-      projectState.completedRank
+      projectState.completedRank ||
+      isCompleted !== projectState.isCompleted
     ) {
       hasChanges = true;
 
       projectsById[projectId] = {
         ...projectState,
         completedRank,
+        isCompleted,
       };
     }
   }
 
   const activeProjectId =
-    research.activeProjectId !== null &&
-      RESEARCH_PROJECTS[research.activeProjectId] !== undefined
-      ? research.activeProjectId
+    research.activeProjectId;
+
+  const activeProgram =
+    activeProjectId !== null
+      ? RESEARCH_PROGRAMS[activeProjectId]
+      : undefined;
+
+  const activeProjectState =
+    activeProjectId !== null
+      ? projectsById[activeProjectId]
+      : undefined;
+
+  const normalizedActiveProjectId =
+    activeProjectId !== null &&
+      activeProgram !== undefined &&
+      activeProjectState !== undefined &&
+      activeProjectState.completedRank <
+      activeProgram.ranks.length
+      ? activeProjectId
       : null;
 
-  if (activeProjectId !== research.activeProjectId) {
+  if (
+    normalizedActiveProjectId !==
+    research.activeProjectId
+  ) {
     hasChanges = true;
   }
 
@@ -95,35 +130,93 @@ export function ensureResearchProjectStates(
 
   return {
     ...research,
-    activeProjectId,
+    activeProjectId:
+      normalizedActiveProjectId,
     projectsById,
   };
+}
+
+export function getNextResearchRankDefinition(
+  state: GameState,
+  projectId: ResearchProjectId,
+): ResearchRankDefinition | null {
+  const program =
+    RESEARCH_PROGRAMS[projectId];
+
+  const projectState =
+    state.research.projectsById[projectId];
+
+  if (!program || !projectState) {
+    return null;
+  }
+
+  return (
+    program.ranks[
+    projectState.completedRank
+    ] ?? null
+  );
+}
+
+export function isResearchProgramMastered(
+  state: GameState,
+  projectId: ResearchProjectId,
+): boolean {
+  const program =
+    RESEARCH_PROGRAMS[projectId];
+
+  const projectState =
+    state.research.projectsById[projectId];
+
+  if (!program || !projectState) {
+    return false;
+  }
+
+  return (
+    projectState.completedRank >=
+    program.ranks.length
+  );
 }
 
 export function canStartResearch(
   state: GameState,
   projectId: ResearchProjectId,
 ): boolean {
-  const projectState = state.research.projectsById[projectId];
-  const projectDefinition = RESEARCH_PROJECTS[projectId];
+  const program =
+    RESEARCH_PROGRAMS[projectId];
 
-  if (!projectState || !projectDefinition) {
+  const nextRank =
+    getNextResearchRankDefinition(
+      state,
+      projectId,
+    );
+
+  if (!program || nextRank === null) {
     return false;
   }
 
-  if (projectState.isCompleted) {
-    return false;
-  }
+  return program.prerequisites.every(
+    ({
+      programId,
+      requiredRank,
+    }) => {
+      const prerequisiteState =
+        state.research.projectsById[
+        programId
+        ];
 
-  return projectDefinition.prerequisiteIds.every((prerequisiteId) => {
-    return state.research.projectsById[prerequisiteId]?.isCompleted === true;
-  });
+      return (
+        prerequisiteState !== undefined &&
+        prerequisiteState.completedRank >=
+        requiredRank
+      );
+    },
+  );
 }
 
 export function getStartableResearchProjectIds(
   state: GameState,
 ): ResearchProjectId[] {
-  return RESEARCH_PROJECT_IDS.filter((projectId) =>
+  return RESEARCH_PROGRAM_IDS.filter((projectId) =>
     canStartResearch(state, projectId),
   );
 }
@@ -161,15 +254,19 @@ export function applyResearchProgress(
   }
 
   const projectState =
-    state.research.projectsById[activeProjectId];
+    state.research.projectsById[
+    activeProjectId
+    ];
 
-  const projectDefinition =
-    RESEARCH_PROJECTS[activeProjectId];
+  const nextRank =
+    getNextResearchRankDefinition(
+      state,
+      activeProjectId,
+    );
 
   if (
     !projectState ||
-    !projectDefinition ||
-    projectState.isCompleted
+    nextRank === null
   ) {
     return {
       ...state,
@@ -186,11 +283,11 @@ export function applyResearchProgress(
   }
 
   const remainingResearch =
-    projectDefinition.scienceCost -
+    nextRank.scienceCost -
     projectState.progress;
 
   if (remainingResearch <= 0) {
-    return completeResearchProject(
+    return completeResearchRank(
       state,
       activeProjectId,
     );
@@ -202,7 +299,8 @@ export function applyResearchProgress(
   );
 
   const nextProgress =
-    projectState.progress + appliedProgress;
+    projectState.progress +
+    appliedProgress;
 
   const nextState: GameState = {
     ...state,
@@ -223,12 +321,12 @@ export function applyResearchProgress(
 
   if (
     nextProgress <
-    projectDefinition.scienceCost
+    nextRank.scienceCost
   ) {
     return nextState;
   }
 
-  return completeResearchProject(
+  return completeResearchRank(
     nextState,
     activeProjectId,
   );
@@ -238,7 +336,10 @@ export function isResearchCompleted(
   state: GameState,
   projectId: ResearchProjectId,
 ): boolean {
-  return state.research.projectsById[projectId]?.isCompleted === true;
+  return isResearchProgramMastered(
+    state,
+    projectId,
+  );
 }
 
 export function getResearchOutpostOutputBonus(
@@ -296,34 +397,51 @@ export function getResearchOutpostOutputMultiplier(
   return 1 + getResearchOutpostOutputBonus(state, outpostId);
 }
 
-function completeResearchProject(
+function completeResearchRank(
   state: GameState,
   projectId: ResearchProjectId,
 ): GameState {
-  const projectState = state.research.projectsById[projectId];
+  const program =
+    RESEARCH_PROGRAMS[projectId];
 
-  if (!projectState) {
+  const projectState =
+    state.research.projectsById[
+    projectId
+    ];
+
+  if (!program || !projectState) {
     return state;
   }
+
+  const completedRank = Math.min(
+    program.ranks.length,
+    projectState.completedRank + 1,
+  );
+
+  const isCompleted =
+    completedRank >=
+    program.ranks.length;
 
   return {
     ...state,
 
     research: {
       ...state.research,
+
       activeProjectId:
-        state.research.activeProjectId === projectId
+        state.research.activeProjectId ===
+          projectId
           ? null
           : state.research.activeProjectId,
+
       projectsById: {
         ...state.research.projectsById,
+
         [projectId]: {
           ...projectState,
-          completedRank: Math.max(
-            1,
-            projectState.completedRank,
-          ),
-          isCompleted: true,
+          completedRank,
+          progress: 0,
+          isCompleted,
         },
       },
     },

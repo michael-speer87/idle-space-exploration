@@ -8,7 +8,10 @@ import {
 import { SUPPORT_BUILDINGS } from "../config/supportBuildings";
 import type { GameState, StarSystem } from "../types";
 import { getInfluenceOutputMultiplier } from "./influenceSystem";
-import { getResearchOutpostOutputBonus } from "./researchSystem";
+import {
+  getNextResearchRankDefinition,
+  getResearchOutpostOutputBonus,
+} from "./researchSystem";
 import { BASE_CREDITS_PER_MATERIAL, GRAD_COMMAND_STARTER_ENERGY } from "../config/economy";
 import { calculateMaterialFlow } from "./materialEconomySystem";
 
@@ -76,7 +79,7 @@ export function calculateRates(state: GameState): CalculatedRates {
       energyUsed,
     );
 
-  
+
 
   let epPerSecond = 0;
   let sciencePerSecond = 0;
@@ -175,18 +178,20 @@ export function calculateRates(state: GameState): CalculatedRates {
 
   const activeProjectId =
     state.research.activeProjectId;
-  
+
   const hasActiveResearch =
     activeProjectId !== null &&
-    state.research.projectsById[activeProjectId]
-      ?.isCompleted === false;
-  
+    getNextResearchRankDefinition(
+      state,
+      activeProjectId,
+    ) !== null;
+
   const researchSpeedPerSecond =
     hasActiveResearch
       ? Math.min(
         sciencePerSecond,
         researchCapacityPerSecond,
-        )
+      )
       : 0;
 
   return {

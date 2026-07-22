@@ -114,6 +114,16 @@ export function MapLegend() {
               <LegendRow
                 marker={
                   <OutpostMarker
+                    symbol="+"
+                    className="text-[#72e0ff]"
+                  />
+                }
+                label="Research Academy"
+              />
+
+              <LegendRow
+                marker={
+                  <OutpostMarker
                     symbol="◆"
                     className="text-[#9cffb1]"
                   />
@@ -132,7 +142,7 @@ export function MapLegend() {
               />
             </LegendGroup>
 
-            <LegendGroup 
+            <LegendGroup
               title="System Rarity"
               className="col-span-2"
               contentClassName="grid-cols-2 sm:grid-cols-3"
@@ -159,7 +169,7 @@ export function MapLegend() {
               ))}
             </LegendGroup>
 
-            
+
           </div>
         </div>
       )}

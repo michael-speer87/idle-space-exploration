@@ -817,6 +817,22 @@ function drawClaimedOutpostMarker(container: Container, system: StarSystem, mate
             break;
         }
 
+        case "research_academy": {
+            marker.moveTo(-3.25, markerY);
+            marker.lineTo(3.25, markerY);
+
+            marker.moveTo(0, markerY - 3.25)
+            marker.lineTo(0, markerY + 3.25)
+
+            marker.stroke({
+                color: markerColor,
+                width: 1.75,
+                alpha: 1,
+            })
+
+            break;
+        }
+
         case "power_relay": {
             marker
                 .poly([

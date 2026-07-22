@@ -9,7 +9,7 @@ import {
   RESEARCH_WEB_CONNECTIONS,
   RESEARCH_WEB_LAYOUT,
   RESEARCH_WEB_PROJECT_IDS,
-  type ResearchDiscipline,
+  type ResearchDirectorate,
   type ResearchNodeKind,
   type ResearchWebNodeLayout,
   type ResearchWebPointId,
@@ -17,35 +17,31 @@ import {
 import { ResearchNodeIcon } from "./ResearchNodeIcon";
 import { useEffect, useRef } from "react";
 
-const RESEARCH_DISCIPLINE_LABELS: Array<{
-  discipline: ResearchDiscipline;
-  x: number;
-  y: number;
-}> = [
+const RESEARCH_DIRECTORATE_LABELS:
+  Array<{
+    directorate: ResearchDirectorate;
+    x: number;
+    y: number;
+  }> = [
     {
-      discipline: "survey",
+      directorate: "exploration",
       x: 50,
       y: 29,
     },
     {
-      discipline: "commerce",
-      x: 72,
-      y: 25,
+      directorate: "industrial",
+      x: 76,
+      y: 50,
     },
     {
-      discipline: "science",
-      x: 74,
-      y: 63,
+      directorate: "systems",
+      x: 24,
+      y: 50,
     },
     {
-      discipline: "extraction",
-      x: 26,
-      y: 63,
-    },
-    {
-      discipline: "power",
-      x: 28,
-      y: 25,
+      directorate: "command",
+      x: 50,
+      y: 90,
     },
   ];
 
@@ -145,7 +141,7 @@ export function ResearchWeb({
           bg-ise-void/55
         "
         role="group"
-        aria-label="Research technology web"
+        aria-label="Research directorate web"
       >
         <ResearchConnectionLayer
           research={research}
@@ -154,11 +150,11 @@ export function ResearchWeb({
 
         <ResearchCore />
 
-        {RESEARCH_DISCIPLINE_LABELS.map(
-          ({ discipline, x, y }) => (
-            <ResearchDisciplineLabel
-              key={discipline}
-              discipline={discipline}
+        {RESEARCH_DIRECTORATE_LABELS.map(
+          ({ directorate, x, y }) => (
+            <ResearchDirectorateLabel
+              key={directorate}
+              directorate={directorate}
               x={x}
               y={y}
             />
@@ -226,7 +222,7 @@ export function ResearchWeb({
             <ResearchNodeButton
               key={projectId}
               projectId={projectId}
-              discipline={layout.discipline}
+              directorate={layout.directorate}
               kind={layout.kind}
               x={layout.x}
               y={layout.y}
@@ -405,17 +401,17 @@ function ResearchCore() {
   );
 }
 
-type ResearchDisciplineLabelProps = {
-  discipline: ResearchDiscipline;
+type ResearchDirectorateLabelProps = {
+  directorate: ResearchDirectorate;
   x: number;
   y: number;
 };
 
-function ResearchDisciplineLabel({
-  discipline,
+function ResearchDirectorateLabel({
+  directorate,
   x,
   y,
-}: ResearchDisciplineLabelProps) {
+}: ResearchDirectorateLabelProps) {
   return (
     <span
       className="
@@ -433,7 +429,7 @@ function ResearchDisciplineLabel({
       }}
       aria-hidden="true"
     >
-      {formatDisciplineName(discipline)}
+      {formatDirectorateName(directorate)}
     </span>
   );
 }
@@ -496,7 +492,7 @@ function ResearchWebKeyItem({
 
 type ResearchNodeButtonProps = {
   projectId: ResearchProjectId;
-  discipline: ResearchDiscipline;
+  directorate: ResearchDirectorate;
   kind: ResearchNodeKind;
   x: number;
   y: number;
@@ -520,7 +516,7 @@ type ResearchNodeButtonProps = {
 
 function ResearchNodeButton({
   projectId,
-  discipline,
+  directorate,
   kind,
   x,
   y,
@@ -654,7 +650,7 @@ function ResearchNodeButton({
         }}
       >
         <ResearchNodeIcon
-          discipline={discipline}
+          directorate={directorate}
           kind={kind}
         />
 
@@ -709,7 +705,7 @@ function ResearchNodeButton({
         nextRankNumber={nextRankNumber}
         progressPercent={progressPercent}
         stateLabel={stateLabel}
-        discipline={discipline}
+        directorate={directorate}
         kind={kind}
         canStart={canStart}
         isActive={isActive}
@@ -799,7 +795,7 @@ type ResearchNodeTooltipProps = {
   nextRankNumber: number | null;
   progressPercent: number;
   stateLabel: string;
-  discipline: ResearchDiscipline;
+  directorate: ResearchDirectorate;
   kind: ResearchNodeKind;
   canStart: boolean;
   isActive: boolean;
@@ -823,7 +819,7 @@ function ResearchNodeTooltip({
   nextRankNumber,
   progressPercent,
   stateLabel,
-  discipline,
+  directorate,
   kind,
   canStart,
   isActive,
@@ -911,7 +907,7 @@ function ResearchNodeTooltip({
       tracking-[0.06em] text-ise-text-muted
     "
         >
-          {formatDisciplineName(discipline)}
+          {formatDirectorateName(directorate)}
         </span>
 
         <span
@@ -1108,31 +1104,27 @@ function formatPrerequisiteNames(
         programId,
         requiredRank,
       }) =>
-        `${
-          RESEARCH_PROGRAMS[programId]
-            .name
+        `${RESEARCH_PROGRAMS[programId]
+          .name
         } Rank ${requiredRank}`,
     )
     .join(", ");
 }
 
-function formatDisciplineName(
-  discipline: ResearchDiscipline,
+function formatDirectorateName(
+  directorate: ResearchDirectorate,
 ): string {
-  switch (discipline) {
-    case "survey":
-      return "Survey";
+  switch (directorate) {
+    case "exploration":
+      return "Exploration";
 
-    case "commerce":
-      return "Commerce";
+    case "industrial":
+      return "Industrial";
 
-    case "science":
-      return "Science";
+    case "systems":
+      return "Systems";
 
-    case "power":
-      return "Power";
-
-    case "extraction":
-      return "Extraction";
+    case "command":
+      return "Command";
   }
 }

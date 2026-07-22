@@ -1,16 +1,19 @@
-import type { ReactNode } from "react";
 import type {
-    ResearchDiscipline,
-    ResearchNodeKind,
-} from "./researchWebLayout"
+  ReactNode,
+} from "react";
+
+import type {
+  ResearchDirectorate,
+  ResearchNodeKind,
+} from "./researchWebLayout";
 
 type ResearchNodeIconProps = {
-    discipline: ResearchDiscipline;
-    kind: ResearchNodeKind;
-}
+  directorate: ResearchDirectorate;
+  kind: ResearchNodeKind;
+};
 
 export function ResearchNodeIcon({
-  discipline,
+  directorate,
   kind,
 }: ResearchNodeIconProps) {
   return (
@@ -30,12 +33,14 @@ export function ResearchNodeIcon({
         strokeLinecap="round"
         strokeLinejoin="round"
       >
-        {getDisciplineGlyph(discipline)}
+        {getDirectorateGlyph(
+          directorate,
+        )}
       </svg>
 
       <span
         className="
-          absolute -right-1 -bottom-1
+          absolute -bottom-1 -right-1
           flex h-4 w-4
           items-center justify-center
           rounded-full border
@@ -51,77 +56,108 @@ export function ResearchNodeIcon({
   );
 }
 
-function getDisciplineGlyph(
-  discipline: ResearchDiscipline,
+function getDirectorateGlyph(
+  directorate: ResearchDirectorate,
 ): ReactNode {
-  switch (discipline) {
-    case "survey":
+  switch (directorate) {
+    case "exploration":
       return (
         <>
-          <circle cx="12" cy="12" r="8" />
-          <circle cx="12" cy="12" r="2" />
-          <path d="M12 12L18 7" />
-          <path d="M12 4A8 8 0 0 1 20 12" />
-        </>
-      );
-
-    case "commerce":
-      return (
-        <>
-          <path d="M4 8H18" />
-          <path d="M15 5L18 8L15 11" />
-          <path d="M20 16H6" />
-          <path d="M9 13L6 16L9 19" />
-        </>
-      );
-
-    case "science":
-      return (
-        <>
-          <ellipse
-            cx="12"
-            cy="12"
-            rx="9"
-            ry="3.5"
-          />
-          <ellipse
-            cx="12"
-            cy="12"
-            rx="3.5"
-            ry="9"
-            transform="rotate(45 12 12)"
-          />
-          <ellipse
-            cx="12"
-            cy="12"
-            rx="3.5"
-            ry="9"
-            transform="rotate(-45 12 12)"
-          />
           <circle
             cx="12"
             cy="12"
-            r="1.5"
-            fill="currentColor"
-            stroke="none"
+            r="8"
+          />
+
+          <circle
+            cx="12"
+            cy="12"
+            r="2"
+          />
+
+          <path d="M12 12L18 7" />
+
+          <path
+            d="
+              M12 4
+              A8 8 0 0 1
+              20 12
+            "
           />
         </>
       );
 
-    case "power":
+    case "industrial":
       return (
         <>
-          <path d="M13 2L5 13H11L10 22L19 10H13L13 2Z" />
+          <path
+            d="
+              M4 20V9
+              L10 12V8
+              L16 11V4
+              H20V20
+              H4Z
+            "
+          />
+
+          <path d="M8 20V16H12V20" />
+          <path d="M16 8H20" />
         </>
       );
 
-    case "extraction":
+    case "systems":
       return (
         <>
-          <path d="M5 19L15 9" />
-          <path d="M12 5L19 12" />
-          <path d="M9 8C12 5 15 4 19 5" />
-          <path d="M4 20L7 17" />
+          <circle
+            cx="12"
+            cy="12"
+            r="2.5"
+            fill="currentColor"
+            stroke="none"
+          />
+
+          <circle
+            cx="5"
+            cy="6"
+            r="2"
+          />
+
+          <circle
+            cx="19"
+            cy="6"
+            r="2"
+          />
+
+          <circle
+            cx="12"
+            cy="20"
+            r="2"
+          />
+
+          <path d="M6.5 7.5L10 10.5" />
+          <path d="M17.5 7.5L14 10.5" />
+          <path d="M12 14.5V18" />
+        </>
+      );
+
+    case "command":
+      return (
+        <>
+          <path
+            d="
+              M12 3
+              L19 6V11
+              C19 15.5
+              16.2 19
+              12 21
+              C7.8 19
+              5 15.5
+              5 11V6
+              L12 3Z
+            "
+          />
+
+          <path d="M9 12L11 14L15 10" />
         </>
       );
   }

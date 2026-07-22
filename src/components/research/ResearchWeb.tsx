@@ -1,5 +1,6 @@
 import {
-  RESEARCH_PROJECTS,
+  RESEARCH_PROGRAMS,
+  type ResearchPrerequisite,
   type ResearchProjectId,
 } from "../../game/config/research";
 import type { ResearchState } from "../../game/types";
@@ -166,17 +167,60 @@ export function ResearchWeb({
 
         {RESEARCH_WEB_PROJECT_IDS.map((projectId) => {
           const layout = getNodeLayout(projectId);
-          const project = RESEARCH_PROJECTS[projectId];
-          const projectState = research.projectsById[projectId];
 
-          if (layout === null || projectState === undefined) {
+          const program =
+            RESEARCH_PROGRAMS[projectId];
+
+          const programState =
+            research.projectsById[projectId];
+
+          if (
+            layout === null ||
+            programState === undefined
+          ) {
             return null;
           }
 
-          const progressPercent = calculateProgressPercent(
-            projectState.progress,
-            project.scienceCost,
+          const totalRanks =
+            program.ranks.length;
+
+          const completedRank = Math.min(
+            totalRanks,
+            Math.max(
+              0,
+              Math.floor(
+                programState.completedRank,
+              ),
+            ),
           );
+
+          const nextRank =
+            program.ranks[completedRank] ?? null;
+
+          const displayedRank =
+            nextRank ??
+            program.ranks[totalRanks - 1] ??
+            null;
+
+          if (displayedRank === null) {
+            return null;
+          }
+
+          const nextRankNumber =
+            nextRank !== null
+              ? completedRank + 1
+              : null;
+
+          const isMastered =
+            completedRank >= totalRanks;
+
+          const progressPercent =
+            nextRank !== null
+              ? calculateProgressPercent(
+                programState.progress,
+                nextRank.scienceCost,
+              )
+              : 100;
 
           return (
             <ResearchNodeButton
@@ -186,16 +230,34 @@ export function ResearchWeb({
               kind={layout.kind}
               x={layout.x}
               y={layout.y}
-              name={project.name}
-              description={project.description}
-              scienceCost={project.scienceCost}
-              prerequisiteIds={project.prerequisiteIds}
+              name={program.name}
+              description={displayedRank.description}
+              scienceCost={
+                nextRank?.scienceCost ?? null
+              }
+              prerequisites={
+                program.prerequisites
+              }
+              completedRank={completedRank}
+              totalRanks={totalRanks}
+              nextRankNumber={nextRankNumber}
               progressPercent={progressPercent}
-              isCompleted={projectState.isCompleted}
-              isActive={research.activeProjectId === projectId}
-              canStart={startableProjectIdSet.has(projectId)}
-              isSelected={selectedProjectId === projectId}
-              hasActiveResearch={research.activeProjectId !== null}
+              isMastered={isMastered}
+              isActive={
+                research.activeProjectId ===
+                projectId
+              }
+              canStart={
+                startableProjectIdSet.has(
+                  projectId,
+                )
+              }
+              isSelected={
+                selectedProjectId === projectId
+              }
+              hasActiveResearch={
+                research.activeProjectId !== null
+              }
               onSelect={onSelectProject}
               onStartResearch={onStartResearch}
               onDismiss={onDismissProject}
@@ -233,12 +295,29 @@ function ResearchConnectionLayer({
           return null;
         }
 
-        const targetState = research.projectsById[connection.to];
-        const isCompleted = targetState?.isCompleted === true;
-        const isActive = research.activeProjectId === connection.to;
-        const canStart = startableProjectIdSet.has(connection.to);
+        const targetProgram =
+          RESEARCH_PROGRAMS[connection.to];
 
-        const lineClassName = isCompleted
+        const targetState =
+          research.projectsById[
+          connection.to
+          ];
+
+        const isMastered =
+          targetState !== undefined &&
+          targetState.completedRank >=
+          targetProgram.ranks.length;
+
+        const isActive =
+          research.activeProjectId ===
+          connection.to;
+
+        const canStart =
+          startableProjectIdSet.has(
+            connection.to,
+          );
+
+        const lineClassName = isMastered
           ? "text-ise-success"
           : isActive
             ? "text-ise-accent"
@@ -256,7 +335,7 @@ function ResearchConnectionLayer({
             stroke="currentColor"
             strokeWidth={isActive ? 2 : 1.25}
             strokeDasharray={
-              isCompleted || isActive || canStart
+              isMastered || isActive || canStart
                 ? undefined
                 : "3 3"
             }
@@ -423,10 +502,13 @@ type ResearchNodeButtonProps = {
   y: number;
   name: string;
   description: string;
-  scienceCost: number;
-  prerequisiteIds: ResearchProjectId[];
+  scienceCost: number | null;
+  prerequisites: ResearchPrerequisite[];
+  completedRank: number;
+  totalRanks: number;
+  nextRankNumber: number | null;
   progressPercent: number;
-  isCompleted: boolean;
+  isMastered: boolean;
   isActive: boolean;
   canStart: boolean;
   isSelected: boolean;
@@ -445,26 +527,36 @@ function ResearchNodeButton({
   name,
   description,
   scienceCost,
-  prerequisiteIds,
+  prerequisites,
+  completedRank,
+  totalRanks,
+  nextRankNumber,
   progressPercent,
-  isCompleted,
+  isMastered,
   isActive,
   canStart,
   isSelected,
   hasActiveResearch,
   onSelect,
   onStartResearch,
-  onDismiss
+  onDismiss,
 }: ResearchNodeButtonProps) {
-  const stateLabel = isCompleted
-    ? "Completed"
+  const stateLabel = isMastered
+    ? "Mastered"
     : isActive
       ? "Active"
       : canStart
         ? "Available"
         : "Locked";
 
-  const stateClassName = isCompleted
+  const rankLabel =
+    isMastered
+      ? `Rank ${totalRanks} of ${totalRanks}`
+      : nextRankNumber !== null
+        ? `Rank ${nextRankNumber} of ${totalRanks}`
+        : null;
+
+  const stateClassName = isMastered
     ? `
         border-ise-success
         bg-ise-success/20
@@ -545,9 +637,11 @@ function ResearchNodeButton({
         `}
         type="button"
         aria-label={
-          isActive
-            ? `${name}: ${stateLabel}, ${progressPercent}% complete`
-            : `${name}: ${stateLabel}`
+          isActive && rankLabel !== null
+            ? `${name}: ${rankLabel}, ${progressPercent}% complete`
+            : rankLabel !== null
+              ? `${name}: ${stateLabel}, ${rankLabel}`
+              : `${name}: ${stateLabel}`
         }
         aria-pressed={isSelected}
         onClick={() => {
@@ -564,12 +658,13 @@ function ResearchNodeButton({
           kind={kind}
         />
 
-        {isActive && !isCompleted && (
+        {isActive && !isMastered && (
           <ActiveResearchProgressRing
             progressPercent={progressPercent}
           />
         )}
-        {isCompleted && (
+
+        {isMastered && (
           <span
             className="
               absolute -right-1 -top-1
@@ -583,6 +678,24 @@ function ResearchNodeButton({
             ✓
           </span>
         )}
+
+        {totalRanks > 1 && !isMastered && (
+          <span
+            className="
+              absolute -bottom-1 -right-1
+              flex min-h-4 min-w-4
+              items-center justify-center
+              rounded-full
+              border border-ise-border-strong
+              bg-ise-void px-1
+              text-[0.5rem] font-semibold
+              tabular-nums text-ise-text-muted
+            "
+            aria-hidden="true"
+          >
+            {completedRank}/{totalRanks}
+          </span>
+        )}
       </button>
 
       <ResearchNodeTooltip
@@ -590,18 +703,25 @@ function ResearchNodeButton({
         name={name}
         description={description}
         scienceCost={scienceCost}
-        prerequisiteIds={prerequisiteIds}
+        prerequisites={prerequisites}
+        completedRank={completedRank}
+        totalRanks={totalRanks}
+        nextRankNumber={nextRankNumber}
         progressPercent={progressPercent}
         stateLabel={stateLabel}
         discipline={discipline}
         kind={kind}
         canStart={canStart}
         isActive={isActive}
-        isComplete={isCompleted}
+        isMastered={isMastered}
         isSelected={isSelected}
         hasActiveResearch={hasActiveResearch}
-        verticalClassName={tooltipVerticalClassName}
-        horizontalClassName={tooltipHorizontalClassName}
+        verticalClassName={
+          tooltipVerticalClassName
+        }
+        horizontalClassName={
+          tooltipHorizontalClassName
+        }
         onStartResearch={onStartResearch}
       />
     </div>
@@ -672,20 +792,24 @@ type ResearchNodeTooltipProps = {
   projectId: ResearchProjectId;
   name: string;
   description: string;
-  scienceCost: number;
-  prerequisiteIds: ResearchProjectId[];
+  scienceCost: number | null;
+  prerequisites: ResearchPrerequisite[];
+  completedRank: number;
+  totalRanks: number;
+  nextRankNumber: number | null;
   progressPercent: number;
   stateLabel: string;
   discipline: ResearchDiscipline;
   kind: ResearchNodeKind;
   canStart: boolean;
   isActive: boolean;
-  isComplete: boolean;
+  isMastered: boolean;
   isSelected: boolean;
   hasActiveResearch: boolean;
   verticalClassName: string;
   horizontalClassName: string;
-  onStartResearch: (projectId: ResearchProjectId) => void;
+  onStartResearch:
+  (projectId: ResearchProjectId) => void;
 };
 
 function ResearchNodeTooltip({
@@ -693,14 +817,17 @@ function ResearchNodeTooltip({
   name,
   description,
   scienceCost,
-  prerequisiteIds,
+  prerequisites,
+  completedRank,
+  totalRanks,
+  nextRankNumber,
   progressPercent,
   stateLabel,
   discipline,
   kind,
   canStart,
   isActive,
-  isComplete,
+  isMastered,
   isSelected,
   hasActiveResearch,
   verticalClassName,
@@ -708,15 +835,21 @@ function ResearchNodeTooltip({
   onStartResearch,
 }: ResearchNodeTooltipProps) {
 
-  const actionLabel = isComplete
-    ? "Research Completed"
+  const actionLabel = isMastered
+    ? "Program Mastered"
     : isActive
-      ? "Currently Researching"
+      ? nextRankNumber !== null
+        ? `Researching Rank ${nextRankNumber}`
+        : "Currently Researching"
       : !canStart
         ? "Research Locked"
         : hasActiveResearch
-          ? "Switch Research"
-          : "Start Research"
+          ? nextRankNumber !== null
+            ? `Switch to Rank ${nextRankNumber}`
+            : "Switch Research"
+          : nextRankNumber !== null
+            ? `Research Rank ${nextRankNumber}`
+            : "Start Research";
 
   return (
     <div
@@ -727,12 +860,11 @@ function ResearchNodeTooltip({
         bg-ise-surface p-3
         text-left shadow-xl
 
-        transition-opacity duraction-150
+        transition-opacity duration-150
 
-        ${
-          isSelected
-            ? "visible opacity-100"
-            : "invisible opacity-0"
+        ${isSelected
+          ? "visible opacity-100"
+          : "invisible opacity-0"
         }
 
         ${verticalClassName}
@@ -792,6 +924,24 @@ function ResearchNodeTooltip({
         >
           {formatNodeKindName(kind)}
         </span>
+
+        <span
+          className="
+    rounded-full border
+    border-ise-accent/30
+    bg-ise-accent/10
+    px-1.5 py-0.5
+    text-[0.55rem] font-semibold
+    uppercase tracking-[0.06em]
+    text-ise-accent-hover
+  "
+        >
+          {isMastered
+            ? `${totalRanks}/${totalRanks} Ranks`
+            : nextRankNumber !== null
+              ? `Rank ${nextRankNumber}/${totalRanks}`
+              : `${completedRank}/${totalRanks} Ranks`}
+        </span>
       </div>
 
       <p
@@ -811,10 +961,18 @@ function ResearchNodeTooltip({
         "
       >
         <TooltipMetric
-          label="Science Cost"
-          value={scienceCost.toFixed(0)}
-          valueClassName="text-ise-science"
+          label="Completed Ranks"
+          value={`${completedRank}/${totalRanks}`}
+          valueClassName="text-ise-success"
         />
+
+        {scienceCost !== null && (
+          <TooltipMetric
+            label="Next Rank Cost"
+            value={scienceCost.toFixed(0)}
+            valueClassName="text-ise-science"
+          />
+        )}
 
         {(progressPercent > 0 || stateLabel === "Active") && (
           <TooltipMetric
@@ -824,14 +982,14 @@ function ResearchNodeTooltip({
           />
         )}
 
-        {prerequisiteIds.length > 0 && (
+        {prerequisites.length > 0 && (
           <div className="leading-relaxed">
             <span className="text-ise-text-subtle">
               Requires:{" "}
             </span>
 
             <span className="text-ise-text-muted">
-              {formatPrerequisiteNames(prerequisiteIds)}
+              {formatPrerequisiteNames(prerequisites)}
             </span>
           </div>
         )}
@@ -846,7 +1004,7 @@ function ResearchNodeTooltip({
           focus-visible:outline-offset-2
           focus-visible:outline-ise-accent
 
-          ${isComplete || isActive || !canStart
+          ${isMastered || isActive || !canStart
             ? `
                   cursor-not-allowed
                   border-ise-border
@@ -863,7 +1021,7 @@ function ResearchNodeTooltip({
         `}
         type="button"
         disabled={
-          isComplete ||
+          isMastered ||
           isActive ||
           !canStart
         }
@@ -942,12 +1100,18 @@ function calculateProgressPercent(
 }
 
 function formatPrerequisiteNames(
-  prerequisiteIds: ResearchProjectId[],
+  prerequisites: ResearchPrerequisite[],
 ): string {
-  return prerequisiteIds
+  return prerequisites
     .map(
-      (projectId) =>
-        RESEARCH_PROJECTS[projectId].name,
+      ({
+        programId,
+        requiredRank,
+      }) =>
+        `${
+          RESEARCH_PROGRAMS[programId]
+            .name
+        } Rank ${requiredRank}`,
     )
     .join(", ");
 }

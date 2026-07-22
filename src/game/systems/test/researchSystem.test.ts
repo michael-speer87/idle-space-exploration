@@ -14,6 +14,8 @@ import {
     applyResearchProgress,
     canStartResearch,
     getNextResearchRankDefinition,
+    getResearchOutpostOutputBonus,
+    getSurveyDistanceReduction,
     startResearch,
 } from "../researchSystem";
 
@@ -269,6 +271,126 @@ describe("Ranked Research lifecycle", () => {
                         "improved_survey_arrays",
                     ),
                 ).toBe(false);
+            } finally {
+                program.ranks = originalRanks;
+            }
+        },
+    );
+
+    it(
+        "applies effects from each completed rank",
+        () => {
+            const program =
+                RESEARCH_PROGRAMS
+                    .improved_survey_arrays;
+
+            const originalRanks =
+                program.ranks;
+
+            program.ranks = [
+                originalRanks[0],
+
+                {
+                    rank: 2,
+                    scienceCost: 2_000,
+                    description:
+                        "Temporary ranked-effect test.",
+                    effects: [
+                        {
+                            type:
+                                "primary_outpost_output_bonus",
+                            outpostId:
+                                "survey_array",
+                            amount: 0.1,
+                        },
+                    ],
+                },
+            ];
+
+            try {
+                const state = createNewGame();
+
+                const programState =
+                    state.research.projectsById
+                        .improved_survey_arrays;
+
+                programState.completedRank = 1;
+                programState.isCompleted = false;
+
+                expect(
+                    getResearchOutpostOutputBonus(
+                        state,
+                        "survey_array",
+                    ),
+                ).toBeCloseTo(0.25);
+
+                programState.completedRank = 2;
+                programState.isCompleted = true;
+
+                expect(
+                    getResearchOutpostOutputBonus(
+                        state,
+                        "survey_array",
+                    ),
+                ).toBeCloseTo(0.35);
+            } finally {
+                program.ranks = originalRanks;
+            }
+        },
+    );
+
+    it(
+        "accumulates Survey distance effects by completed rank",
+        () => {
+            const program =
+                RESEARCH_PROGRAMS
+                    .deep_range_telemetry;
+
+            const originalRanks =
+                program.ranks;
+
+            program.ranks = [
+                originalRanks[0],
+
+                {
+                    rank: 2,
+                    scienceCost: 10_000,
+                    description:
+                        "Temporary distance-effect test.",
+                    effects: [
+                        {
+                            type:
+                                "survey_distance_reduction",
+                            amount: 0.1,
+                        },
+                    ],
+                },
+            ];
+
+            try {
+                const state = createNewGame();
+
+                const programState =
+                    state.research.projectsById
+                        .deep_range_telemetry;
+
+                programState.completedRank = 1;
+                programState.isCompleted = false;
+
+                expect(
+                    getSurveyDistanceReduction(
+                        state,
+                    ),
+                ).toBeCloseTo(0.1);
+
+                programState.completedRank = 2;
+                programState.isCompleted = true;
+
+                expect(
+                    getSurveyDistanceReduction(
+                        state,
+                    ),
+                ).toBeCloseTo(0.2);
             } finally {
                 program.ranks = originalRanks;
             }

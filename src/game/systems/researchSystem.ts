@@ -2,8 +2,7 @@ import type { GameState, ResearchState } from "../types";
 import {
   RESEARCH_PROGRAM_IDS,
   RESEARCH_PROGRAMS,
-  RESEARCH_PROJECT_IDS,
-  RESEARCH_PROJECTS,
+  type ResearchEffect,
   type ResearchProjectId,
   type ResearchRankDefinition,
 } from "../config/research";
@@ -342,26 +341,74 @@ export function isResearchCompleted(
   );
 }
 
+function getCompletedResearchEffects(
+  state: GameState,
+): ResearchEffect[] {
+  const completedEffects:
+    ResearchEffect[] = [];
+
+  for (
+    const programId of
+    RESEARCH_PROGRAM_IDS
+  ) {
+    const program =
+      RESEARCH_PROGRAMS[programId];
+
+    const programState =
+      state.research.projectsById[
+      programId
+      ];
+
+    if (!programState) {
+      continue;
+    }
+
+    const completedRankCount =
+      Math.min(
+        program.ranks.length,
+
+        Math.max(
+          0,
+          Math.floor(
+            programState.completedRank,
+          ),
+        ),
+      );
+
+    const completedRanks =
+      program.ranks.slice(
+        0,
+        completedRankCount,
+      );
+
+    for (
+      const rank of completedRanks
+    ) {
+      completedEffects.push(
+        ...rank.effects,
+      );
+    }
+  }
+
+  return completedEffects;
+}
+
 export function getResearchOutpostOutputBonus(
   state: GameState,
   outpostId: PrimaryOutpostId,
 ): number {
   let totalBonus = 0;
 
-  for (const projectId of RESEARCH_PROJECT_IDS) {
-    if (!isResearchCompleted(state, projectId)) {
-      continue;
-    }
-
-    const project = RESEARCH_PROJECTS[projectId];
-
-    for (const effect of project.effects) {
-      if (
-        effect.type === "primary_outpost_output_bonus" &&
-        effect.outpostId === outpostId
-      ) {
-        totalBonus += effect.amount;
-      }
+  for (
+    const effect of
+    getCompletedResearchEffects(state)
+  ) {
+    if (
+      effect.type ===
+        "primary_outpost_output_bonus" &&
+      effect.outpostId === outpostId
+    ) {
+      totalBonus += effect.amount;
     }
   }
 
@@ -373,21 +420,22 @@ export function getSurveyDistanceReduction(
 ): number {
   let totalReduction = 0;
 
-  for (const projectId of RESEARCH_PROJECT_IDS) {
-    if (!isResearchCompleted(state, projectId)) {
-      continue;
-    }
-
-    const project = RESEARCH_PROJECTS[projectId];
-
-    for (const effect of project.effects) {
-      if (effect.type === "survey_distance_reduction") {
-        totalReduction += effect.amount;
-      }
+  for (
+    const effect of
+    getCompletedResearchEffects(state)
+  ) {
+    if (
+      effect.type ===
+      "survey_distance_reduction"
+    ) {
+      totalReduction += effect.amount;
     }
   }
 
-  return Math.min(1, Math.max(0, totalReduction));
+  return Math.min(
+    1,
+    Math.max(0, totalReduction),
+  );
 }
 
 export function getResearchOutpostOutputMultiplier(

@@ -34,6 +34,28 @@ export type ResearchEffect =
     amount: number;
   };
 
+export type ResearchProgramId =
+  ResearchProjectId;
+
+export type ResearchRankDefinition = {
+  rank: number;
+  scienceCost: number;
+  description: string;
+  effects: ResearchEffect[];
+};
+
+export type ResearchPrerequisite = {
+  programId: ResearchProgramId;
+  requiredRank: number;
+};
+
+export type ResearchProgramDefinition = {
+  id: ResearchProgramId;
+  name: string;
+  prerequisites: ResearchPrerequisite[];
+  ranks: ResearchRankDefinition[];
+}
+
 export type ResearchProjectDefinition = {
   id: ResearchProjectId;
   name: string;
@@ -277,3 +299,46 @@ export const RESEARCH_PROJECTS: Record<
 export const RESEARCH_PROJECT_IDS = Object.keys(
   RESEARCH_PROJECTS,
 ) as ResearchProjectId[];
+
+export const RESEARCH_PROGRAM_IDS:
+  ResearchProgramId[] = [
+    ...RESEARCH_PROJECT_IDS,
+  ];
+
+export const RESEARCH_PROGRAMS =
+  Object.fromEntries(
+    RESEARCH_PROGRAM_IDS.map((programId) => {
+      const project =
+        RESEARCH_PROJECTS[programId];
+
+      const program:
+        ResearchProgramDefinition = {
+        id: project.id,
+        name: project.name,
+
+        prerequisites:
+          project.prerequisiteIds.map(
+            (prerequisiteId) => ({
+              programId: prerequisiteId,
+              requiredRank: 1,
+            }),
+          ),
+
+        ranks: [
+          {
+            rank: 1,
+            scienceCost:
+              project.scienceCost,
+            description:
+              project.description,
+            effects: project.effects,
+          },
+        ],
+      };
+
+      return [programId, program];
+    }),
+  ) as Record<
+    ResearchProgramId,
+    ResearchProgramDefinition
+  >;

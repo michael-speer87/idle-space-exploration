@@ -1,21 +1,24 @@
 import type { PrimaryOutpostId } from "./outposts";
-import type { ResearchProjectId } from "./research";
+
 
 export type SupportBuildingId =
-    | "survey_booster"
-    | "local_market"
-    | "research_annex"
-    | "solar_grid"
-    | "refinery";
+  | "survey_booster"
+  | "local_market"
+  | "research_annex"
+  | "solar_grid"
+  | "refinery";
 
 export type SupportBuildingDefinition = {
-    id: SupportBuildingId;
-    name: string;
-    requiredPrimaryOutpostId: PrimaryOutpostId;
-    unlockResearchId: ResearchProjectId;
-    creditCost: number;
-    outputBonus: number;
-    description: string;
+  id: SupportBuildingId;
+  name: string;
+  requiredPrimaryOutpostId:
+  PrimaryOutpostId;
+
+  startsUnlocked: boolean;
+
+  creditCost: number;
+  outputBonus: number;
+  description: string;
 };
 
 export const SUPPORT_BUILDINGS: Record<SupportBuildingId, SupportBuildingDefinition> = {
@@ -23,7 +26,7 @@ export const SUPPORT_BUILDINGS: Record<SupportBuildingId, SupportBuildingDefinit
     id: "survey_booster",
     name: "Survey Booster",
     requiredPrimaryOutpostId: "survey_array",
-    unlockResearchId: "auxiliary_survey_instrumentation",
+    startsUnlocked: false,
     creditCost: 75,
     outputBonus: 0.15,
     description: "Increases this system's Survey Array EP output by 15%.",
@@ -33,7 +36,7 @@ export const SUPPORT_BUILDINGS: Record<SupportBuildingId, SupportBuildingDefinit
     id: "local_market",
     name: "Local Market",
     requiredPrimaryOutpostId: "commerce_hub",
-    unlockResearchId: "regional_trade_networks",
+    startsUnlocked: false,
     creditCost: 75,
     outputBonus: 0.15,
     description: "Increases this system's Material sales throughput by 15%.",
@@ -43,7 +46,7 @@ export const SUPPORT_BUILDINGS: Record<SupportBuildingId, SupportBuildingDefinit
     id: "research_annex",
     name: "Research Annex",
     requiredPrimaryOutpostId: "science_station",
-    unlockResearchId: "distributed_research_facilities",
+    startsUnlocked: false,
     creditCost: 100,
     outputBonus: 0.15,
     description: "Increases this system's Science Station output by 15%.",
@@ -53,7 +56,7 @@ export const SUPPORT_BUILDINGS: Record<SupportBuildingId, SupportBuildingDefinit
     id: "solar_grid",
     name: "Solar Grid",
     requiredPrimaryOutpostId: "power_relay",
-    unlockResearchId: "localized_power_infrastructure",
+    startsUnlocked: false,
     creditCost: 125,
     outputBonus: 0.15,
     description: "Increases this system's Power Relay Energy output by 15%.",
@@ -63,7 +66,7 @@ export const SUPPORT_BUILDINGS: Record<SupportBuildingId, SupportBuildingDefinit
     id: "refinery",
     name: "Refinery",
     requiredPrimaryOutpostId: "extraction_rig",
-    unlockResearchId: "industrial_refining_methods",
+    startsUnlocked: false,
     creditCost: 100,
     outputBonus: 0.15,
     description: "Increases this system's Material production by 15%.",

@@ -44,6 +44,38 @@ describe("Survey distance requirements", () => {
       ),
     ).toBe(23);
   });
+
+  it(
+    "applies all completed Deep Range Telemetry ranks",
+    () => {
+      const state = createNewGame();
+
+      state.research.projectsById
+        .deep_range_telemetry
+        .completedRank = 3;
+
+      expect(
+        getSurveyDistanceReduction(state),
+      ).toBeCloseTo(0.3);
+
+      const requirement =
+        getSurveyRequirementForSystem(
+          state,
+          DISTANCE_TWO_SYSTEM_ID,
+        );
+
+      /*
+       * Base requirement: 12
+       * Distance contribution:
+       * 2 × 0.5 × (1 - 0.3) = 0.7
+       *
+       * 12 × (1 + 0.7) = 20.4
+       * Rounded upward: 21
+       */
+
+      expect(requirement).toBe(21);
+    },
+  );
 });
 
 describe("Active Survey speed", () => {

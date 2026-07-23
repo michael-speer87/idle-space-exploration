@@ -247,5 +247,60 @@ describe(
         }
       },
     );
+
+    it(
+  "owns Support Building construction access through Research effects",
+  () => {
+    const unlocks = [
+      {
+        programId:
+          "auxiliary_survey_instrumentation",
+        supportBuildingId:
+          "survey_booster",
+      },
+      {
+        programId:
+          "regional_trade_networks",
+        supportBuildingId:
+          "local_market",
+      },
+      {
+        programId:
+          "distributed_research_facilities",
+        supportBuildingId:
+          "research_annex",
+      },
+      {
+        programId:
+          "localized_power_infrastructure",
+        supportBuildingId:
+          "solar_grid",
+      },
+      {
+        programId:
+          "industrial_refining_methods",
+        supportBuildingId:
+          "refinery",
+      },
+    ] as const;
+
+    for (
+      const {
+        programId,
+        supportBuildingId,
+      } of unlocks
+    ) {
+      expect(
+        RESEARCH_PROGRAMS[
+          programId
+        ].ranks[0].effects,
+      ).toContainEqual({
+        type:
+          "unlock_support_building",
+        supportBuildingId,
+      });
+    }
+  },
+);
   },
 );

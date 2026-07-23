@@ -4,11 +4,19 @@ import {
   type SupportBuildingId,
 } from "../config/supportBuildings";
 import type { GameState, StarSystemId } from "../types";
-import { isResearchCompleted } from "./researchSystem";
+import {
+  getSupportBuildingUnlockRequirement,
+  hasResearchUnlockedSupportBuilding,
+  type SupportBuildingUnlockRequirement,
+} from "./researchSystem";
+import {
+  RESEARCH_PROGRAMS,
+} from "../config/research";
 
 export type SupportBuildingBuildOption = {
   supportBuildingId: SupportBuildingId;
   creditCost: number;
+  unlockRequirement: SupportBuildingUnlockRequirement | null;
   canBuild: boolean;
   blockedReason: string | null;
 };
@@ -32,6 +40,9 @@ export function getSupportBuildingBuildOptions(
     })
     .map((supportBuildingId) => {
       const building = SUPPORT_BUILDINGS[supportBuildingId];
+      const unlockRequirement = building.startsUnlocked
+        ? null
+        : getSupportBuildingUnlockRequirement(supportBuildingId);
 
       const blockedReason = getSupportBuildingBuildBlockedReason(
         state,
@@ -42,6 +53,7 @@ export function getSupportBuildingBuildOptions(
       return {
         supportBuildingId,
         creditCost: building.creditCost,
+        unlockRequirement,
         canBuild: blockedReason === null,
         blockedReason,
       };
@@ -144,8 +156,35 @@ function getSupportBuildingBuildBlockedReason(
     return "This Support Building is incompatible with the current Primary Outpost.";
   }
 
-  if (!isResearchCompleted(state, building.unlockResearchId)) {
-    return "Complete the required Research first.";
+  if (!building.startsUnlocked) {
+    const unlockRequirement =
+      getSupportBuildingUnlockRequirement(
+        supportBuildingId,
+      );
+
+    if (unlockRequirement === null) {
+      return (
+        "No Research unlock is configured " +
+        "for this Support Building."
+      );
+    }
+
+    if (
+      !hasResearchUnlockedSupportBuilding(
+        state,
+        supportBuildingId,
+      )
+    ) {
+      const program =
+        RESEARCH_PROGRAMS[
+        unlockRequirement.programId
+        ];
+
+      return (
+        `Complete ${program.name} ` +
+        `Rank ${unlockRequirement.requiredRank} first.`
+      );
+    }
   }
 
   if (getAvailableSupportSlotCount(state, systemId) <= 0) {

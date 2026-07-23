@@ -4,7 +4,7 @@ import {
   type PrimaryOutpostDefinition,
   type PrimaryOutpostId,
 } from "../game/config/outposts";
-import { RESEARCH_PROJECTS } from "../game/config/research";
+import { RESEARCH_PROGRAMS } from "../game/config/research";
 import {
   SUPPORT_BUILDINGS,
   type SupportBuildingDefinition,
@@ -21,6 +21,7 @@ import type {
   StarSystem,
 } from "../game/types";
 import { Section } from "./ui/Section";
+
 
 type BuildTab = "primary" | "support";
 
@@ -821,7 +822,20 @@ function SupportBuildingCard({
   onBuild,
 }: SupportBuildingCardProps) {
   const unlockResearch =
-    RESEARCH_PROJECTS[building.unlockResearchId];
+    option.unlockRequirement !== null
+      ? RESEARCH_PROGRAMS[
+      option.unlockRequirement
+        .programId
+      ]
+      : null;
+
+  const unlockResearchLabel =
+    unlockResearch !== null &&
+      option.unlockRequirement !== null
+      ? `${unlockResearch.name} Rank ${option.unlockRequirement
+        .requiredRank
+      }`
+      : "Available from start";
 
   const bonusPercent = Math.round(
     building.outputBonus * 100,
@@ -881,7 +895,7 @@ function SupportBuildingCard({
         <div className="col-span-2">
           <BuildMetric
             label="Required Research"
-            value={unlockResearch.name}
+            value={unlockResearchLabel}
           />
         </div>
       </div>

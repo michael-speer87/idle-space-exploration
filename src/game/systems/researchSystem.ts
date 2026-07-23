@@ -7,6 +7,7 @@ import {
   type ResearchRankDefinition,
 } from "../config/research";
 import type { PrimaryOutpostId } from "../config/outposts";
+import type { SupportBuildingId } from "../config/supportBuildings";
 
 export function createInitialResearchState(): ResearchState {
   const projectsById = {} as ResearchState["projectsById"]
@@ -349,6 +350,68 @@ export function isResearchCompleted(
   return isResearchProgramMastered(
     state,
     projectId,
+  );
+}
+
+export type SupportBuildingUnlockRequirement = {
+  programId: ResearchProjectId;
+  requiredRank: number;
+};
+
+export function getSupportBuildingUnlockRequirement(
+  supportBuildingId: SupportBuildingId,
+): SupportBuildingUnlockRequirement | null {
+  for (
+    const programId of
+    RESEARCH_PROGRAM_IDS
+  ) {
+    const program =
+      RESEARCH_PROGRAMS[programId];
+
+    for (const rank of program.ranks) {
+      const unlocksBuilding =
+        rank.effects.some(
+          (effect) =>
+            effect.type ===
+              "unlock_support_building" &&
+            effect.supportBuildingId ===
+              supportBuildingId,
+        );
+
+      if (unlocksBuilding) {
+        return {
+          programId,
+          requiredRank: rank.rank,
+        };
+      }
+    }
+  }
+
+  return null;
+}
+
+export function hasResearchUnlockedSupportBuilding(
+  state: GameState,
+  supportBuildingId: SupportBuildingId,
+): boolean {
+  const requirement =
+    getSupportBuildingUnlockRequirement(
+      supportBuildingId,
+    );
+
+  if (requirement === null) {
+    return false;
+  }
+
+  const programState =
+    state.research.projectsById[
+      requirement.programId
+    ];
+
+  return (
+    programState !== undefined &&
+    programState.completedRank >=
+      requirement.requiredRank
   );
 }
 

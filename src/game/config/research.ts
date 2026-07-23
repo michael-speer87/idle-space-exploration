@@ -1,4 +1,5 @@
 import type { PrimaryOutpostId } from "./outposts";
+import type { SupportBuildingId } from "./supportBuildings";
 
 export type ResearchProjectId =
   | "improved_survey_arrays"
@@ -32,6 +33,10 @@ export type ResearchEffect =
   | {
     type: "survey_distance_reduction";
     amount: number;
+  }
+  | {
+    type: "unlock_support_building";
+    supportBuildingId: SupportBuildingId;
   };
 
 export type ResearchProgramId =
@@ -151,7 +156,12 @@ export const RESEARCH_PROJECTS: Record<
     prerequisiteIds: ["improved_survey_arrays"],
     description:
       "Unlocks Survey Booster construction for Survey Array systems.",
-    effects: [],
+    effects: [
+      {
+        type: "unlock_support_building",
+        supportBuildingId: "survey_booster",
+      }
+    ],
   },
 
   regional_trade_networks: {
@@ -161,7 +171,12 @@ export const RESEARCH_PROJECTS: Record<
     prerequisiteIds: ["commerce_optimization"],
     description:
       "Unlocks Local Market construction for Commerce Hub systems.",
-    effects: [],
+    effects: [
+      {
+        type: "unlock_support_building",
+        supportBuildingId: "local_market",
+      }
+    ],
   },
 
   distributed_research_facilities: {
@@ -171,7 +186,12 @@ export const RESEARCH_PROJECTS: Record<
     prerequisiteIds: ["applied_science_methods"],
     description:
       "Unlocks Research Annex construction for Science Station systems.",
-    effects: [],
+    effects: [
+      {
+        type: "unlock_support_building",
+        supportBuildingId: "research_annex",
+      }
+    ],
   },
 
   localized_power_infrastructure: {
@@ -181,7 +201,12 @@ export const RESEARCH_PROJECTS: Record<
     prerequisiteIds: ["power_relay_efficiency"],
     description:
       "Unlocks Solar Grid construction for Power Relay systems.",
-    effects: [],
+    effects: [
+      {
+        type: "unlock_support_building",
+        supportBuildingId: "solar_grid",
+      }
+    ],
   },
 
   industrial_refining_methods: {
@@ -191,7 +216,12 @@ export const RESEARCH_PROJECTS: Record<
     prerequisiteIds: ["extraction_handling"],
     description:
       "Unlocks Refinery construction for Extraction Rig systems.",
-    effects: [],
+    effects: [
+      {
+        type: "unlock_support_building",
+        supportBuildingId: "refinery",
+      }
+    ],
   },
 
   deep_range_telemetry: {

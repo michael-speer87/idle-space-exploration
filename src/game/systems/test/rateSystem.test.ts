@@ -22,7 +22,7 @@ describe("calculateRates", () => {
 
     const rates = calculateRates(state);
 
-    expect(rates.epPerSecond).toBeCloseTo(1.4);
+    expect(rates.epPerSecond).toBeCloseTo(1.2);
   });
 
   it("calculates Research Academy capacity without producing Science", () => {

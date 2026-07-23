@@ -305,7 +305,7 @@ export const RESEARCH_PROGRAM_IDS:
     ...RESEARCH_PROJECT_IDS,
   ];
 
-export const RESEARCH_PROGRAMS =
+const COMPATIBILITY_RESEARCH_PROGRAMS =
   Object.fromEntries(
     RESEARCH_PROGRAM_IDS.map((programId) => {
       const project =
@@ -313,28 +313,28 @@ export const RESEARCH_PROGRAMS =
 
       const program:
         ResearchProgramDefinition = {
-        id: project.id,
-        name: project.name,
+          id: project.id,
+          name: project.name,
 
-        prerequisites:
-          project.prerequisiteIds.map(
-            (prerequisiteId) => ({
-              programId: prerequisiteId,
-              requiredRank: 1,
-            }),
-          ),
+          prerequisites:
+            project.prerequisiteIds.map(
+              (prerequisiteId) => ({
+                programId: prerequisiteId,
+                requiredRank: 1,
+              }),
+            ),
 
-        ranks: [
-          {
-            rank: 1,
-            scienceCost:
-              project.scienceCost,
-            description:
-              project.description,
-            effects: project.effects,
-          },
-        ],
-      };
+          ranks: [
+            {
+              rank: 1,
+              scienceCost:
+                project.scienceCost,
+              description:
+                project.description,
+              effects: project.effects,
+            },
+          ],
+        };
 
       return [programId, program];
     }),
@@ -342,3 +342,66 @@ export const RESEARCH_PROGRAMS =
     ResearchProgramId,
     ResearchProgramDefinition
   >;
+
+export const RESEARCH_PROGRAMS: Record<
+  ResearchProgramId,
+  ResearchProgramDefinition
+> = {
+  ...COMPATIBILITY_RESEARCH_PROGRAMS,
+
+  improved_survey_arrays: {
+    id: "improved_survey_arrays",
+    name: "Integrated Survey Network",
+    prerequisites: [],
+
+    ranks: [
+      {
+        rank: 1,
+        scienceCost: 1_500,
+        description:
+          "Links Survey Arrays through a shared coordination network, increasing Survey EP output by 5%.",
+
+        effects: [
+          {
+            type:
+              "primary_outpost_output_bonus",
+            outpostId: "survey_array",
+            amount: 0.05,
+          },
+        ],
+      },
+
+      {
+        rank: 2,
+        scienceCost: 4_500,
+        description:
+          "Expands synchronization coverage, increasing Survey EP output by an additional 5%.",
+
+        effects: [
+          {
+            type:
+              "primary_outpost_output_bonus",
+            outpostId: "survey_array",
+            amount: 0.05,
+          },
+        ],
+      },
+
+      {
+        rank: 3,
+        scienceCost: 12_000,
+        description:
+          "Completes network-wide Survey coordination, increasing Survey EP output by an additional 5%.",
+
+        effects: [
+          {
+            type:
+              "primary_outpost_output_bonus",
+            outpostId: "survey_array",
+            amount: 0.05,
+          },
+        ],
+      },
+    ],
+  },
+};

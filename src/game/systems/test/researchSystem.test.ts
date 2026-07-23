@@ -13,6 +13,7 @@ import { createNewGame } from "../../createNewGame";
 import {
     applyResearchProgress,
     canStartResearch,
+    ensureResearchProjectStates,
     getNextResearchRankDefinition,
     getResearchOutpostOutputBonus,
     getSurveyDistanceReduction,
@@ -20,6 +21,42 @@ import {
 } from "../researchSystem";
 
 describe("Ranked Research lifecycle", () => {
+    it(
+        "clears stale completed-project progress when new ranks are added",
+        () => {
+            const state = createNewGame();
+
+            const programState =
+                state.research.projectsById
+                    .improved_survey_arrays;
+
+            programState.completedRank = 1;
+            programState.progress = 1_500;
+            programState.isCompleted = true;
+
+            const normalizedResearch =
+                ensureResearchProjectStates(
+                    state.research,
+                );
+
+            const normalizedProgram =
+                normalizedResearch.projectsById
+                    .improved_survey_arrays;
+
+            expect(
+                normalizedProgram.completedRank,
+            ).toBe(1);
+
+            expect(
+                normalizedProgram.progress,
+            ).toBe(0);
+
+            expect(
+                normalizedProgram.isCompleted,
+            ).toBe(false);
+        },
+    );
+
     it(
         "starts an available Research program",
         () => {
@@ -140,7 +177,7 @@ describe("Ranked Research lifecycle", () => {
     );
 
     it(
-        "completes one rank and resets progress",
+        "completes one rank, resets progress, and exposes the next rank",
         () => {
             const initialState =
                 createNewGame();
@@ -174,7 +211,7 @@ describe("Ranked Research lifecycle", () => {
 
             expect(projectState.progress).toBe(0);
             expect(projectState.isCompleted).toBe(
-                true,
+                false,
             );
 
             expect(
@@ -186,7 +223,14 @@ describe("Ranked Research lifecycle", () => {
                     nextState,
                     "improved_survey_arrays",
                 ),
-            ).toBe(false);
+            ).toBe(true);
+
+            expect(
+                getNextResearchRankDefinition(
+                    nextState,
+                    "improved_survey_arrays",
+                )?.rank,
+            ).toBe(2);
         },
     );
 
@@ -322,7 +366,7 @@ describe("Ranked Research lifecycle", () => {
                         state,
                         "survey_array",
                     ),
-                ).toBeCloseTo(0.25);
+                ).toBeCloseTo(0.05);
 
                 programState.completedRank = 2;
                 programState.isCompleted = true;
@@ -332,7 +376,7 @@ describe("Ranked Research lifecycle", () => {
                         state,
                         "survey_array",
                     ),
-                ).toBeCloseTo(0.35);
+                ).toBeCloseTo(0.15);
             } finally {
                 program.ranks = originalRanks;
             }

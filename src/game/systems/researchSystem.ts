@@ -79,9 +79,19 @@ export function ensureResearchProjectStates(
     const isCompleted =
       completedRank >= program.ranks.length;
 
+    const shouldResetLegacyProgress =
+      projectState.isCompleted &&
+      !isCompleted &&
+      projectState.progress > 0;
+
+    const progress =
+      shouldResetLegacyProgress
+        ? 0
+        : projectState.progress;
+
     if (
-      completedRank !==
-      projectState.completedRank ||
+      completedRank !== projectState.completedRank ||
+      progress !== projectState.progress ||
       isCompleted !== projectState.isCompleted
     ) {
       hasChanges = true;
@@ -89,6 +99,7 @@ export function ensureResearchProjectStates(
       projectsById[projectId] = {
         ...projectState,
         completedRank,
+        progress,
         isCompleted,
       };
     }

@@ -2,24 +2,21 @@ import type { GameState, StarSystemId } from "../types";
 import {
   getExtractionStorageCapacity,
   PRIMARY_OUTPOSTS,
+  PRIMARY_OUTPOST_IDS,
   type PrimaryOutpostId,
 } from "../config/outposts";
 import { calculateRates } from "./rateSystem";
-
-
-
-export const CLAIMABLE_PRIMARY_OUTPOST_IDS: readonly PrimaryOutpostId[] = [
-  "survey_array",
-  "commerce_hub",
-  "science_station",
-  "power_relay",
-  "extraction_rig",
-  "research_academy",
-];
+import { RESEARCH_PROGRAMS } from "../config/research";
+import {
+  getPrimaryOutpostUnlockRequirement,
+  hasResearchUnlockedPrimaryOutpost,
+  type PrimaryOutpostUnlockRequirement,
+} from "./researchSystem";
 
 export type OutpostClaimOption = {
   outpostId: PrimaryOutpostId;
   creditCost: number;
+  unlockRequirement: PrimaryOutpostUnlockRequirement | null;
   canClaim: boolean;
   blockedReason: string | null;
 };
@@ -44,8 +41,13 @@ export function getOutpostClaimOptions(
   state: GameState,
   systemId: StarSystemId,
 ): OutpostClaimOption[] {
-  return CLAIMABLE_PRIMARY_OUTPOST_IDS.map((outpostId) => {
+  return PRIMARY_OUTPOST_IDS.map((outpostId) => {
     const creditCost = getOutpostClaimCreditCost(state, outpostId);
+    const outpost = PRIMARY_OUTPOSTS[outpostId];
+    const unlockRequirement = outpost.startsUnlocked
+      ? null
+      : getPrimaryOutpostUnlockRequirement(outpostId);
+
     const blockedReason = getOutpostClaimBlockedReason(
       state,
       systemId,
@@ -56,13 +58,12 @@ export function getOutpostClaimOptions(
     return {
       outpostId,
       creditCost,
+      unlockRequirement,
       canClaim: blockedReason === null,
       blockedReason,
     };
   });
 }
-
-
 
 export function getClaimableOutpostIds(
   state: GameState,
@@ -133,7 +134,7 @@ export function getOutpostClaimCreditCost(
 
   return Math.ceil(
     outpost.claimCreditCost *
-      Math.pow(outpost.claimCreditCostGrowthRate, ownedCount),
+    Math.pow(outpost.claimCreditCostGrowthRate, ownedCount),
   );
 }
 
@@ -144,13 +145,16 @@ function getOutpostClaimBlockedReason(
   creditCost: number,
 ): string | null {
   const system = state.map.systemsById[systemId];
+  const outpost = PRIMARY_OUTPOSTS[outpostId];
+
+  if (!outpost) {
+    return (
+      "This Primary Outpost is not configured."
+    )
+  }
 
   if (!system) {
     return "System does not exist.";
-  }
-
-  if (!CLAIMABLE_PRIMARY_OUTPOST_IDS.includes(outpostId)) {
-    return "This outpost is not available yet.";
   }
 
   if (system.isHome) {
@@ -163,6 +167,37 @@ function getOutpostClaimBlockedReason(
 
   if (system.primaryOutpostId !== null) {
     return "System already has a Primary Outpost.";
+  }
+
+  if (!outpost.startsUnlocked) {
+    const unlockRequirement =
+      getPrimaryOutpostUnlockRequirement(
+        outpostId,
+      );
+
+    if (unlockRequirement === null) {
+      return (
+        "No Research unlock is configured " +
+        "for this Primary Outpost."
+      );
+    }
+
+    if (
+      !hasResearchUnlockedPrimaryOutpost(
+        state,
+        outpostId,
+      )
+    ) {
+      const program =
+        RESEARCH_PROGRAMS[
+        unlockRequirement.programId
+        ];
+
+      return (
+        `Complete ${program.name} ` +
+        `Rank ${unlockRequirement.requiredRank} first.`
+      );
+    }
   }
 
   const rates = calculateRates(state);
@@ -289,8 +324,8 @@ export function getPrimaryOutpostDecommissionPreview(
   const materialCapacityLost =
     system.primaryOutpostId === "extraction_rig"
       ? getExtractionStorageCapacity(
-          system.primaryOutpostLevel,
-        )
+        system.primaryOutpostLevel,
+      )
       : 0;
 
   const currentMaterialCapacity =
@@ -304,7 +339,7 @@ export function getPrimaryOutpostDecommissionPreview(
   const materialOverflowLost = Math.max(
     0,
     state.resources.materials -
-      nextMaterialCapacity,
+    nextMaterialCapacity,
   );
 
   return {
@@ -339,7 +374,7 @@ export function decommissionPrimaryOutpost(
   const nextMaterialCapacity = Math.max(
     0,
     currentMaterialCapacity -
-      preview.materialCapacityLost,
+    preview.materialCapacityLost,
   );
 
   return {
@@ -403,7 +438,7 @@ export function getPrimaryOutpostUpgradeCreditCost(
 
   return Math.ceil(
     outpost.upgradeCreditCost *
-      Math.pow(outpost.upgradeCreditCostGrowthRate, currentLevel - 1),
+    Math.pow(outpost.upgradeCreditCostGrowthRate, currentLevel - 1),
   );
 }
 

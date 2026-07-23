@@ -26,6 +26,7 @@ export type PrimaryOutpostDefinition = {
     name: string;
     category: OutpostCategory;
     affinityKey: OutpostAffinityKey;
+    startsUnlocked: boolean;
     baseOutput: number;
     claimCreditCost: number;
     claimCreditCostGrowthRate: number;
@@ -45,6 +46,7 @@ export const PRIMARY_OUTPOSTS: Record<
         name: "Survey Array",
         category: "survey",
         affinityKey: "survey",
+        startsUnlocked: true,
         baseOutput: 1,
         claimCreditCost: 10,
         claimCreditCostGrowthRate: 1.18,
@@ -60,6 +62,7 @@ export const PRIMARY_OUTPOSTS: Record<
         name: "Commerce Hub",
         category: "commerce",
         affinityKey: "commerce",
+        startsUnlocked: true,
         baseOutput: 1,
         claimCreditCost: 10,
         claimCreditCostGrowthRate: 1.18,
@@ -75,6 +78,7 @@ export const PRIMARY_OUTPOSTS: Record<
         name: "Science Station",
         category: "science",
         affinityKey: "science",
+        startsUnlocked: true,
         baseOutput: 1,
         claimCreditCost: 15,
         claimCreditCostGrowthRate: 1.2,
@@ -90,6 +94,7 @@ export const PRIMARY_OUTPOSTS: Record<
         name: "Power Relay",
         category: "power",
         affinityKey: "power",
+        startsUnlocked: true,
         baseOutput: 5,
         claimCreditCost: 20,
         claimCreditCostGrowthRate: 1.22,
@@ -105,6 +110,7 @@ export const PRIMARY_OUTPOSTS: Record<
         name: "Extraction Rig",
         category: "extraction",
         affinityKey: "extraction",
+        startsUnlocked: true,
         baseOutput: 1,
         claimCreditCost: 15,
         claimCreditCostGrowthRate: 1.2,
@@ -120,6 +126,7 @@ export const PRIMARY_OUTPOSTS: Record<
         name: "Research Acadamy",
         category: "research",
         affinityKey: "science",
+        startsUnlocked: true,
         baseOutput: 1,
         claimCreditCost: 30,
         claimCreditCostGrowthRate: 1.2,
@@ -132,6 +139,9 @@ export const PRIMARY_OUTPOSTS: Record<
             "Routes fresh science into active Research up to its Research Capacity.",
     },
 };
+
+export const PRIMARY_OUTPOST_IDS =
+    Object.keys(PRIMARY_OUTPOSTS) as PrimaryOutpostId[];
 
 export function getOutpostLevelOutputMultiplier(level: number): number {
   if (level <= 0) {

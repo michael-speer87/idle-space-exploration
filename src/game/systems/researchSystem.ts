@@ -373,9 +373,9 @@ export function getSupportBuildingUnlockRequirement(
         rank.effects.some(
           (effect) =>
             effect.type ===
-              "unlock_support_building" &&
+            "unlock_support_building" &&
             effect.supportBuildingId ===
-              supportBuildingId,
+            supportBuildingId,
         );
 
       if (unlocksBuilding) {
@@ -405,13 +405,13 @@ export function hasResearchUnlockedSupportBuilding(
 
   const programState =
     state.research.projectsById[
-      requirement.programId
+    requirement.programId
     ];
 
   return (
     programState !== undefined &&
     programState.completedRank >=
-      requirement.requiredRank
+    requirement.requiredRank
   );
 }
 
@@ -479,7 +479,7 @@ export function getResearchOutpostOutputBonus(
   ) {
     if (
       effect.type ===
-        "primary_outpost_output_bonus" &&
+      "primary_outpost_output_bonus" &&
       effect.outpostId === outpostId
     ) {
       totalBonus += effect.amount;
@@ -568,4 +568,66 @@ function completeResearchRank(
       },
     },
   };
+}
+
+export type PrimaryOutpostUnlockRequirement = {
+  programId: ResearchProjectId;
+  requiredRank: number;
+};
+
+export function getPrimaryOutpostUnlockRequirement(
+  outpostId: PrimaryOutpostId,
+): PrimaryOutpostUnlockRequirement | null {
+  for (
+    const programId of
+    RESEARCH_PROGRAM_IDS
+  ) {
+    const program =
+      RESEARCH_PROGRAMS[programId];
+
+    for (const rank of program.ranks) {
+      const unlocksOutpost =
+        rank.effects.some(
+          (effect) =>
+            effect.type ===
+            "unlock_primary_outpost" &&
+            effect.outpostId ===
+            outpostId,
+        );
+
+      if (unlocksOutpost) {
+        return {
+          programId,
+          requiredRank: rank.rank,
+        };
+      }
+    }
+  }
+
+  return null;
+}
+
+export function hasResearchUnlockedPrimaryOutpost(
+  state: GameState,
+  outpostId: PrimaryOutpostId,
+): boolean {
+  const requirement =
+    getPrimaryOutpostUnlockRequirement(
+      outpostId,
+    );
+
+  if (requirement === null) {
+    return false;
+  }
+
+  const programState =
+    state.research.projectsById[
+    requirement.programId
+    ];
+
+  return (
+    programState !== undefined &&
+    programState.completedRank >=
+    requirement.requiredRank
+  );
 }

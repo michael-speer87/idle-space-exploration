@@ -37,6 +37,10 @@ export type ResearchEffect =
   | {
     type: "unlock_support_building";
     supportBuildingId: SupportBuildingId;
+  }
+  | {
+    type: "unlock_primary_outpost";
+    outpostId: PrimaryOutpostId;
   };
 
 export type ResearchProgramId =

@@ -159,6 +159,18 @@ export function BuildPanel({
                 const affinity =
                   system.affinities[outpost.affinityKey];
 
+                const unlockResearch = option.unlockRequirement !== null
+                  ? RESEARCH_PROGRAMS[option.unlockRequirement.programId]
+                  : null;
+
+                const unlockResearchLabel =
+                  unlockResearch !== null &&
+                    option.unlockRequirement !== null
+                    ? `${unlockResearch.name} Rank ${option.unlockRequirement
+                      .requiredRank
+                    }`
+                    : null;
+
                 return (
                   <BuildOutpostCard
                     key={option.outpostId}
@@ -169,11 +181,18 @@ export function BuildPanel({
                         ? "Free"
                         : `${option.creditCost.toFixed(0)} Credits`
                     }
+                    unlockResearchLabel={
+                      unlockResearchLabel
+                    }
                     actionLabel={`Establish ${outpost.name}`}
                     disabled={!option.canClaim}
-                    blockedReason={option.blockedReason}
+                    blockedReason={
+                      option.blockedReason
+                    }
                     onAction={() =>
-                      onClaimOutpost(option.outpostId)
+                      onClaimOutpost(
+                        option.outpostId,
+                      )
                     }
                   />
                 );
@@ -435,6 +454,7 @@ type BuildOutpostCardProps = {
   outpost: PrimaryOutpostDefinition;
   affinity: AffinityLevel;
   costLabel: string;
+  unlockResearchLabel: string | null;
   actionLabel: string;
   disabled: boolean;
   blockedReason: string | null;
@@ -445,6 +465,7 @@ function BuildOutpostCard({
   outpost,
   affinity,
   costLabel,
+  unlockResearchLabel,
   actionLabel,
   disabled,
   blockedReason,
@@ -495,6 +516,22 @@ function BuildOutpostCard({
               : "text-ise-success"
           }
         />
+
+        {unlockResearchLabel !== null && (
+          <div
+            className="
+              mt-2 rounded-control
+              border border-ise-border
+              bg-ise-background/55 p-2
+            "
+          >
+            <BuildMetric
+              label="Required Research"
+              value={unlockResearchLabel}
+              valueClassName="text-ise-science"
+            />
+          </div>
+        )}
       </div>
 
       <button

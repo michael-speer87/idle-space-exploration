@@ -1,6 +1,5 @@
 import type { GameState, StarSystemId } from "../types";
-import type { PrimaryOutpostId } from "../config/outposts";
-import { CLAIMABLE_PRIMARY_OUTPOST_IDS } from "./outpostSystem";
+import { PRIMARY_OUTPOST_IDS, type PrimaryOutpostId, } from "../config/outposts";
 import { getHexId, getHexNeighbors } from "../map/hexCoords";
 
 export function devAddResources(
@@ -82,7 +81,7 @@ export function devClaimWithOutpost(
         return state;
     }
 
-    if (!CLAIMABLE_PRIMARY_OUTPOST_IDS.includes(outpostId)) {
+    if (!PRIMARY_OUTPOST_IDS.includes(outpostId)) {
         return state;
     }
 

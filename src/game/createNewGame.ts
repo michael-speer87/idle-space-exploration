@@ -19,13 +19,14 @@ export function createNewGame(
     });
 
     return {
-        version: 4,
+        version: 5,
         seed,
 
         resources: {
             credits: getExpeditionStartingCredits(influence.lifetimeInfluence),
             science: 0,
             materials: 0,
+            goods: 0,
         },
 
         exploration: {

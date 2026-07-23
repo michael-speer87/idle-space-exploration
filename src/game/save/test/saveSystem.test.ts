@@ -1,12 +1,51 @@
 import {
+  beforeEach,
   describe,
   expect,
   it,
+  vi,
 } from "vitest";
 
 import type { GameState } from "../../types";
 import { createNewGame } from "../../createNewGame";
-import { migrateGameState } from "../saveSystem";
+import {
+  loadGame,
+  migrateGameState,
+} from "../saveSystem";
+
+const SAVE_KEY =
+  "idle-space-exploration.save.v1";
+
+function createLocalStorage():
+  Storage {
+  const values = new Map<string, string>();
+
+  return {
+    get length() {
+      return values.size;
+    },
+
+    clear() {
+      values.clear();
+    },
+
+    getItem(key) {
+      return values.get(key) ?? null;
+    },
+
+    key(index) {
+      return [...values.keys()][index] ?? null;
+    },
+
+    removeItem(key) {
+      values.delete(key);
+    },
+
+    setItem(key, value) {
+      values.set(key, value);
+    },
+  };
+}
 
 type LegacyResearchProjectState = {
   id: string;
@@ -51,13 +90,30 @@ function createVersion3Fixture():
   return fixture;
 }
 
-describe("Game-state version 4 migration", () => {
+function createVersion4Fixture():
+  Version3Fixture {
+  const fixture = createVersion3Fixture();
+
+  fixture.version = 4;
+
+  return fixture;
+}
+
+describe("Game-state version 5 migration", () => {
+  beforeEach(() => {
+    vi.stubGlobal(
+      "localStorage",
+      createLocalStorage(),
+    );
+  });
+
   it(
-    "creates new games using version 4 rank state",
+    "creates new games with zero Goods",
     () => {
       const state = createNewGame();
 
-      expect(state.version).toBe(4);
+      expect(state.version).toBe(5);
+      expect(state.resources.goods).toBe(0);
 
       expect(
         state.research.projectsById
@@ -85,7 +141,7 @@ describe("Game-state version 4 migration", () => {
           legacyState,
         ) as GameState;
 
-      expect(migratedState.version).toBe(4);
+      expect(migratedState.version).toBe(5);
 
       expect(
         migratedState.research.projectsById
@@ -164,6 +220,90 @@ describe("Game-state version 4 migration", () => {
         migratedState.research
           .speedPerSecond,
       ).toBeUndefined();
+    },
+  );
+
+  it(
+    "migrates version 4 missing Goods to zero",
+    () => {
+      const legacyState =
+        createVersion4Fixture();
+
+      delete (
+        legacyState.resources as {
+          goods?: number;
+        }
+      ).goods;
+
+      const migratedState =
+        migrateGameState(
+          legacyState,
+        ) as GameState;
+
+      expect(migratedState.version).toBe(5);
+      expect(migratedState.resources.goods).toBe(0);
+    },
+  );
+
+  it(
+    "preserves an existing numeric Goods value",
+    () => {
+      const legacyState =
+        createVersion4Fixture();
+
+      (
+        legacyState.resources as {
+          goods: number;
+        }
+      ).goods = 42;
+
+      const migratedState =
+        migrateGameState(
+          legacyState,
+        ) as GameState;
+
+      expect(migratedState.version).toBe(5);
+      expect(migratedState.resources.goods).toBe(42);
+    },
+  );
+
+  it(
+    "rejects version 5 with nonnumeric Goods",
+    () => {
+      const state = createNewGame() as unknown as {
+        resources: {
+          goods: unknown;
+        };
+      };
+
+      state.resources.goods = "42";
+
+      localStorage.setItem(
+        SAVE_KEY,
+        JSON.stringify(state),
+      );
+
+      expect(loadGame().status).toBe("corrupted");
+    },
+  );
+
+  it(
+    "rejects version 5 with missing Goods",
+    () => {
+      const state = createNewGame() as unknown as {
+        resources: {
+          goods?: number;
+        };
+      };
+
+      delete state.resources.goods;
+
+      localStorage.setItem(
+        SAVE_KEY,
+        JSON.stringify(state),
+      );
+
+      expect(loadGame().status).toBe("corrupted");
     },
   );
 });

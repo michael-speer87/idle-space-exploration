@@ -3,7 +3,7 @@ import type { ResearchProjectId } from "./config/research";
 import type { SupportBuildingId } from "./config/supportBuildings";
 import type { TutorialStepId } from "./config/tutorial";
 
-export type GameVersion = 4;
+export type GameVersion = 5;
 
 export type StarSystemId = string;
 
@@ -89,6 +89,7 @@ export type ResourceState = {
   credits: number;
   science: number;
   materials: number;
+  goods: number;
 };
 
 export type ResearchState = {

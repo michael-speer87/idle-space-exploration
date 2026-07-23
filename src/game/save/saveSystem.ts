@@ -100,7 +100,8 @@ export function migrateGameState(value: unknown): unknown {
     value.version !== 1 &&
     value.version !== 2 &&
     value.version !== 3 &&
-    value.version !== 4
+    value.version !== 4 &&
+    value.version !== 5
   ) {
     return value;
   }
@@ -120,6 +121,15 @@ export function migrateGameState(value: unknown): unknown {
         typeof value.resources.materials === "number"
           ? value.resources.materials
           : 0,
+
+      ...(value.version <= 4
+        ? {
+          goods:
+            typeof value.resources.goods === "number"
+              ? value.resources.goods
+              : 0,
+        }
+        : {}),
     }
     : value.resources;
 
@@ -131,7 +141,7 @@ export function migrateGameState(value: unknown): unknown {
   const migratedValue = {
     ...value,
 
-    version: 4,
+    version: 5,
     resources,
     research,
     influence,
@@ -187,7 +197,7 @@ function isValidGameState(value: unknown): value is GameState {
     return false;
   }
 
-  if (value.version !== 4) {
+  if (value.version !== 5) {
     return false;
   }
 
@@ -208,6 +218,10 @@ function isValidGameState(value: unknown): value is GameState {
   }
 
   if (typeof value.resources.materials !== "number") {
+    return false;
+  }
+
+  if (typeof value.resources.goods !== "number") {
     return false;
   }
 

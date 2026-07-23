@@ -384,60 +384,37 @@ describe("Ranked Research lifecycle", () => {
     );
 
     it(
-        "accumulates Survey distance effects by completed rank",
+        "accumulates Survey distance reduction across completed ranks",
         () => {
-            const program =
-                RESEARCH_PROGRAMS
+            const state = createNewGame();
+
+            const programState =
+                state.research.projectsById
                     .deep_range_telemetry;
 
-            const originalRanks =
-                program.ranks;
+            programState.completedRank = 1;
 
-            program.ranks = [
-                originalRanks[0],
+            expect(
+                getSurveyDistanceReduction(
+                    state,
+                ),
+            ).toBeCloseTo(0.1);
 
-                {
-                    rank: 2,
-                    scienceCost: 10_000,
-                    description:
-                        "Temporary distance-effect test.",
-                    effects: [
-                        {
-                            type:
-                                "survey_distance_reduction",
-                            amount: 0.1,
-                        },
-                    ],
-                },
-            ];
+            programState.completedRank = 2;
 
-            try {
-                const state = createNewGame();
+            expect(
+                getSurveyDistanceReduction(
+                    state,
+                ),
+            ).toBeCloseTo(0.2);
 
-                const programState =
-                    state.research.projectsById
-                        .deep_range_telemetry;
+            programState.completedRank = 3;
 
-                programState.completedRank = 1;
-                programState.isCompleted = false;
-
-                expect(
-                    getSurveyDistanceReduction(
-                        state,
-                    ),
-                ).toBeCloseTo(0.1);
-
-                programState.completedRank = 2;
-                programState.isCompleted = true;
-
-                expect(
-                    getSurveyDistanceReduction(
-                        state,
-                    ),
-                ).toBeCloseTo(0.2);
-            } finally {
-                program.ranks = originalRanks;
-            }
+            expect(
+                getSurveyDistanceReduction(
+                    state,
+                ),
+            ).toBeCloseTo(0.3);
         },
     );
 });

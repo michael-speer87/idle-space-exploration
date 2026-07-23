@@ -313,28 +313,28 @@ const COMPATIBILITY_RESEARCH_PROGRAMS =
 
       const program:
         ResearchProgramDefinition = {
-          id: project.id,
-          name: project.name,
+        id: project.id,
+        name: project.name,
 
-          prerequisites:
-            project.prerequisiteIds.map(
-              (prerequisiteId) => ({
-                programId: prerequisiteId,
-                requiredRank: 1,
-              }),
-            ),
+        prerequisites:
+          project.prerequisiteIds.map(
+            (prerequisiteId) => ({
+              programId: prerequisiteId,
+              requiredRank: 1,
+            }),
+          ),
 
-          ranks: [
-            {
-              rank: 1,
-              scienceCost:
-                project.scienceCost,
-              description:
-                project.description,
-              effects: project.effects,
-            },
-          ],
-        };
+        ranks: [
+          {
+            rank: 1,
+            scienceCost:
+              project.scienceCost,
+            description:
+              project.description,
+            effects: project.effects,
+          },
+        ],
+      };
 
       return [programId, program];
     }),
@@ -399,6 +399,69 @@ export const RESEARCH_PROGRAMS: Record<
               "primary_outpost_output_bonus",
             outpostId: "survey_array",
             amount: 0.05,
+          },
+        ],
+      },
+    ],
+  },
+
+  deep_range_telemetry: {
+    id: "deep_range_telemetry",
+    name: "Deep Range Telemetry",
+
+    prerequisites: [
+      {
+        programId:
+          "improved_survey_arrays",
+        requiredRank: 1,
+      },
+    ],
+
+    ranks: [
+      {
+        rank: 1,
+        scienceCost: 7_500,
+
+        description:
+          "Improves long-range survey telemetry, reducing the distance contribution to Survey requirements by 10%.",
+
+        effects: [
+          {
+            type:
+              "survey_distance_reduction",
+            amount: 0.1,
+          },
+        ],
+      },
+
+      {
+        rank: 2,
+        scienceCost: 22_500,
+
+        description:
+          "Expands deep-range telemetry coverage, reducing the distance contribution by an additional 10%.",
+
+        effects: [
+          {
+            type:
+              "survey_distance_reduction",
+            amount: 0.1,
+          },
+        ],
+      },
+
+      {
+        rank: 3,
+        scienceCost: 60_000,
+
+        description:
+          "Completes the deep-range telemetry network, reducing the distance contribution by an additional 10%.",
+
+        effects: [
+          {
+            type:
+              "survey_distance_reduction",
+            amount: 0.1,
           },
         ],
       },
